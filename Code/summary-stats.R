@@ -14,7 +14,15 @@ data_filtered = data |>
          reliten = as.numeric(reliten),
          relitenv = as.numeric(relitenv),
          relitennv = as.numeric(relitennv),
-         reliten_comb = coalesce(reliten, relitenv, relitennv))
+         reliten_comb = coalesce(reliten, relitenv, relitennv),
+         xaffil = case_when(
+           relig %in% c(1, 11, 13) ~ 1,
+           relig == 2 ~ 4,
+           relig == 3 ~ 5,
+           relig == 4 ~ 9,
+           relig %in% c(5, 6, 7, 8, 9, 10, 12) ~ 6,
+           .default = NA
+         ))
 
 ## HOUT FIGURE 1
 
@@ -163,6 +171,12 @@ fig3_data |>
         axis.text.y.right = element_text(color = "gray50"))
 
 ## HOUT FIGURE 4
+
+ml_denom = c(2, 3, 4, 5, 7)
+
+ml_other = c(40, 81)
+
+cons_other = c(68, 64, 35, 31, 58, 12, 36)
 
 fig4_data = data_filtered |>
   filter(!is.na(relig), !is.na(relig16),
