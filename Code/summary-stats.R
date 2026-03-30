@@ -188,30 +188,143 @@ classify_relig = function(relig, denom, other) {
   )
 }
 
-fig4_data = data_filtered |>
-  filter(!is.na(relig), !is.na(relig16), cohort %in% 1905:2000,
+fig4_base = data_filtered |>
+  filter(!is.na(relig), !is.na(relig16), cohort %in% 1905:1995,
          year %in% 1974:2024) |>
-  mutate(cohort = as.numeric(cohort),
-         relig_macro = classify_relig(relig, denom, other),
-         relig16_macro = classify_relig(relig16, denom16, oth16),
-         origin_match = relig_macro == relig16_macro,
+  mutate(cohort        = as.numeric(cohort),
+         relig_macro   = classify_relig(relig,   denom,   other),
+         relig16_macro = classify_relig(relig16, denom16, oth16))
+
+fig4_cohort_n = count(fig4_base, cohort, name = "total_n")
+
+# Above zero: panel = current religion, includes converts in
+fig4_above = fig4_base |>
+  filter(relig_macro %in% c("Catholic", "Mainline", "Conservative")) |>
+  mutate(panel = relig_macro,
          group = case_when(
-           !origin_match & !is.na(relig_macro) ~ "Converted",
-           origin_match & reliten_comb == 1 ~ "Strong",
-           origin_match & (reliten_comb %in% 2:3 | is.na(reliten_comb)) ~ "Not strong",
-           !origin_match & relig_macro == "No religion",
-           !origin_match & reliten_comb == 1 ~ "Strong in new religion",
-           !origin_match & (reliten_comb %in% 2:3 | is.na(reliten_comb)) ~ "Not strong in new religion"
+           relig16_macro != relig_macro ~ "Converted",
+           reliten_comb == 1            ~ "Strong",
+           TRUE                         ~ "Not strong"
          ))
 
-  
+# Below zero: panel = origin religion, switchers only
+fig4_below = fig4_base |>
+  filter(relig16_macro %in% c("Catholic", "Mainline", "Conservative"),
+         relig_macro != relig16_macro) |>
+  mutate(panel = relig16_macro,
+         group = case_when(
+           relig_macro == "No religion" ~ "No religion",
+           reliten_comb == 1            ~ "Strong in new religion",
+           TRUE                         ~ "Not strong in new religion"
+         ))
 
+fig4_data = bind_rows(fig4_above, fig4_below) |>
+  count(cohort, panel, group) |>
+  left_join(fig4_cohort_n, by = "cohort") |>
+  mutate(pct_raw = n / total_n * 100,
+         pct_raw = if_else(group %in% c("No religion", "Strong in new religion",
+                                        "Not strong in new religion"),
+                           -pct_raw, pct_raw)) |>
+  reframe(cohort     = cohort,
+          panel      = panel,
+          pct_smooth = predict(loess(pct_raw ~ cohort, span = 0.4)),
+          .by = c(panel, group))
 
+fig4_group_levels = c("Converted", "Strong", "Not strong",
+                      "No religion", "Not strong in new religion", "Strong in new religion")
 
+fig4_group_colors = c(
+  "Converted"                  = "#FFFFFF",  # white            — converts in
+  "Strong"                     = "#0072B2",  # Okabe-Ito blue   — persistent, strong
+  "Not strong"                 = "#56B4E9",  # Okabe-Ito sky    — persistent, weak
+  "No religion"                = "#555555",  # dark gray        — left for none
+  "Strong in new religion"     = "#D55E00",  # Okabe-Ito verm.  — switcher, strong
+  "Not strong in new religion" = "#E69F00")  # Okabe-Ito orange — switcher, weak
 
+fig4_panel_labels = c(
+  Catholic     = "Catholic",
+  Conservative = "Conservative Protestant",
+  Mainline     = "Mainline Protestant")
 
+fig4_data |>
+  mutate(group = factor(group, levels = fig4_group_levels),
+         panel = factor(panel, levels = c("Catholic", "Conservative", "Mainline"))) |>
+  ggplot(aes(x = cohort, y = pct_smooth, fill = group)) +
+  geom_area(position = "stack", color = "black", linewidth = 0.3, outline.type = "full") +
+  geom_hline(yintercept = 0, linewidth = 0) +
+  scale_fill_manual(values = fig4_group_colors) +
+  scale_y_continuous(breaks = seq(-15, 45, 15),
+                     sec.axis = dup_axis(name = NULL)) +
+  facet_wrap(~ panel, nrow = 1,
+             labeller = labeller(panel = fig4_panel_labels)) +
+  labs(x = "Year of Birth", y = "Share of total population (%)", fill = NULL) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        axis.text.y.right = element_text(color = "gray50"),
+        legend.position = "bottom",
+        legend.direction = "horizontal")
 
+## FIGURE 5: PERSISTENCE BY EDUCATION
 
+fig5_data = data_filtered |>
+  filter(!is.na(relig), !is.na(relig16), !is.na(educ), !is.na(cohort),
+         cohort %in% 1905:1995) |>
+  mutate(cohort = as.numeric(cohort),
+         educ_group = case_when(
+           educ < 12       ~ "Less than HS",
+           educ %in% 12:15 ~ "HS or some college",
+           educ >= 16      ~ "College or more"
+         ),
+         stayed = as.numeric(relig) == as.numeric(relig16)) |>
+  filter(!is.na(educ_group),
+         as.numeric(relig16) != 4) |>
+  group_by(cohort, educ_group) |>
+  summarise(pct_stayed = mean(stayed, na.rm = TRUE) * 100, .groups = "drop")
 
+fig5_data |>
+  mutate(educ_group = factor(educ_group,
+                             levels = c("Less than HS", "HS or some college", "College or more"))) |>
+  ggplot(aes(x = cohort, y = pct_stayed)) +
+  geom_point(shape = 1, size = 2) +
+  geom_smooth(method = "loess", span = 0.4, se = FALSE, color = "black") +
+  facet_wrap(~ educ_group, nrow = 1) +
+  labs(x = "Birth Year", y = "Stayed in origin religion (%)") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
 
+## FIGURE 6: CURRENTLY VS RAISED CATHOLIC BY EDUCATION AND YEAR
 
+fig6_data = data_filtered |>
+  filter(!is.na(relig), !is.na(relig16), !is.na(educ),
+         year %in% 1974:2024) |>
+  mutate(educ_group = case_when(
+           educ < 12       ~ "Less than HS",
+           educ %in% 12:15 ~ "HS or some college",
+           educ >= 16      ~ "College or more"
+         ),
+         currently_catholic = as.numeric(relig)   == 2,
+         raised_catholic    = as.numeric(relig16) == 2) |>
+  filter(!is.na(educ_group)) |>
+  group_by(year, educ_group) |>
+  summarise(pct_current = mean(currently_catholic, na.rm = TRUE) * 100,
+            pct_raised  = mean(raised_catholic,    na.rm = TRUE) * 100,
+            .groups = "drop") |>
+  pivot_longer(cols = c(pct_current, pct_raised),
+               names_to = "series", values_to = "pct") |>
+  mutate(series = recode(series,
+                         pct_current = "Currently Catholic",
+                         pct_raised  = "Raised Catholic"))
+
+fig6_data |>
+  mutate(educ_group = factor(educ_group,
+                             levels = c("Less than HS", "HS or some college", "College or more"))) |>
+  ggplot(aes(x = year, y = pct, color = series)) +
+  geom_point(shape = 1, size = 2) +
+  geom_smooth(method = "loess", span = 0.4, se = FALSE) +
+  scale_color_manual(values = c("Currently Catholic" = "gray50",
+                                "Raised Catholic"    = "black")) +
+  facet_wrap(~ educ_group, nrow = 1) +
+  labs(x = "Year", y = "Catholic (%)", color = NULL) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom")
