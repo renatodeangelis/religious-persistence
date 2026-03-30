@@ -10,18 +10,26 @@ data = read_dta(
 
 data_filtered = data |>
   mutate(age = year - cohort,
-         year = as.numeric(year),
-         reliten = as.numeric(reliten),
-         relitenv = as.numeric(relitenv),
-         relitennv = as.numeric(relitennv),
-         reliten_comb = coalesce(reliten, relitenv, relitennv))
+         year   = as.numeric(year),
+         cohort = as.numeric(cohort),
+         relig   = as.numeric(relig),
+         relig16 = as.numeric(relig16),
+         reliten    = as.numeric(reliten),
+         relitenv   = as.numeric(relitenv),
+         relitennv  = as.numeric(relitennv),
+         reliten_comb = coalesce(reliten, relitenv, relitennv),
+         educ_group = case_when(
+           educ < 12       ~ "Less than HS",
+           educ %in% 12:15 ~ "HS or some college",
+           educ >= 16      ~ "College or more"
+         ))
 
 ## HOUT FIGURE 1
 
 fig1_data = data_filtered |>
   filter(!is.na(relig), !is.na(relig16)) |>
-  mutate(currently_catholic = as.numeric(relig) == 2,
-         raised_catholic = as.numeric(relig16) == 2) |>
+  mutate(currently_catholic = relig == 2,
+         raised_catholic    = relig16 == 2) |>
   group_by(year) |>
   summarise(
     pct_current = mean(currently_catholic, na.rm = TRUE) * 100,
@@ -50,10 +58,10 @@ fig2_data = data_filtered |>
   mutate(group = case_when(
            relig16 != 2 & relig == 2 ~ "Converted to Catholic",
            relig16 == 2 & relig == 2 & reliten_comb == 1 ~ "Strong Catholic",
-           relig16 == 2 & relig == 2 & reliten_comb %in% 2:3 ~ "Not strong Catholic",
+           relig16 == 2 & relig == 2 & (reliten_comb %in% 2:3 | is.na(reliten_comb)) ~ "Not strong Catholic",
            relig16 == 2 & relig == 4 ~ "No religion",
            relig16 == 2 & relig != 2 & reliten_comb == 1 ~ "Strong in new religion",
-           relig16 == 2 & relig != 2 & reliten_comb %in% 2:3 ~ "Not strong in new religion")) |>
+           relig16 == 2 & relig != 2 & (reliten_comb %in% 2:3 | is.na(reliten_comb)) ~ "Not strong in new religion")) |>
   count(year, group) |>
   group_by(year) |>
   mutate(pct_raw = n / sum(n) * 100,
@@ -74,12 +82,12 @@ group_levels = c(
   "Strong in new religion")
 
 group_colors = c(
-  "Converted to Catholic"       = "white",
-  "Strong Catholic"             = "gray30",
-  "Not strong Catholic"         = "gray65",
-  "Strong in new religion"      = "gray40",
-  "Not strong in new religion"  = "gray55",
-  "No religion"                 = "gray10")
+  "Converted to Catholic"       = "#FFFFFF",  # white
+  "Strong Catholic"             = "#0072B2",  # Okabe-Ito blue
+  "Not strong Catholic"         = "#56B4E9",  # Okabe-Ito sky
+  "Strong in new religion"      = "#D55E00",  # Okabe-Ito vermillion
+  "Not strong in new religion"  = "#E69F00",  # Okabe-Ito orange
+  "No religion"                 = "#555555")  # dark gray
 
 band_labels = tibble::tribble(
   ~group,                      ~x,     ~y,    ~color,
@@ -191,8 +199,7 @@ classify_relig = function(relig, denom, other) {
 fig4_base = data_filtered |>
   filter(!is.na(relig), !is.na(relig16), cohort %in% 1905:1995,
          year %in% 1974:2024) |>
-  mutate(cohort        = as.numeric(cohort),
-         relig_macro   = classify_relig(relig,   denom,   other),
+  mutate(relig_macro   = classify_relig(relig,   denom,   other),
          relig16_macro = classify_relig(relig16, denom16, oth16))
 
 fig4_cohort_n = count(fig4_base, cohort, name = "total_n")
@@ -267,17 +274,10 @@ fig4_data |>
 ## FIGURE 5: PERSISTENCE BY EDUCATION
 
 fig5_data = data_filtered |>
-  filter(!is.na(relig), !is.na(relig16), !is.na(educ), !is.na(cohort),
-         cohort %in% 1905:1995) |>
-  mutate(cohort = as.numeric(cohort),
-         educ_group = case_when(
-           educ < 12       ~ "Less than HS",
-           educ %in% 12:15 ~ "HS or some college",
-           educ >= 16      ~ "College or more"
-         ),
-         stayed = as.numeric(relig) == as.numeric(relig16)) |>
-  filter(!is.na(educ_group),
-         as.numeric(relig16) != 4) |>
+  filter(!is.na(relig), !is.na(relig16), !is.na(educ_group), !is.na(cohort),
+         cohort %in% 1905:1995,
+         relig16 != 4) |>
+  mutate(stayed = relig == relig16) |>
   group_by(cohort, educ_group) |>
   summarise(pct_stayed = mean(stayed, na.rm = TRUE) * 100, .groups = "drop")
 
@@ -295,16 +295,10 @@ fig5_data |>
 ## FIGURE 6: CURRENTLY VS RAISED CATHOLIC BY EDUCATION AND YEAR
 
 fig6_data = data_filtered |>
-  filter(!is.na(relig), !is.na(relig16), !is.na(educ),
+  filter(!is.na(relig), !is.na(relig16), !is.na(educ_group),
          year %in% 1974:2024) |>
-  mutate(educ_group = case_when(
-           educ < 12       ~ "Less than HS",
-           educ %in% 12:15 ~ "HS or some college",
-           educ >= 16      ~ "College or more"
-         ),
-         currently_catholic = as.numeric(relig)   == 2,
-         raised_catholic    = as.numeric(relig16) == 2) |>
-  filter(!is.na(educ_group)) |>
+  mutate(currently_catholic = relig   == 2,
+         raised_catholic    = relig16 == 2) |>
   group_by(year, educ_group) |>
   summarise(pct_current = mean(currently_catholic, na.rm = TRUE) * 100,
             pct_raised  = mean(raised_catholic,    na.rm = TRUE) * 100,
