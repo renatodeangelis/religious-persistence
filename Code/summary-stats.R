@@ -50,7 +50,9 @@ ggplot(fig1_data, aes(x = year, y = pct, color = series)) +
   labs(x = "Year", y = "Catholic (%)", color = NULL) +
   theme_minimal() +
   theme(legend.position = "bottom")
-  
+
+ggsave("Figures/fig1.png", width = 7, height = 5)
+
 ## HOUT FIGURE 2
 fig2_data = data_filtered |>
   filter(!is.na(relig), !is.na(relig16),
@@ -118,6 +120,8 @@ fig2_data |>
   theme(panel.grid.minor = element_blank(),
         axis.text.y.right = element_text(color = "gray50"))
 
+ggsave("Figures/fig2.png", width = 7, height = 5)
+
 ## HOUT FIGURE 3
 fig3_data = data_filtered |>
   filter(!is.na(relig), !is.na(relig16), !is.na(cohort),
@@ -169,6 +173,8 @@ fig3_data |>
   theme_minimal() +
   theme(panel.grid.minor = element_blank(),
         axis.text.y.right = element_text(color = "gray50"))
+
+ggsave("Figures/fig3.png", width = 7, height = 5)
 
 ## HOUT FIGURE 4
 
@@ -271,6 +277,8 @@ fig4_data |>
         legend.position = "bottom",
         legend.direction = "horizontal")
 
+ggsave("Figures/fig4.png", width = 10, height = 5)
+
 ## FIGURE 5: PERSISTENCE BY EDUCATION
 
 fig5_data = data_filtered |>
@@ -291,6 +299,8 @@ fig5_data |>
   labs(x = "Birth Year", y = "Stayed in origin religion (%)") +
   theme_minimal() +
   theme(panel.grid.minor = element_blank())
+
+ggsave("Figures/fig5.png", width = 10, height = 5)
 
 ## FIGURE 6: CURRENTLY VS RAISED CATHOLIC BY EDUCATION AND YEAR
 
@@ -322,3 +332,5 @@ fig6_data |>
   theme_minimal() +
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom")
+
+ggsave("Figures/fig6.png", width = 10, height = 5)
