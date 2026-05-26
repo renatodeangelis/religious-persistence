@@ -180,6 +180,10 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 
 ---
 
+## Coding Conventions
+
+- Use `=` as the assignment operator, not `<-`
+
 ## Code Files
 
 | File | Purpose |
