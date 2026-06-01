@@ -188,6 +188,50 @@ recall_dat |>
   print()
 
 # ---------------------------------------------------------------------------
+# Recall bias table — concordant-at-W1 subsample
+# Restricted to respondents whose own Wave 1 religion (relig_child_w1)
+# matched their parent's Wave 1 religion (relig_parent_w1). In these
+# households there is no ambiguity about the childhood religious environment,
+# so off-diagonal cells are more clearly attributable to recall error rather
+# than genuine household heterogeneity.
+# ---------------------------------------------------------------------------
+
+recall_concordant = addhealth |>
+  filter(
+    !is.na(relig_parent_w1), !is.na(relig_recall_w3),
+    !is.na(relig_child_w1),
+    relig_child_w1 == relig_parent_w1
+  ) |>
+  mutate(
+    parent  = factor(relig_parent_w1, levels = 0:4, labels = relig_labs),
+    recall  = factor(relig_recall_w3, levels = 0:4, labels = relig_labs)
+  )
+
+cat("\nConcordant-at-W1 subsample: n =", nrow(recall_concordant), "\n")
+cat("(respondents whose own W1 religion matched parent's W1 religion)\n")
+
+recall_tab_conc = table(parent = recall_concordant$parent,
+                        recall = recall_concordant$recall)
+
+cat("\nRecall bias table (concordant-at-W1) — counts:\n")
+print(recall_tab_conc)
+
+cat("\nRecall bias table (concordant-at-W1) — row proportions:\n")
+print(round(prop.table(recall_tab_conc, margin = 1), 3))
+
+recall_concordant = recall_concordant |>
+  mutate(mismatch = parent != recall)
+
+cat("\nOverall mismatch rate (concordant-at-W1):",
+    round(mean(recall_concordant$mismatch), 3), "\n")
+
+cat("\nMismatch rate by actual parental religion (concordant-at-W1):\n")
+recall_concordant |>
+  group_by(parent) |>
+  summarise(n = n(), mismatch_rate = round(mean(mismatch), 3)) |>
+  print()
+
+# ---------------------------------------------------------------------------
 # Child–parent religious discordance at Wave 1
 # How many respondents already differed from their parent's religion at age ~16?
 # relig_child_w1 (H1RE1) vs relig_parent_w1 (PA22)

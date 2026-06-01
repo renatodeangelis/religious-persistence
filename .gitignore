@@ -47,3 +47,14 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# macOS metadata
+.DS_Store
+
+# R default plot output
+Rplots.pdf
+
+# Quarto build artifacts
+.quarto/
+*_files/
+*.html

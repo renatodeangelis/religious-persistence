@@ -88,6 +88,20 @@ and Muslim respondents are collapsed into Other due to thin cell counts.
 
 ---
 
+**Table 4a.** Retrospective recall (H3RE26) by actual parental religion (PA22) — **concordant-at-Wave-1 subsample**. Restricted to respondents whose own Wave 1 religion (H1RE1) matched their parent's religion (PA22); $N = 3{,}364$. In these households there is no ambiguity about the childhood religious environment, so off-diagonal cells more cleanly reflect recall error. Overall mismatch rate = 0.179 (vs. 0.253 in the full sample). Row proportions; diagonal in **bold**.
+
+| | **Recalled: None** | **Recalled: Protestant** | **Recalled: Catholic** | **Recalled: Jewish** | **Recalled: Other** | *Mismatch rate* |
+|---|---|---|---|---|---|---|
+| **PA22: None** | **0.642** | 0.169 | 0.095 | 0.000 | 0.095 | 0.358 |
+| **PA22: Protestant** | 0.057 | **0.792** | 0.042 | 0.002 | 0.107 | 0.208 |
+| **PA22: Catholic** | 0.017 | 0.030 | **0.950** | 0.000 | 0.004 | 0.050 |
+| **PA22: Jewish** | 0.000 | 0.000 | 0.000 | **0.974** | 0.026 | 0.026 |
+| **PA22: Other** | 0.057 | 0.396 | 0.038 | 0.019 | **0.491** | 0.509 |
+
+*Note.* Catholic and Jewish diagonal entries improve substantially relative to Table 4 (0.877 → 0.950; 0.816 → 0.974), consistent with prior household discordance inflating apparent recall error in the full sample. The None and Other categories show persistent high mismatch even in this clean subsample.
+
+---
+
 **Table 5.** Mismatch type by adult religion at Wave 3 (H3RE1). Row percentages. Complete cases ($N = 3{,}812$).
 
 | Adult religion (W3) | Concordant | More secular | More religious | Different religion |
