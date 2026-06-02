@@ -33,7 +33,11 @@ data = gss_all |>
 
 # Matrix power operator (replaces expm::`%^%`)
 `%^%` = function(M, k) {
-  if (k == 0) return(diag(nrow(M)))
+  if (k == 0) {
+    I = diag(nrow(M))
+    dimnames(I) = dimnames(M)
+    return(I)
+  }
   result = M
   for (i in seq_len(k - 1)) result = result %*% M
   result
@@ -87,6 +91,14 @@ im = function(data, origin, current, t = 1) {
   log(im_i)
 }
 
+# IM from a pre-built matrix (reuses P_list_* to avoid recomputing P).
+im_from_P = function(P, t = 1) {
+  pi_s = pi_star(P)
+  P_t  = P %^% t
+  im_i = apply(P_t, 1, function(row_i) tv_norm(row_i, pi_s))
+  setNames(log(im_i), rownames(P))
+}
+
 # ── TRANSITION MATRICES ──────────────────────────────────────────────────────
 
 states_alt = sort(unique(c(data$reltrad_alt, data$reltrad16_alt)))
@@ -127,6 +139,21 @@ for (coh in cohorts_10) {
   pi0_list_10[[key]]    = pi_0(sub, "reltrad16_alt")
   pistar_list_10[[key]] = pi_star(P_list_10[[key]])
 }
+
+# ── IM LOOP (10-year cohorts, t = 0:4) ──────────────────────────────────────
+im_rows_10 = vector("list", length(P_list_10))
+names(im_rows_10) = names(P_list_10)
+
+for (key in names(P_list_10)) {
+  rows = lapply(0:4, function(t) {
+    vals = im_from_P(P_list_10[[key]], t = t)
+    data.frame(cohort = as.integer(key), t = t, origin = names(vals), im = vals,
+               row.names = NULL)
+  })
+  im_rows_10[[key]] = do.call(rbind, rows)
+}
+
+im_df_10 = do.call(rbind, im_rows_10)
 
 # ── FIGURES ───────────────────────────────────────────────────────────────────
 
@@ -201,4 +228,25 @@ for (key in names(P_list_5)) {
   ggsave(paste0("output/figures/trans_", key, "_5yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
+
+# ── IM FIGURE ────────────────────────────────────────────────────────────────
+im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
+
+p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  facet_wrap(~ cohort, nrow = 2) +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_continuous(breaks = 0:4) +
+  labs(x = "Step (t)", y = "log(TV distance from π*)",
+       color = "Origin", title = "Individual Memory by Cohort (10-year bins, t = 0–4)") +
+  theme_minimal() +
+  theme(
+    strip.text      = element_text(size = 12),
+    legend.position = "bottom",
+    legend.title    = element_text(size = 12),
+    legend.text     = element_text(size = 11)
+  )
+
+ggsave("output/figures/im_memory_10yr.png", p_im, width = 12, height = 7, dpi = 200)
 
