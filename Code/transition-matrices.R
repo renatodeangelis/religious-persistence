@@ -147,6 +147,20 @@ mob_rows = lapply(1920:1980, function(coh) {
 })
 mob_df = do.call(rbind, Filter(Negate(is.null), mob_rows))
 
+# ── EXCHANGE/STRUCTURAL MOBILITY (10-year cohorts, t = 0:4) ──────────────────
+
+em_sm_rows_10 = lapply(names(P_list_10), function(key) {
+  P   = P_list_10[[key]]
+  pi0 = pi0_list_10[[key]]
+  lapply(0:4, function(t) {
+    om_v = overall_mobility(P, mu_t(pi0, P, t))
+    sm_v = sm(P, pi0, t)
+    data.frame(cohort = as.integer(key), t = t, EM = om_v - sm_v, SM = sm_v, OM = om_v,
+               row.names = NULL)
+  })
+})
+em_sm_df_10 = do.call(rbind, unlist(em_sm_rows_10, recursive = FALSE))
+
 # ── NATIONAL FIGURES ──────────────────────────────────────────────────────────
 
 dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
@@ -224,6 +238,35 @@ p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
   theme_minimal()
 
 ggsave("output/figures/mobility_pooled.png", p_mob, width = 9, height = 5, dpi = 200)
+
+em_sm_long = pivot_longer(em_sm_df_10, cols = c(EM, OM),
+                           names_to = "measure", values_to = "value")
+
+p_em_sm = ggplot(em_sm_long, aes(x = t, y = value, color = measure,
+                                  linetype = measure, shape = measure, group = measure)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  facet_wrap(~ cohort, nrow = 2) +
+  scale_color_manual(name   = "Measure",
+                     values = c(EM = "#D55E00", OM = "#0072B2"),
+                     labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
+  scale_linetype_manual(name   = "Measure",
+                        values = c(EM = "dashed", OM = "solid"),
+                        labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
+  scale_shape_manual(name   = "Measure",
+                     values = c(EM = 17, OM = 16),
+                     labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
+  scale_x_continuous(breaks = 0:4) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(x = "Step (t)", y = "Probability to move",
+       title = "Exchange and Structural Mobility by Cohort (10-year bins, t = 0–4)") +
+  theme_minimal() +
+  theme(strip.text      = element_text(size = 12),
+        legend.position = "bottom",
+        legend.title    = element_text(size = 12),
+        legend.text     = element_text(size = 11))
+
+ggsave("output/figures/em_sm_10yr.png", p_em_sm, width = 12, height = 7, dpi = 200)
 
 # ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
 

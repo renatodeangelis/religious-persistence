@@ -79,6 +79,24 @@ overall_mobility = function(P, pi0 = NULL) {
   1 - sum(pi0 * diag(P))
 }
 
+# Marginal distribution of origin states at generation t.
+mu_t = function(pi0, P, t = 0) {
+  if (t == 0) return(as.numeric(pi0))
+  as.numeric(pi0 %*% (P %^% t))
+}
+
+# Structural mobility: TV distance between the marginal at t and t+1.
+sm = function(P, pi0, t = 0) {
+  mu  = mu_t(pi0, P, t)
+  mu1 = as.numeric(mu %*% P)
+  tv_norm(mu, mu1)
+}
+
+# Exchange mobility: overall mobility minus structural component.
+em = function(P, pi0, t = 0) {
+  overall_mobility(P, mu_t(pi0, P, t)) - sm(P, pi0, t)
+}
+
 # ── PLOTTING HELPERS ─────────────────────────────────────────────────────────
 
 plot_pmat_heatmap = function(P, levels = NULL, text_size = 5, title_str = "P") {
