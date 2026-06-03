@@ -34,10 +34,10 @@ data = gss_all |>
     cohort_10  = floor((cohort - 1900) / 10) * 10 + 1900,
     cohort_20  = floor((cohort - 1900) / 20) * 20 + 1900,
     region_broad = case_when(
-      as.numeric(region) %in% 1:2 ~ "Northeast",
-      as.numeric(region) %in% 3:4 ~ "Midwest",
-      as.numeric(region) %in% 5:7 ~ "South",
-      as.numeric(region) %in% 8:9 ~ "West",
+      as.numeric(region) == 1 ~ "Northeast",
+      as.numeric(region) == 2 ~ "Midwest",
+      as.numeric(region) == 3 ~ "South",
+      as.numeric(region) == 4 ~ "West",
       TRUE ~ NA_character_
     )
   )
@@ -153,21 +153,24 @@ dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_5)) {
   p = make_combined(P_list_5[[key]], pi0_list_5[[key]], pistar_list_5[[key]],
-                    levels = rel_level_order, title_str = paste("Cohort", key))
+                    levels = rel_level_order,
+                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 4))
   ggsave(paste0("output/figures/trans_", key, "_5yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
 for (key in names(P_list_10)) {
   p = make_combined(P_list_10[[key]], pi0_list_10[[key]], pistar_list_10[[key]],
-                    levels = rel_level_order, title_str = paste("Cohort", key))
+                    levels = rel_level_order,
+                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 9))
   ggsave(paste0("output/figures/trans_", key, "_10yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
 for (key in names(P_list_20)) {
   p = make_combined(P_list_20[[key]], pi0_list_20[[key]], pistar_list_20[[key]],
-                    levels = rel_level_order, title_str = paste("Cohort", key))
+                    levels = rel_level_order,
+                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 19))
   ggsave(paste0("output/figures/trans_", key, "_20yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
@@ -215,7 +218,7 @@ ggsave("output/figures/im_memory_20yr.png", p_im_20, width = 10, height = 5, dpi
 p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
   geom_point(size = 1.5, alpha = 0.6) +
   geom_smooth(method = "loess", se = TRUE, span = 0.4) +
-  scale_y_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(x = "Birth cohort", y = "Overall mobility (1 − weighted diagonal)",
        title = "Religious Mobility by Birth Cohort (pooled, 1-year bins)") +
   theme_minimal()
@@ -284,9 +287,11 @@ mob_reg_df = do.call(rbind,
 dir.create("output/figures/region", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_reg)) {
+  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  reg_lbl = gsub("_", " ", sub("_\\d{4}$", "", key))
   p = make_combined(P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
                     levels = rel_level_order,
-                    title_str = gsub("_", " – ", key))
+                    title_str = paste0(reg_lbl, " – ", coh_yr, "–", coh_yr + 19))
   ggsave(paste0("output/figures/region/trans_", key, "_20yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
@@ -297,11 +302,10 @@ for (reg in regions_broad) {
   for (coh in cohorts_20) {
     key = paste(reg, coh, sep = "_")
     if (!is.null(P_list_reg[[key]])) {
-      grid_plots[[idx]] = plot_pmat_heatmap(
-        P_list_reg[[key]],
+      grid_plots[[idx]] = make_combined(
+        P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
         levels    = rel_level_order,
-        text_size = 3,
-        title_str = paste0(reg, "\n", coh)
+        title_str = paste0(reg, "\n", coh, "–", coh + 19)
       )
     } else {
       grid_plots[[idx]] = patchwork::plot_spacer()
@@ -315,7 +319,7 @@ p_grid_reg = patchwork::wrap_plots(grid_plots,
                                     ncol = length(cohorts_20))
 
 ggsave("output/figures/region/trans_grid_region_20yr.png", p_grid_reg,
-       width = 18, height = 20, dpi = 200)
+       width = 30, height = 20, dpi = 200)
 
 mob_reg_df$region = factor(mob_reg_df$region, levels = regions_broad)
 
@@ -323,7 +327,7 @@ p_mob_reg = ggplot(mob_reg_df, aes(x = cohort, y = mobility)) +
   geom_point(size = 1.5, alpha = 0.6) +
   geom_smooth(method = "loess", se = TRUE, span = 0.5) +
   facet_wrap(~ region, nrow = 2) +
-  scale_y_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(x = "Birth cohort", y = "Overall mobility (1 − weighted diagonal)",
        title = "Religious Mobility by Birth Cohort and Region (1-year bins)") +
   theme_minimal() +
