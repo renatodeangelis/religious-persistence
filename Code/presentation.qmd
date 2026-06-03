@@ -1,0 +1,104 @@
+---
+title: "Religious Persistence"
+format:
+  html:
+    embed-resources: true
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    fig-align: center
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(magick)
+
+cohorts_5yr = c(
+  "1920","1925","1930","1935","1940","1945",
+  "1950","1955","1960","1965","1970","1975","1980"
+)
+
+frames = lapply(cohorts_5yr, function(coh) {
+  img = image_read(paste0("../output/figures/trans_", coh, "_5yr.png"))
+  image_scale(img, "1200")
+})
+
+gif = image_animate(image_join(frames), fps = 1, optimize = TRUE)
+image_write(gif, "../output/figures/trans_cohort_5yr_anim.gif")
+```
+
+## Transition Matrices
+
+### Diachronic change
+
+![](../output/figures/trans_cohort_5yr_anim.gif)
+
+### By cohort
+
+::: {.panel-tabset}
+
+## 1920–1929
+![](../output/figures/trans_1920_10yr.png)
+
+## 1930–1939
+![](../output/figures/trans_1930_10yr.png)
+
+## 1940–1949
+![](../output/figures/trans_1940_10yr.png)
+
+## 1950–1959
+![](../output/figures/trans_1950_10yr.png)
+
+## 1960–1969
+![](../output/figures/trans_1960_10yr.png)
+
+## 1970–1979
+![](../output/figures/trans_1970_10yr.png)
+
+## 1980–1989
+![](../output/figures/trans_1980_10yr.png)
+
+:::
+
+## Exchange and Structural Mobility
+
+![](../output/figures/em_sm_10yr.png)
+
+## Intergenerational Memory Curves
+
+::: {.panel-tabset}
+
+## 10-year cohorts
+![](../output/figures/im_memory_10yr.png)
+
+## 20-year cohorts
+![](../output/figures/im_memory_20yr.png)
+
+:::
+
+## Regional Breakdowns
+
+### Transition matrices
+
+::: {.panel-tabset}
+
+## Midwest
+![](../output/figures/region/trans_grid_Midwest_20yr.png)
+
+## Northeast
+![](../output/figures/region/trans_grid_Northeast_20yr.png)
+
+## South
+![](../output/figures/region/trans_grid_South_20yr.png)
+
+## West
+![](../output/figures/region/trans_grid_West_20yr.png)
+
+:::
+
+### Mobility by region
+
+![](../output/figures/region/mobility_region.png)

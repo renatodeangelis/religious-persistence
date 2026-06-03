@@ -339,30 +339,23 @@ for (key in names(P_list_reg)) {
          width = 10, height = 7, dpi = 200)
 }
 
-grid_plots = vector("list", length(regions_broad) * length(cohorts_20))
-idx = 1
 for (reg in regions_broad) {
-  for (coh in cohorts_20) {
+  reg_plots = lapply(cohorts_20, function(coh) {
     key = paste(reg, coh, sep = "_")
     if (!is.null(P_list_reg[[key]])) {
-      grid_plots[[idx]] = make_combined(
+      make_combined(
         P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
         levels    = rel_level_order,
         title_str = paste0(reg, "\n", coh, "–", coh + 19)
       )
     } else {
-      grid_plots[[idx]] = patchwork::plot_spacer()
+      patchwork::plot_spacer()
     }
-    idx = idx + 1
-  }
+  })
+  p_reg = patchwork::wrap_plots(reg_plots, nrow = 1, ncol = length(cohorts_20))
+  fname = paste0("output/figures/region/trans_grid_", gsub(" ", "_", reg), "_20yr.png")
+  ggsave(fname, p_reg, width = 30, height = 7, dpi = 200)
 }
-
-p_grid_reg = patchwork::wrap_plots(grid_plots,
-                                    nrow = length(regions_broad),
-                                    ncol = length(cohorts_20))
-
-ggsave("output/figures/region/trans_grid_region_20yr.png", p_grid_reg,
-       width = 30, height = 20, dpi = 200)
 
 mob_reg_df$region = factor(mob_reg_df$region, levels = regions_broad)
 
