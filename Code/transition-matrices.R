@@ -15,7 +15,7 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 
 data(gss_all)
 data = gss_all |>
-  select(year, cohort, reltrad, reltrad16, region) |>
+  select(year, cohort, reltrad, reltrad16, region, evolved, abany, homosex, premarsx, pornlaw) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -33,6 +33,11 @@ data = gss_all |>
     cohort_5   = floor((cohort - 1900) / 5)  * 5  + 1900,
     cohort_10  = floor((cohort - 1900) / 10) * 10 + 1900,
     cohort_20  = floor((cohort - 1900) / 20) * 20 + 1900,
+    cohort_3   = case_when(
+      cohort < 1940                  ~ "1900-1939",
+      cohort >= 1940 & cohort < 1960 ~ "1940-1959",
+      cohort >= 1960                 ~ paste0("1960-", max(cohort, na.rm = TRUE))
+    ),
     region_broad = case_when(
       as.numeric(region) == 1 ~ "Northeast",
       as.numeric(region) == 2 ~ "Midwest",
@@ -46,6 +51,202 @@ data = gss_all |>
 
 states_alt = sort(unique(c(data$reltrad_alt, data$reltrad16_alt)))
 states_alt = states_alt[!is.na(states_alt)]
+
+# ── ATTITUDE BINARY RECODES ───────────────────────────────────────────────────
+# GSS codings:
+#   evolved:   1 = True, 2 = False
+#   abany:     1 = Yes (any reason), 2 = No
+#   homosex:   1 = Always wrong … 4 = Not wrong at all  → 1–2 conservative, 3–4 liberal
+#   premarsx:  1 = Always wrong … 4 = Not wrong at all  → 1–2 conservative, 3–4 liberal
+#   pornlaw:   1 = Illegal to all, 2 = Illegal under 18, 3 = Legal to all → 1 conservative, 2–3 liberal
+
+data = data |>
+  mutate(
+    evolved_bin  = case_when(evolved  == 1 ~ 1L, evolved  == 2 ~ 0L),
+    abany_bin    = case_when(abany    == 1 ~ 1L, abany    == 2 ~ 0L),
+    homosex_bin  = case_when(homosex  %in% 3:4 ~ 1L, homosex  %in% 1:2 ~ 0L),
+    premarsx_bin = case_when(premarsx %in% 3:4 ~ 1L, premarsx %in% 1:2 ~ 0L),
+    pornlaw_bin  = case_when(pornlaw  %in% 2:3 ~ 1L, pornlaw  == 1      ~ 0L)
+  )
+
+# ── COVERAGE SUMMARY ─────────────────────────────────────────────────────────
+
+att_vars_all = c(
+  "evolved_bin", "abany_bin",
+  "homosex_bin", "premarsx_bin", "pornlaw_bin"
+)
+
+att_coverage = lapply(att_vars_all, function(v) {
+  data |>
+    filter(!is.na(reltrad_alt), !is.na(reltrad16_alt)) |>
+    summarise(
+      variable  = v,
+      n_liberal = sum(.data[[v]] == 1L, na.rm = TRUE),
+      n_conserv = sum(.data[[v]] == 0L, na.rm = TRUE),
+      n_missing = sum(is.na(.data[[v]])),
+      pct_cover = round((n_liberal + n_conserv) / n() * 100, 1)
+    )
+}) |> bind_rows()
+
+print(att_coverage, n = Inf)
+
+# ── CELL-COUNT FEASIBILITY (20-year cohort windows) ──────────────────────────
+
+att_check_vars = c(
+  "evolved_bin", "abany_bin",
+  "homosex_bin", "premarsx_bin", "pornlaw_bin"
+)
+
+cell_rows = list()
+
+for (v in att_check_vars) {
+  for (grp in c(0L, 1L)) {
+    for (coh in c(1920, 1940, 1960, 1980)) {
+      sub = data[
+        !is.na(data$cohort_20) & data$cohort_20 == coh &
+        !is.na(data[[v]])      & data[[v]]       == grp, ]
+      if (nrow(sub) == 0) next
+      tab = table(
+        factor(sub$reltrad16_alt, levels = states_alt),
+        factor(sub$reltrad_alt,   levels = states_alt)
+      )
+      cell_rows[[length(cell_rows) + 1]] = data.frame(
+        variable  = v,
+        group     = if (grp == 1L) "liberal" else "conservative",
+        cohort    = coh,
+        n         = nrow(sub),
+        min_cell  = min(tab),
+        cells_lt5 = sum(tab < 5),
+        cells_0   = sum(tab == 0),
+        row.names = NULL
+      )
+    }
+  }
+}
+
+cell_df = do.call(rbind, cell_rows)
+
+print(cell_df, row.names = FALSE)
+
+# ── ATTITUDE MATRICES: POOLED (no cohort stratification) ─────────────────────
+# Mean birth year is tabulated to show cohort composition of each stratum.
+# Note: item coverage varies by GSS year — inspect mean_cohort for drift.
+
+att_vars = c("evolved_bin", "abany_bin", "homosex_bin", "premarsx_bin", "pornlaw_bin")
+
+P_list_att_pooled   = list()
+pi0_list_att_pooled = list()
+pooled_summary_rows = list()
+
+for (v in att_vars) {
+  for (grp in c(0L, 1L)) {
+    sub = data[!is.na(data$reltrad_alt) & !is.na(data$reltrad16_alt) &
+               !is.na(data[[v]])        & data[[v]] == grp, ]
+    if (nrow(sub) < 30) next
+    grp_lbl = if (grp == 1L) "liberal" else "conservative"
+    key     = paste(v, grp_lbl, sep = "_")
+
+    P_list_att_pooled[[key]]   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+    pi0_list_att_pooled[[key]] = pi_0(sub, "reltrad16_alt")
+
+    pooled_summary_rows[[key]] = data.frame(
+      variable      = v,
+      group         = grp_lbl,
+      n             = nrow(sub),
+      mean_cohort   = round(mean(sub$cohort,   na.rm = TRUE), 1),
+      median_cohort = median(sub$cohort, na.rm = TRUE),
+      row.names     = NULL
+    )
+  }
+}
+
+pooled_summary = do.call(rbind, pooled_summary_rows)
+print(pooled_summary, row.names = FALSE)
+
+# ── ATTITUDE MATRICES: THREE-COHORT STRATIFICATION ───────────────────────────
+# Groups: pre-1940 / 1940-1959 / 1960+ (open-ended)
+
+max_cohort_yr   = max(data$cohort, na.rm = TRUE)
+cohort_3_levels = c("1900-1939", "1940-1959", paste0("1960-", max_cohort_yr))
+
+P_list_att_3coh   = list()
+pi0_list_att_3coh = list()
+coh3_summary_rows = list()
+
+for (v in att_vars) {
+  for (grp in c(0L, 1L)) {
+    for (cg in cohort_3_levels) {
+      sub = data[!is.na(data$reltrad_alt) & !is.na(data$reltrad16_alt) &
+                 !is.na(data[[v]])        & data[[v]]     == grp &
+                 !is.na(data$cohort_3)   & data$cohort_3 == cg, ]
+      if (nrow(sub) < 30) next
+      grp_lbl = if (grp == 1L) "liberal" else "conservative"
+      key     = paste(v, grp_lbl, cg, sep = "_")
+
+      P_list_att_3coh[[key]]   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+      pi0_list_att_3coh[[key]] = pi_0(sub, "reltrad16_alt")
+
+      coh3_summary_rows[[key]] = data.frame(
+        variable    = v,
+        group       = grp_lbl,
+        cohort_grp  = cg,
+        n           = nrow(sub),
+        mean_cohort = round(mean(sub$cohort, na.rm = TRUE), 1),
+        row.names   = NULL
+      )
+    }
+  }
+}
+
+coh3_summary = do.call(rbind, coh3_summary_rows)
+print(coh3_summary, row.names = FALSE)
+
+# ── ATTITUDE FIGURES ──────────────────────────────────────────────────────────
+
+att_labels = c(
+  evolved_bin  = "Evolution",
+  abany_bin    = "Abortion (any reason)",
+  homosex_bin  = "Homosexuality",
+  premarsx_bin = "Premarital sex",
+  pornlaw_bin  = "Pornography law"
+)
+
+dir.create("output/figures/attitude/pooled", recursive = TRUE, showWarnings = FALSE)
+dir.create("output/figures/attitude/3coh",   recursive = TRUE, showWarnings = FALSE)
+
+for (v in att_vars) {
+  for (grp_lbl in c("conservative", "liberal")) {
+    key = paste(v, grp_lbl, sep = "_")
+    if (is.null(P_list_att_pooled[[key]])) next
+    P       = P_list_att_pooled[[key]]
+    pi0     = pi0_list_att_pooled[[key]]
+    pistar  = pi_star(P)
+    med_coh = pooled_summary$median_cohort[pooled_summary$variable == v &
+                                             pooled_summary$group    == grp_lbl]
+    ttl     = paste0(att_labels[v], " — ", tools::toTitleCase(grp_lbl), " (pooled)")
+    p       = make_combined(P, pi0, pistar, levels = rel_level_order, title_str = ttl) +
+                patchwork::plot_annotation(subtitle = paste0("Median birth cohort: ", med_coh))
+    ggsave(paste0("output/figures/attitude/pooled/", key, ".png"),
+           p, width = 10, height = 7, dpi = 200)
+  }
+}
+
+for (v in att_vars) {
+  for (grp_lbl in c("conservative", "liberal")) {
+    for (cg in cohort_3_levels) {
+      key = paste(v, grp_lbl, cg, sep = "_")
+      if (is.null(P_list_att_3coh[[key]])) next
+      P      = P_list_att_3coh[[key]]
+      pi0    = pi0_list_att_3coh[[key]]
+      pistar = pi_star(P)
+      ttl    = paste0(att_labels[v], " — ", tools::toTitleCase(grp_lbl), " — ", cg)
+      p      = make_combined(P, pi0, pistar, levels = rel_level_order, title_str = ttl)
+      safe_cg = gsub("[^a-zA-Z0-9]", "_", cg)
+      ggsave(paste0("output/figures/attitude/3coh/", v, "_", grp_lbl, "_", safe_cg, ".png"),
+             p, width = 10, height = 7, dpi = 200)
+    }
+  }
+}
 
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
