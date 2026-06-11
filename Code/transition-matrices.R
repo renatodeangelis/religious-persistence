@@ -572,3 +572,112 @@ p_mob_reg = ggplot(mob_reg_df, aes(x = cohort, y = mobility)) +
 
 ggsave("output/figures/region/mobility_region.png", p_mob_reg,
        width = 11, height = 7, dpi = 200)
+
+# ── BINARY (AFFILIATED / UNAFFILIATED) 2×2 MATRICES ──────────────────────────
+# Affiliated = any reltrad_alt other than "none"; unaffiliated = "none"
+
+data = data |>
+  mutate(
+    belief   = if_else(reltrad_alt   == "none", "unaffiliated", "affiliated"),
+    belief16 = if_else(reltrad16_alt == "none", "unaffiliated", "affiliated")
+  )
+
+states_2x2 = c("affiliated", "unaffiliated")
+
+cohorts_10_2x2 = sort(unique(
+  data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1920 & data$cohort_10 <= 1980]
+))
+
+P_list_2x2      = list()
+pi0_list_2x2    = list()
+pistar_list_2x2 = list()
+n_list_2x2      = list()
+
+for (coh in cohorts_10_2x2) {
+  sub = data[!is.na(data$cohort_10) & data$cohort_10 == coh &
+               !is.na(data$belief16) & !is.na(data$belief), ]
+  if (nrow(sub) < 30) next
+  key = as.character(coh)
+
+  P_list_2x2[[key]]      = p_matrix(sub, "belief16", "belief", levels = states_2x2)
+  pi0_list_2x2[[key]]    = pi_0(sub, "belief16")
+  pistar_list_2x2[[key]] = pi_star(P_list_2x2[[key]])
+  n_list_2x2[[key]]      = nrow(sub)
+}
+
+# Print matrices with N
+for (key in names(P_list_2x2)) {
+  cat("\n── Cohort", key, "–", as.integer(key) + 9, "  (N =", n_list_2x2[[key]], ") ──\n")
+  print(round(P_list_2x2[[key]], 3))
+}
+
+# ── FIGURES: individual make_combined heatmaps per cohort ────────────────────
+
+dir.create("output/figures/binary", recursive = TRUE, showWarnings = FALSE)
+
+for (key in names(P_list_2x2)) {
+  p = make_combined(
+    P_list_2x2[[key]], pi0_list_2x2[[key]], pistar_list_2x2[[key]],
+    levels    = states_2x2,
+    title_str = paste0("Cohort ", key, "–", as.integer(key) + 9,
+                       "  (N = ", n_list_2x2[[key]], ")")
+  )
+  ggsave(paste0("output/figures/binary/trans_", key, "_10yr_2x2.png"),
+         p, width = 7, height = 5, dpi = 200)
+}
+
+# ── FIGURE: all 4 cells over cohorts ─────────────────────────────────────────
+
+cells_2x2 = do.call(rbind, lapply(names(P_list_2x2), function(key) {
+  P   = P_list_2x2[[key]]
+  df  = as.data.frame(as.table(P), stringsAsFactors = FALSE)
+  names(df) = c("origin", "current", "prob")
+  df$cohort = as.integer(key)
+  df
+}))
+
+p_cells_2x2 = ggplot(cells_2x2,
+    aes(x = cohort, y = prob, color = current, group = current)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  facet_wrap(~ origin, nrow = 1,
+             labeller = labeller(origin = c(
+               affiliated   = "Origin: Affiliated",
+               unaffiliated = "Origin: Unaffiliated"))) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+  scale_color_manual(
+    values = c(affiliated = "#0072B2", unaffiliated = "#D55E00"),
+    labels = c(affiliated = "→ Affiliated", unaffiliated = "→ Unaffiliated")) +
+  labs(x = "Birth cohort (10-year bins)", y = "Transition probability",
+       color = NULL,
+       title = "2×2 Transition Probabilities by Birth Cohort") +
+  theme_minimal() +
+  theme(legend.position = "bottom", strip.text = element_text(size = 11))
+
+ggsave("output/figures/binary/cells_2x2_10yr.png", p_cells_2x2,
+       width = 10, height = 5, dpi = 200)
+
+# ── FIGURE: diagonal persistence over cohorts ─────────────────────────────────
+
+persistence_2x2 = do.call(rbind, lapply(names(P_list_2x2), function(key) {
+  P = P_list_2x2[[key]]
+  data.frame(cohort = as.integer(key), state = rownames(P),
+             persistence = diag(P), row.names = NULL)
+}))
+
+p_persist_2x2 = ggplot(persistence_2x2,
+    aes(x = cohort, y = persistence, color = state, group = state)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
+  scale_color_manual(
+    values = c(affiliated = "#0072B2", unaffiliated = "#D55E00")) +
+  labs(x = "Birth cohort (10-year bins)",
+       y = "Diagonal persistence P[i → i]",
+       color = "Origin state",
+       title = "Diagonal Persistence: Affiliated vs. Unaffiliated (10-year cohorts)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+ggsave("output/figures/binary/persistence_2x2_10yr.png", p_persist_2x2,
+       width = 8, height = 5, dpi = 200)
