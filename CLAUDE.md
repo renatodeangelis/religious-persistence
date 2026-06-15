@@ -51,18 +51,6 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 
 ---
 
-## State Space Decision
-
-**Leading candidate**: 3–4 category scheme grounded in the boundary-maintenance literature (Iannaccone, Kelley): high-boundary (conservative evangelical, Mormon, Orthodox Jewish), low-boundary (mainline Protestant, Catholic), none, and possibly other/residual.
-
-**Fallback**: Binary affiliated/unaffiliated if cell counts are too thin.
-
-**Fine-grained (7+ categories)**: Not viable due to small-cell problems.
-
-A Goodman RC(1) association model could estimate a latent ordering — if it recovers something like the boundary-maintenance gradient, the nominality problem is partially dissolved empirically.
-
----
-
 ## Measurement Section Architecture
 
 Present **before** the main findings, organized around three questions:
@@ -152,7 +140,7 @@ Hout (2017): ~20% of Americans are "liminal" (cycling between affiliation and no
 
 1. **Add Health codebook**: Does any later wave ask the adult child a retrospective "what religion were you raised in?" question? If yes, Add Health becomes the ideal recall-bias diagnostic.
 2. **Pew ATP**: Has the childhood religion item been asked at multiple ATP waves separated by enough time to test recall drift? Worth contacting Pew directly.
-3. **State-space construction**: Requires cell-count analysis. Boundary-maintenance 3–4 category scheme is leading candidate; binary affiliated/unaffiliated is the fallback.
+3. **State-space construction**: Requires cell-count analysis. 3–4 category scheme is leading candidate; binary affiliated/unaffiliated is the fallback.
 4. **λ₂ CI width**: If CIs are too wide to detect cohort trends, emphasis shifts from eigenvalue trends to diagonal persistence and Altham indices, with memory curves becoming illustrative.
 5. **Ysseldyk et al. citation error**: The Overleaf file currently has the Myers (1996) title on the Ysseldyk et al. (2010) entry — needs correction.
 
