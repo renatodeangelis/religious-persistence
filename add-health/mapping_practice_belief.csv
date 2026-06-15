@@ -1,0 +1,95 @@
+"variable","raw_code","codebook_label","domain","wave","missing_flag"
+"PA23",1,"once a week or more","attendance","W1_parent",0
+"PA23",2,"less than once a week, but at least once a month","attendance","W1_parent",0
+"PA23",3,"less than once a month","attendance","W1_parent",0
+"PA23",4,"never","attendance","W1_parent",0
+"PA23",6,"refused","attendance","W1_parent",1
+"PA23",7,"legitimate skip [no religion]","attendance","W1_parent",1
+"H1RE3",1,"once a week or more","attendance","W1_child",0
+"H1RE3",2,"once a month or more, but less than once a week","attendance","W1_child",0
+"H1RE3",3,"less than once a month","attendance","W1_child",0
+"H1RE3",4,"never","attendance","W1_child",0
+"H1RE3",6,"refused","attendance","W1_child",1
+"H1RE3",7,"legitimate skip [no religion]","attendance","W1_child",1
+"H1RE3",8,"don't know","attendance","W1_child",1
+"H4RE7",0,"never","attendance","W4_child",0
+"H4RE7",1,"a few times","attendance","W4_child",0
+"H4RE7",2,"once a month","attendance","W4_child",0
+"H4RE7",3,"2 or 3 times a month","attendance","W4_child",0
+"H4RE7",4,"once a week","attendance","W4_child",0
+"H4RE7",5,"more than once a week","attendance","W4_child",0
+"H4RE7",8,"don't know","attendance","W4_child",1
+"H5RE2",1,"never","attendance","W5_child",0
+"H5RE2",2,"a few times","attendance","W5_child",0
+"H5RE2",3,"once a month","attendance","W5_child",0
+"H5RE2",4,"2 or 3 times a month","attendance","W5_child",0
+"H5RE2",5,"once a week","attendance","W5_child",0
+"H5RE2",6,"more than once a week","attendance","W5_child",0
+"PA24",1,"very important","salience","W1_parent",0
+"PA24",2,"fairly important","salience","W1_parent",0
+"PA24",3,"fairly unimportant","salience","W1_parent",0
+"PA24",4,"not important at all","salience","W1_parent",0
+"PA24",6,"refused","salience","W1_parent",1
+"PA24",7,"legitimate skip [no religion]","salience","W1_parent",1
+"H1RE4",1,"very important","salience","W1_child",0
+"H1RE4",2,"fairly important","salience","W1_child",0
+"H1RE4",3,"fairly unimportant","salience","W1_child",0
+"H1RE4",4,"not important at all","salience","W1_child",0
+"H1RE4",6,"refused","salience","W1_child",1
+"H1RE4",7,"legitimate skip [no religion]","salience","W1_child",1
+"H1RE4",8,"don't know","salience","W1_child",1
+"H4RE9",1,"not important","salience","W4_child",0
+"H4RE9",2,"somewhat important","salience","W4_child",0
+"H4RE9",3,"very important","salience","W4_child",0
+"H4RE9",4,"more important than anything else","salience","W4_child",0
+"H4RE9",6,"refused","salience","W4_child",1
+"H4RE9",8,"don't know","salience","W4_child",1
+"H5RE3",1,"not important","salience","W5_child",0
+"H5RE3",2,"somewhat important","salience","W5_child",0
+"H5RE3",3,"very important","salience","W5_child",0
+"H5RE3",4,"more important than anything else","salience","W5_child",0
+"PA25",1,"at least once a day","prayer","W1_parent",0
+"PA25",2,"at least once a week","prayer","W1_parent",0
+"PA25",3,"at least once a month","prayer","W1_parent",0
+"PA25",4,"from time to time, but less than once a month","prayer","W1_parent",0
+"PA25",5,"never","prayer","W1_parent",0
+"PA25",6,"refused","prayer","W1_parent",1
+"PA25",7,"legitimate skip [no religion]","prayer","W1_parent",1
+"H1RE6",1,"at least once a day","prayer","W1_child",0
+"H1RE6",2,"at least once a week","prayer","W1_child",0
+"H1RE6",3,"at least once a month","prayer","W1_child",0
+"H1RE6",4,"less than once a month","prayer","W1_child",0
+"H1RE6",5,"never","prayer","W1_child",0
+"H1RE6",6,"refused","prayer","W1_child",1
+"H1RE6",7,"legitimate skip [no religion]","prayer","W1_child",1
+"H1RE6",8,"don't know","prayer","W1_child",1
+"H4RE10",0,"never","prayer","W4_child",0
+"H4RE10",1,"less than once a month","prayer","W4_child",0
+"H4RE10",2,"once a month","prayer","W4_child",0
+"H4RE10",3,"a few times a month","prayer","W4_child",0
+"H4RE10",4,"once a week","prayer","W4_child",0
+"H4RE10",5,"a few times a week","prayer","W4_child",0
+"H4RE10",6,"once a day","prayer","W4_child",0
+"H4RE10",7,"more than once a day","prayer","W4_child",0
+"H4RE10",96,"refused","prayer","W4_child",1
+"H4RE10",98,"don't know","prayer","W4_child",1
+"H5RE4",1,"never","prayer","W5_child",0
+"H5RE4",2,"less than once a month","prayer","W5_child",0
+"H5RE4",3,"once a month","prayer","W5_child",0
+"H5RE4",4,"a few times a month","prayer","W5_child",0
+"H5RE4",5,"once a week","prayer","W5_child",0
+"H5RE4",6,"a few times a week","prayer","W5_child",0
+"H5RE4",7,"once a day","prayer","W5_child",0
+"H5RE4",8,"more than once a day","prayer","W5_child",0
+"PA26",1,"agree","scripture","W1_parent",0
+"PA26",2,"disagree","scripture","W1_parent",0
+"PA26",3,"Religion has no sacred scriptures","scripture","W1_parent",0
+"PA26",6,"refused","scripture","W1_parent",1
+"PA26",7,"legitimate skip [no religion]","scripture","W1_parent",1
+"PA26",8,"don't know","scripture","W1_parent",1
+"H1RE2",1,"agree","scripture","W1_child",0
+"H1RE2",2,"disagree","scripture","W1_child",0
+"H1RE2",3,"Religion doesn't have sacred scriptures","scripture","W1_child",0
+"H1RE2",6,"refused","scripture","W1_child",1
+"H1RE2",7,"legitimate skip [no religion]","scripture","W1_child",1
+"H1RE2",8,"don't know","scripture","W1_child",1
