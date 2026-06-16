@@ -19,254 +19,21 @@ w4inhome = readRDS(file.path(dir_data, "w4inhome.rds")) |>
   janitor::clean_names()
 
 addhealth = inner_join(w1inhome, w4inhome, by = "aid") |>
-  filter(!is.na(pa22), pa22 != 96) |>
+  filter(!is.na(pa22), pa22 != 96, !(h4re1 %in% c(96, 98))) |>
   mutate(reltrad_parent = case_when(
     pa22 == 7 ~ "catholic",
     pa22 %in% c(6, 11, 14, 16, 18, 17, 19, 24, 27) ~ "other",
     pa22 == 28 ~ "none",
     pa22 %in% c(8, 9, 10, 12, 13, 20, 21, 26) ~ "mainline",
     pa22 %in% c(1, 2, 3, 5, 15, 23, 25) ~ "conservative"),
-  reltrad_child_w1 = case_when(
-    h1re1 = 0 ~ "none",
-    
-  ))
+  reltrad_child_w4 = case_when(
+    h4re1 == 1 ~ "none",
+    h4re1 == 3 ~ "catholic",
+    h4re1 %in% c(5, 6, 7, 8, 9) ~ "other",
+    h4re6 %in% c(2, 9, 14, 15, 16, 21, 28, 30, 34, 36, 38, 39) ~ "mainline",
+    h4re6 %in% c(3, 4, 5, 6, 7, 8, 10, 12, 13, 18, 19, 20, 22, 23, 24, 25, 26, 27, 31, 32, 33, 41, 42) ~ "conservative")) |>
+  filter(!is.na(reltrad_child_w4))
 
-# ── STATE SPACE ───────────────────────────────────────────────────────────────
-# state3 = Christian / Non-Christian / None  (pre-coded in .rds files)
-# state4 = Catholic / Protestant+other Christian / Non-Christian / None
-# state5 = RELTRAD-style 5-category scheme (added below):
-#   Mainline Protestant    — Disciples, Congregational, Episcopal, Friends,
-#                            Lutheran, Methodist, Presbyterian, UCC,
-#                            "other Protestant"
-#   Evangelical Protestant — Baptist, Assemblies of God, Holiness, Pentecostal,
-#                            Adventist, AME/CME, National Baptist
-#   Catholic               — Catholic only
-#   Other                  — non-Christian religions (Jewish, Muslim, Buddhist,
-#                            Hindu, Baha'i, other religion) + ambiguous Christian
-#                            groups (JW, Mormon, Eastern Orthodox, Christian
-#                            Science, Unitarian)
-#   None                   — no religion / atheist / agnostic
-#
-# Wave IV/V constraint: H4RE1/H5RE1 code 2 ("Protestant") cannot be split into
-# Mainline vs. Evangelical without the H4RE6 denomination follow-up. Those
-# respondents are coded NA in child_state5; use denomination_wave4 for a
-# fine-grained Wave IV matrix.
-
-# ── state4 on mapping table ───────────────────────────────────────────────────
-
-mapping_affiliation = mapping_affiliation |>
-  mutate(
-    state4 = case_when(
-      variable == "PA22"  & raw_code == 7L  ~ "Catholic",
-      variable == "H1RE1" & raw_code == 22L ~ "Catholic",
-      variable == "H4RE1" & raw_code == 3L  ~ "Catholic",
-      variable == "H5RE1" & raw_code == 3L  ~ "Catholic",
-      state3 == "Christian"                 ~ "Protestant / other Christian",
-      !is.na(state3)                        ~ state3,
-      TRUE                                  ~ NA_character_
-    ),
-    state5 = case_when(
-      # Catholic
-      variable == "PA22"  & raw_code == 7L  ~ "Catholic",
-      variable == "H1RE1" & raw_code == 22L ~ "Catholic",
-      variable == "H4RE1" & raw_code == 3L  ~ "Catholic",
-      variable == "H5RE1" & raw_code == 3L  ~ "Catholic",
-      # None
-      variable == "PA22"  & raw_code == 28L ~ "None",
-      variable == "H1RE1" & raw_code == 0L  ~ "None",
-      variable %in% c("H4RE1", "H5RE1") & raw_code == 1L ~ "None",
-      # Mainline Protestant (Wave I variables only — PA22 and H1RE1)
-      variable == "PA22"  & raw_code %in% c(8L, 10L, 12L, 13L, 20L, 21L, 23L, 26L) ~ "Mainline Protestant",
-      variable == "H1RE1" & raw_code %in% c(5L, 7L, 8L, 9L, 13L, 14L, 17L, 18L, 19L) ~ "Mainline Protestant",
-      # Evangelical Protestant (Wave I variables only)
-      variable == "PA22"  & raw_code %in% c(1L, 2L, 3L, 5L, 15L, 25L) ~ "Evangelical Protestant",
-      variable == "H1RE1" & raw_code %in% c(1L, 2L, 3L, 4L, 10L, 15L, 16L) ~ "Evangelical Protestant",
-      # Other: non-Christian + ambiguous Christian groups
-      variable == "PA22"  & raw_code %in% c(6L, 9L, 11L, 14L, 16L, 17L, 18L, 19L, 24L, 27L) ~ "Other",
-      variable == "H1RE1" & raw_code %in% c(6L, 11L, 12L, 20L, 21L, 23L, 24L, 25L, 26L, 27L, 28L) ~ "Other",
-      # H4RE1/H5RE1 code 2 (Protestant) = NA — can't split without H4RE6
-      variable %in% c("H4RE1", "H5RE1") & raw_code == 2L ~ NA_character_,
-      variable == "H4RE1" & raw_code %in% c(4L, 5L, 6L, 7L, 8L, 9L) ~ "Other",
-      variable == "H5RE1" & raw_code %in% c(4L, 5L, 6L, 9L)          ~ "Other",
-      TRUE ~ NA_character_
-    )
-  )
-
-# ── state4 on affiliation dataframes ─────────────────────────────────────────
-
-affiliation_wave1 = affiliation_wave1 |>
-  mutate(
-    parent_state4 = case_when(
-      PA22  == 7L                   ~ "Catholic",
-      parent_state3 == "Christian"  ~ "Protestant / other Christian",
-      !is.na(parent_state3)         ~ parent_state3,
-      TRUE                          ~ NA_character_
-    ),
-    child_state4 = case_when(
-      H1RE1 == 22L                  ~ "Catholic",
-      child_state3 == "Christian"   ~ "Protestant / other Christian",
-      !is.na(child_state3)          ~ child_state3,
-      TRUE                          ~ NA_character_
-    ),
-    parent_state5 = case_when(
-      PA22 == 7L                                          ~ "Catholic",
-      PA22 == 28L                                         ~ "None",
-      PA22 %in% c(8L, 10L, 12L, 13L, 20L, 21L, 23L, 26L) ~ "Mainline Protestant",
-      PA22 %in% c(1L, 2L, 3L, 5L, 15L, 25L)              ~ "Evangelical Protestant",
-      PA22 %in% c(6L, 9L, 11L, 14L, 16L, 17L,
-                  18L, 19L, 24L, 27L)                    ~ "Other",
-      TRUE                                               ~ NA_character_
-    ),
-    child_state5 = case_when(
-      H1RE1 == 22L                                        ~ "Catholic",
-      H1RE1 == 0L                                         ~ "None",
-      # "other Protestant": born-again (H1RE5 == 1) → Evangelical; else → Mainline
-      H1RE1 == 19L & H1RE5 == 1L                          ~ "Evangelical Protestant",
-      H1RE1 == 19L                                        ~ "Mainline Protestant",
-      H1RE1 %in% c(5L, 7L, 8L, 9L, 13L, 14L, 17L, 18L)  ~ "Mainline Protestant",
-      H1RE1 %in% c(1L, 2L, 3L, 4L, 10L, 15L, 16L)        ~ "Evangelical Protestant",
-      H1RE1 %in% c(6L, 11L, 12L, 20L, 21L, 23L,
-                   24L, 25L, 26L, 27L, 28L)              ~ "Other",
-      TRUE                                               ~ NA_character_
-    )
-  )
-
-affiliation_wave4 = affiliation_wave4 |>
-  mutate(
-    parent_state4 = case_when(
-      PA22  == 7L                   ~ "Catholic",
-      parent_state3 == "Christian"  ~ "Protestant / other Christian",
-      !is.na(parent_state3)         ~ parent_state3,
-      TRUE                          ~ NA_character_
-    ),
-    child_state4 = case_when(
-      H4RE1 == 3L                   ~ "Catholic",
-      child_state3 == "Christian"   ~ "Protestant / other Christian",
-      !is.na(child_state3)          ~ child_state3,
-      TRUE                          ~ NA_character_
-    ),
-    parent_state5 = case_when(
-      PA22 == 7L                                          ~ "Catholic",
-      PA22 == 28L                                         ~ "None",
-      PA22 %in% c(8L, 10L, 12L, 13L, 20L, 21L, 23L, 26L) ~ "Mainline Protestant",
-      PA22 %in% c(1L, 2L, 3L, 5L, 15L, 25L)              ~ "Evangelical Protestant",
-      PA22 %in% c(6L, 9L, 11L, 14L, 16L, 17L,
-                  18L, 19L, 24L, 27L)                    ~ "Other",
-      TRUE                                               ~ NA_character_
-    ),
-    # H4RE1 code 2 (Protestant) → NA: cannot split Mainline vs. Evangelical
-    child_state5 = case_when(
-      H4RE1 == 1L                              ~ "None",
-      H4RE1 == 3L                              ~ "Catholic",
-      H4RE1 %in% c(4L, 5L, 6L, 7L, 8L, 9L)   ~ "Other",
-      TRUE                                    ~ NA_character_
-    )
-  )
-
-affiliation_wave5 = affiliation_wave5 |>
-  mutate(
-    parent_state4 = case_when(
-      PA22  == 7L                   ~ "Catholic",
-      parent_state3 == "Christian"  ~ "Protestant / other Christian",
-      !is.na(parent_state3)         ~ parent_state3,
-      TRUE                          ~ NA_character_
-    ),
-    child_state4 = case_when(
-      H5RE1 == 3L                   ~ "Catholic",
-      child_state3 == "Christian"   ~ "Protestant / other Christian",
-      !is.na(child_state3)          ~ child_state3,
-      TRUE                          ~ NA_character_
-    ),
-    parent_state5 = case_when(
-      PA22 == 7L                                          ~ "Catholic",
-      PA22 == 28L                                         ~ "None",
-      PA22 %in% c(8L, 10L, 12L, 13L, 20L, 21L, 23L, 26L) ~ "Mainline Protestant",
-      PA22 %in% c(1L, 2L, 3L, 5L, 15L, 25L)              ~ "Evangelical Protestant",
-      PA22 %in% c(6L, 9L, 11L, 14L, 16L, 17L,
-                  18L, 19L, 24L, 27L)                    ~ "Other",
-      TRUE                                               ~ NA_character_
-    ),
-    # H5RE1 code 2 (Protestant) → NA: cannot split Mainline vs. Evangelical
-    child_state5 = case_when(
-      H5RE1 == 1L                        ~ "None",
-      H5RE1 == 3L                        ~ "Catholic",
-      H5RE1 %in% c(4L, 5L, 6L, 9L)      ~ "Other",
-      TRUE                              ~ NA_character_
-    )
-  )
-
-# ── COMPLETE-CASE INDICATORS: AFFILIATION ─────────────────────────────────────
-
-affiliation_wave1 = affiliation_wave1 |>
-  mutate(
-    weight_valid     = !is.na(GSWGT1)   & GSWGT1   > 0,
-    complete_dyad_s3 = weight_valid & !is.na(parent_state3) & !is.na(child_state3),
-    complete_dyad_s4 = weight_valid & !is.na(parent_state4) & !is.na(child_state4),
-    complete_dyad_s5 = weight_valid & !is.na(parent_state5) & !is.na(child_state5)
-  )
-affiliation_wave4 = affiliation_wave4 |>
-  mutate(
-    weight_valid     = !is.na(GSWGT4_2) & GSWGT4_2 > 0,
-    complete_dyad_s3 = weight_valid & !is.na(parent_state3) & !is.na(child_state3),
-    complete_dyad_s4 = weight_valid & !is.na(parent_state4) & !is.na(child_state4),
-    complete_dyad_s5 = weight_valid & !is.na(parent_state5) & !is.na(child_state5)
-  )
-affiliation_wave5 = affiliation_wave5 |>
-  mutate(
-    weight_valid     = !is.na(GSW5)     & GSW5     > 0,
-    complete_dyad_s3 = weight_valid & !is.na(parent_state3) & !is.na(child_state3),
-    complete_dyad_s4 = weight_valid & !is.na(parent_state4) & !is.na(child_state4),
-    complete_dyad_s5 = weight_valid & !is.na(parent_state5) & !is.na(child_state5)
-  )
-
-# ── COMPLETE-CASE INDICATORS: DENOMINATION ───────────────────────────────────
-
-denomination_wave1 = denomination_wave1 |>
-  mutate(
-    weight_valid  = !is.na(GSWGT1)   & GSWGT1   > 0,
-    complete_dyad = weight_valid & !is.na(parent_state7) & !is.na(child_state7)
-  )
-denomination_wave4 = denomination_wave4 |>
-  mutate(
-    weight_valid  = !is.na(GSWGT4_2) & GSWGT4_2 > 0,
-    complete_dyad = weight_valid & !is.na(parent_state7) & !is.na(child_state7)
-  )
-
-# ── COMPLETE-CASE INDICATORS: PRACTICE / BELIEF ───────────────────────────────
-
-attendance_wave1 = attendance_wave1 |>
-  mutate(weight_valid  = !is.na(GSWGT1)   & GSWGT1   > 0,
-         complete_dyad = weight_valid & !is.na(PA23_harm) & !is.na(H1RE3_harm))
-attendance_wave4 = attendance_wave4 |>
-  mutate(weight_valid  = !is.na(GSWGT4_2) & GSWGT4_2 > 0,
-         complete_dyad = weight_valid & !is.na(PA23_harm) & !is.na(H4RE7_harm))
-attendance_wave5 = attendance_wave5 |>
-  mutate(weight_valid  = !is.na(GSW5)     & GSW5     > 0,
-         complete_dyad = weight_valid & !is.na(PA23_harm) & !is.na(H5RE2_harm))
-
-salience_wave1 = salience_wave1 |>
-  mutate(weight_valid  = !is.na(GSWGT1)   & GSWGT1   > 0,
-         complete_dyad = weight_valid & !is.na(PA24_harm) & !is.na(H1RE4_harm))
-salience_wave4 = salience_wave4 |>
-  mutate(weight_valid  = !is.na(GSWGT4_2) & GSWGT4_2 > 0,
-         complete_dyad = weight_valid & !is.na(PA24_harm) & !is.na(H4RE9_harm))
-salience_wave5 = salience_wave5 |>
-  mutate(weight_valid  = !is.na(GSW5)     & GSW5     > 0,
-         complete_dyad = weight_valid & !is.na(PA24_harm) & !is.na(H5RE3_harm))
-
-prayer_wave1 = prayer_wave1 |>
-  mutate(weight_valid  = !is.na(GSWGT1)   & GSWGT1   > 0,
-         complete_dyad = weight_valid & !is.na(PA25_harm) & !is.na(H1RE6_harm))
-prayer_wave4 = prayer_wave4 |>
-  mutate(weight_valid  = !is.na(GSWGT4_2) & GSWGT4_2 > 0,
-         complete_dyad = weight_valid & !is.na(PA25_harm) & !is.na(H4RE10_harm))
-prayer_wave5 = prayer_wave5 |>
-  mutate(weight_valid  = !is.na(GSW5)     & GSW5     > 0,
-         complete_dyad = weight_valid & !is.na(PA25_harm) & !is.na(H5RE4_harm))
-
-scripture_wave1 = scripture_wave1 |>
-  mutate(weight_valid  = !is.na(GSWGT1)   & GSWGT1   > 0,
-         complete_dyad = weight_valid & !is.na(PA26_harm) & !is.na(H1RE2_harm))
 
 # ── SCALE LABELS (parent Wave I benchmark) ────────────────────────────────────
 
@@ -375,3 +142,74 @@ hm_cohort_grid = function(mats, section_title, zmax, cell_size = 4.2, axis_size 
 # ── TRANSITION MATRICES ───────────────────────────────────────────────────────
 # Add matrix estimation code below, adapting state variable names to match
 # whichever state coding is implemented above.
+
+# ── 5×5 RELTRAD MATRIX SPLIT BY PARENT RELIGIOSITY (PA23–PA26) ───────────────
+# PA23–PA26 are used as splitting variables, not states. For each variable,
+# dichotomize and estimate the main 5×5 reltrad transition matrix separately
+# for each subgroup. Unweighted for now.
+
+ah_split = addhealth |>
+  mutate(
+    # Out-of-range codes (96/97/98) become NA via case_when
+    pa23_d = case_when(pa23 %in% 1:2 ~ "high", pa23 %in% 3:4 ~ "low"),   # >= monthly vs. < monthly
+    pa24_d = case_when(pa24 %in% 1:2 ~ "high", pa24 %in% 3:4 ~ "low"),   # important vs. unimportant
+    pa25_d = case_when(pa25 %in% 1:2 ~ "high", pa25 %in% 3:5 ~ "low"),   # >= weekly vs. less frequent
+    pa26_d = case_when(pa26 == 1L    ~ "high", pa26 %in% 2:3 ~ "low")    # agree vs. disagree/no scriptures
+  )
+
+reltrad_lvls = c("conservative", "mainline", "catholic", "other", "none")
+
+# ── HELPER: unweighted 5×5 reltrad matrix for a data subset ──────────────────
+
+reltrad_mat = function(data, label) {
+  sub = data |>
+    filter(!is.na(reltrad_parent), !is.na(reltrad_child_w4)) |>
+    mutate(
+      parent_f = factor(reltrad_parent,   levels = reltrad_lvls),
+      child_f  = factor(reltrad_child_w4, levels = reltrad_lvls)
+    )
+  cat(sprintf("\n─── %s  (N = %d) ───\n", label, nrow(sub)))
+  tab = table(parent = sub$parent_f, child = sub$child_f)
+  if (sum(tab == 0) > 0) cat("NOTE:", sum(tab == 0), "zero cell(s)\n")
+  cat("Row-normalised transition matrix:\n")
+  print(round(prop.table(tab, 1), 3))
+  cat("Cell counts:\n")
+  print(tab)
+  invisible(list(P = prop.table(tab, 1), tab = tab, n = nrow(sub)))
+}
+
+# ── PA23: service attendance ──────────────────────────────────────────────────
+
+cat("\n\n======= PA23: Service attendance =======\n")
+cat("Cutpoint: >= monthly (high) vs. < monthly (low)\n")
+print(table(ah_split$pa23_d, useNA = "ifany"))
+
+res_att_high = reltrad_mat(filter(ah_split, pa23_d == "high"), "PA23 high (>= monthly)")
+res_att_low  = reltrad_mat(filter(ah_split, pa23_d == "low"),  "PA23 low  (< monthly)")
+
+# ── PA24: importance of religion ──────────────────────────────────────────────
+
+cat("\n\n======= PA24: Importance of religion =======\n")
+cat("Cutpoint: important (high) vs. unimportant (low)\n")
+print(table(ah_split$pa24_d, useNA = "ifany"))
+
+res_sal_high = reltrad_mat(filter(ah_split, pa24_d == "high"), "PA24 high (important)")
+res_sal_low  = reltrad_mat(filter(ah_split, pa24_d == "low"),  "PA24 low  (unimportant)")
+
+# ── PA25: prayer frequency ────────────────────────────────────────────────────
+
+cat("\n\n======= PA25: Prayer frequency =======\n")
+cat("Cutpoint: >= weekly (high) vs. less frequent (low)\n")
+print(table(ah_split$pa25_d, useNA = "ifany"))
+
+res_pray_high = reltrad_mat(filter(ah_split, pa25_d == "high"), "PA25 high (>= weekly)")
+res_pray_low  = reltrad_mat(filter(ah_split, pa25_d == "low"),  "PA25 low  (< weekly)")
+
+# ── PA26: scripture inerrancy ─────────────────────────────────────────────────
+
+cat("\n\n======= PA26: Scripture inerrancy =======\n")
+cat("Cutpoint: agree (high) vs. disagree or no sacred scriptures (low)\n")
+print(table(ah_split$pa26_d, useNA = "ifany"))
+
+res_scr_high = reltrad_mat(filter(ah_split, pa26_d == "high"), "PA26 high (agree)")
+res_scr_low  = reltrad_mat(filter(ah_split, pa26_d == "low"),  "PA26 low  (disagree / no scriptures)")
