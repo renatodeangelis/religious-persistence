@@ -1,23 +1,15 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(haven)
-library(janitor)
 
 # ---------------------------------------------------------------------------
-# Load Add Health data (Wave 1 and Wave 3 in-home surveys, RData format)
-# Object name in both files is "x"; load into isolated environments to rename
+# Load Add Health data (Wave 1 and Wave 3 in-home surveys)
 # ---------------------------------------------------------------------------
 
-e1 = new.env()
-load("~/Downloads/w1inhome_dvn.RData", envir = e1)
-addhealth_w1 = e1$x
+dir_data = "add-health"
 
-e3 = new.env()
-load("~/Downloads/w3inhome_dvn.RData", envir = e3)
-addhealth_w3 = e3$x
-
-rm(e1, e3)
+addhealth_w1 = readRDS(file.path(dir_data, "w1inhome.rds"))
+addhealth_w3 = readRDS(file.path(dir_data, "w3inhome.rds"))
 
 glimpse(addhealth_w1)
 glimpse(addhealth_w3)
@@ -25,14 +17,14 @@ glimpse(addhealth_w3)
 # ---------------------------------------------------------------------------
 # Extract religion variables and unique identifier
 # W1: AID (respondent ID), H1RE1 (respondent religion), PA22 (parent religion)
-# W3: aid (lowercase in this wave), h3re1 (respondent religion at Wave 3)
+# W3: AID, H3RE1 (respondent religion at Wave 3), H3RE26 (recalled childhood religion)
 # ---------------------------------------------------------------------------
 
 w1_relig = addhealth_w1 |>
   select(AID, H1RE1, PA22)
 
 w3_relig = addhealth_w3 |>
-  select(AID = aid, H3RE1 = h3re1, H3RE26 = h3re26)
+  select(AID, H3RE1, H3RE6, H3RE26)
 
 glimpse(w1_relig)
 glimpse(w3_relig)
@@ -51,22 +43,15 @@ cat("Joined rows:", nrow(addhealth), "\n")
 cat("Dropped (W1 attrition):", nrow(w1_relig) - nrow(addhealth), "\n")
 
 # ---------------------------------------------------------------------------
-# Recode religion variables to a common 7-category scheme
-#
-# Categories:
-#   0 = None / atheist / agnostic
-#   1 = Protestant  (incl. JW, LDS, Christian Science, Unitarian, "just Christian")
-#   2 = Catholic
-#   3 = Jewish
-#   4 = Buddhist
-#   5 = Hindu
-#   6 = Moslem
-#   7 = Other       (Eastern Orthodox, Baha'i, Other religion)
-#   NA = Refused / Don't know / Not applicable
+# Recode PA22, H3RE1, and H3RE26 to a 4-category scheme:
+#   "None", "Protestant", "Catholic", "Other"
+# H1RE1 (respondent's own W1 religion) uses the same scheme for concordance checks.
+# Jewish, Buddhist, Hindu, Islam etc. all collapse to "Other".
+# Variables are ordered factors with labels like "(22) Catholic"; extract the
+# leading numeric code into temporary columns, recode, then drop temporaries.
 # ---------------------------------------------------------------------------
 
-# Variables are ordered factors with labels like "(22) Catholic"; extract the
-# leading numeric code into temporary columns, recode, then drop temporaries
+relig_lvls = c("None", "Protestant", "Catholic", "Other")
 
 addhealth = addhealth |>
   mutate(
@@ -76,58 +61,48 @@ addhealth = addhealth |>
     .h3re1  = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H3RE1))),
     .h3re26 = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H3RE26))),
 
-    # H1RE1: respondent's current religion at Wave 1
-    # 0=None, 1–19=Protestant denominations, 20=Baha'i, 21=Buddhist, 22=Catholic,
-    # 23=Eastern Orthodox, 24=Hindu, 25=Islam, 26=Jewish, 27=Unitarian, 28=Other religion
-    relig_child_w1 = case_when(
-      .h1re1 == 0                ~ 0L,  # None
-      .h1re1 %in% c(1:19, 27)   ~ 1L,  # Protestant
-      .h1re1 == 22               ~ 2L,  # Catholic
-      .h1re1 == 26               ~ 3L,  # Jewish
-      .h1re1 %in% c(20, 21, 23, 24, 25, 28) ~ 4L,  # Other
-      TRUE                       ~ NA_integer_
+    # H1RE1: respondent's own religion at Wave 1
+    # 0=None, 1–19=Protestant denominations, 22=Catholic, 27=Unitarian → Protestant
+    # 20=Baha'i, 21=Buddhist, 23=E. Orthodox, 24=Hindu, 25=Islam, 26=Jewish, 28=Other → Other
+    h1re1_relig = case_when(
+      .h1re1 == 0                               ~ "None",
+      .h1re1 %in% c(1:19, 27)                   ~ "Protestant",
+      .h1re1 == 22                               ~ "Catholic",
+      .h1re1 %in% c(20, 21, 23, 24, 25, 26, 28) ~ "Other",
+      TRUE                                       ~ NA_character_
     ),
 
     # PA22: parent's self-reported religion at Wave 1
-    # 1–3=Protestant, 5=Baptist, 6=Buddhist, 7=Catholic, 8–10=Protestant,
-    # 11=Eastern Orthodox, 12–13=Protestant, 14=Hindu, 15=Protestant, 16=Islam,
-    # 17=JW, 18=Jewish, 19=LDS, 20–21=Protestant, 23=Other Protestant,
-    # 24=Other religion, 25–27=Protestant, 28=None
-    relig_parent_w1 = case_when(
-      .pa22 == 28                                       ~ 0L,  # None
+    # 7=Catholic; 28=None; Protestant denominations → Protestant
+    # 6=Buddhist, 11=E. Orthodox, 14=Hindu, 16=Islam, 18=Jewish, 24=Other → Other
+    pa22_relig = case_when(
+      .pa22 == 28                                            ~ "None",
       .pa22 %in% c(1:3, 5, 8:10, 12:13, 15, 17, 19:21,
-                   23, 25:27)                           ~ 1L,  # Protestant
-      .pa22 == 7                                        ~ 2L,  # Catholic
-      .pa22 == 18                                       ~ 3L,  # Jewish
-      .pa22 %in% c(6, 11, 14, 16, 24)                   ~ 4L,  # Other
-      TRUE                                              ~ NA_integer_
+                   23, 25:27)                               ~ "Protestant",
+      .pa22 == 7                                             ~ "Catholic",
+      .pa22 %in% c(6, 11, 14, 16, 18, 24)                   ~ "Other",
+      TRUE                                                   ~ NA_character_
     ),
 
-    # H3RE1: respondent's current religion at Wave 3
-    # "just Christian" (8) collapsed into Protestant (1)
-    relig_adult_w3 = case_when(
-      .h3re1 == 0           ~ 0L,  # None
-      .h3re1 %in% c(1, 8)  ~ 1L,  # Protestant
-      .h3re1 == 2           ~ 2L,  # Catholic
-      .h3re1 == 3           ~ 3L,  # Jewish
-      .h3re1 %in% c(4, 5, 6, 7) ~ 4L,  # Other
-      TRUE                  ~ NA_integer_
+    # H3RE1: respondent's current religion at Wave 3 ("just Christian" (8) → Protestant)
+    h3re1_relig = case_when(
+      .h3re1 == 0                    ~ "None",
+      .h3re1 %in% c(1, 8)           ~ "Protestant",
+      .h3re1 == 2                    ~ "Catholic",
+      .h3re1 %in% c(3, 4, 5, 6, 7)  ~ "Other",
+      TRUE                           ~ NA_character_
     ),
 
     # H3RE26: retrospective recall of childhood religion at Wave 3
-    # Same scheme as H3RE1
-    relig_recall_w3 = case_when(
-      .h3re26 == 0          ~ 0L,  # None
-      .h3re26 %in% c(1, 8)       ~ 1L,  # Protestant
-      .h3re26 == 2                ~ 2L,  # Catholic
-      .h3re26 == 3                ~ 3L,  # Jewish
-      .h3re26 %in% c(4, 5, 6, 7) ~ 4L,  # Other
-      TRUE                  ~ NA_integer_
+    h3re26_relig = case_when(
+      .h3re26 == 0                    ~ "None",
+      .h3re26 %in% c(1, 8)           ~ "Protestant",
+      .h3re26 == 2                    ~ "Catholic",
+      .h3re26 %in% c(3, 4, 5, 6, 7)  ~ "Other",
+      TRUE                            ~ NA_character_
     )
   ) |>
   select(-.h1re1, -.pa22, -.h3re1, -.h3re26)
-
-relig_labs = c("None", "Protestant", "Catholic", "Jewish", "Other")
 
 # ---------------------------------------------------------------------------
 # PA22 missingness diagnostic
@@ -138,8 +113,8 @@ relig_labs = c("None", "Protestant", "Catholic", "Jewish", "Other")
 
 miss_tab = addhealth |>
   mutate(
-    pa22_missing  = is.na(relig_parent_w1),
-    child_relig   = factor(relig_child_w1, levels = 0:4, labels = relig_labs)
+    pa22_missing  = is.na(pa22_relig),
+    child_relig   = factor(h1re1_relig, levels = relig_lvls)
   ) |>
   count(child_relig, pa22_missing) |>
   group_by(pa22_missing) |>
@@ -160,10 +135,10 @@ print(miss_tab |> tidyr::pivot_wider(names_from = pa22_missing,
 # ---------------------------------------------------------------------------
 
 recall_dat = addhealth |>
-  filter(!is.na(relig_parent_w1), !is.na(relig_recall_w3)) |>
+  filter(!is.na(pa22_relig), !is.na(h3re26_relig)) |>
   mutate(
-    parent  = factor(relig_parent_w1, levels = 0:4, labels = relig_labs),
-    recall  = factor(relig_recall_w3, levels = 0:4, labels = relig_labs)
+    parent  = factor(pa22_relig,    levels = relig_lvls),
+    recall  = factor(h3re26_relig,  levels = relig_lvls)
   )
 
 # Raw counts
@@ -198,13 +173,13 @@ recall_dat |>
 
 recall_concordant = addhealth |>
   filter(
-    !is.na(relig_parent_w1), !is.na(relig_recall_w3),
-    !is.na(relig_child_w1),
-    relig_child_w1 == relig_parent_w1
+    !is.na(pa22_relig), !is.na(h3re26_relig),
+    !is.na(h1re1_relig),
+    h1re1_relig == pa22_relig
   ) |>
   mutate(
-    parent  = factor(relig_parent_w1, levels = 0:4, labels = relig_labs),
-    recall  = factor(relig_recall_w3, levels = 0:4, labels = relig_labs)
+    parent  = factor(pa22_relig,   levels = relig_lvls),
+    recall  = factor(h3re26_relig, levels = relig_lvls)
   )
 
 cat("\nConcordant-at-W1 subsample: n =", nrow(recall_concordant), "\n")
@@ -240,10 +215,10 @@ recall_concordant |>
 # ---------------------------------------------------------------------------
 
 discord_dat = addhealth |>
-  filter(!is.na(relig_child_w1), !is.na(relig_parent_w1)) |>
+  filter(!is.na(h1re1_relig), !is.na(pa22_relig)) |>
   mutate(
-    child  = factor(relig_child_w1, levels = 0:4, labels = relig_labs),
-    parent = factor(relig_parent_w1, levels = 0:4, labels = relig_labs),
+    child   = factor(h1re1_relig, levels = relig_lvls),
+    parent  = factor(pa22_relig,  levels = relig_lvls),
     discord = child != parent
   )
 
@@ -271,12 +246,12 @@ print(table(parent = discord_dat$parent, child = discord_dat$child))
 # ---------------------------------------------------------------------------
 
 endogeneity_dat = addhealth |>
-  filter(!is.na(relig_parent_w1), !is.na(relig_recall_w3),
-         !is.na(relig_adult_w3)) |>
+  filter(!is.na(pa22_relig), !is.na(h3re26_relig),
+         !is.na(h3re1_relig)) |>
   mutate(
-    adult  = factor(relig_adult_w3,  levels = 0:4, labels = relig_labs),
-    parent = factor(relig_parent_w1, levels = 0:4, labels = relig_labs),
-    recall = factor(relig_recall_w3, levels = 0:4, labels = relig_labs),
+    adult  = factor(h3re1_relig,  levels = relig_lvls),
+    parent = factor(pa22_relig,   levels = relig_lvls),
+    recall = factor(h3re26_relig, levels = relig_lvls),
     mismatch_type = case_when(
       recall == parent                          ~ "Concordant",
       recall == "None" & parent != "None"       ~ "Recalled more secular",
@@ -338,9 +313,9 @@ print(or_tab, row.names = FALSE)
 # ---------------------------------------------------------------------------
 
 logreg_dat2 = logreg_dat |>
-  filter(!is.na(relig_child_w1)) |>
+  filter(!is.na(h1re1_relig)) |>
   mutate(child_f = relevel(
-    factor(relig_child_w1, levels = 0:4, labels = relig_labs),
+    factor(h1re1_relig, levels = relig_lvls),
     ref = "Protestant"
   ))
 

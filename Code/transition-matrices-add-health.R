@@ -1,10 +1,4 @@
-library(haven)
 library(dplyr)
-library(tidyr)
-library(survey)
-library(ggplot2)
-library(forcats)
-library(patchwork)
 
 # ── PATHS ─────────────────────────────────────────────────────────────────────
 # Set dir_data to the folder containing the Add Health .rds and .csv files
@@ -35,113 +29,7 @@ addhealth = inner_join(w1inhome, w4inhome, by = "aid") |>
   filter(!is.na(reltrad_child_w4))
 
 
-# ── SCALE LABELS (parent Wave I benchmark) ────────────────────────────────────
-
-att_lbl = c("1" = ">=once/wk",  "2" = ">=once/mo",
-            "3" = "<once/mo",   "4" = "never")
-sal_lbl = c("1" = "very important",      "2" = "fairly important",
-            "3" = "fairly unimportant",  "4" = "not important at all")
-pra_lbl = c("1" = ">=once/day", "2" = ">=once/wk",
-            "3" = ">=once/mo",  "4" = "<once/mo", "5" = "never")
-scr_lbl = c("1" = "agree", "2" = "disagree", "3" = "no sacred scriptures")
-
-# ── HELPER FUNCTIONS ──────────────────────────────────────────────────────────
-
-# Heatmap of a row-normalised transition matrix
-make_hm = function(pmat, title, zmax, n = NULL, cell_size = 4.2, axis_size = 11) {
-  subtitle = if (!is.null(n)) paste0("N = ", format(n, big.mark = ","), " complete dyads") else ""
-  df = as.data.frame(pmat)
-  colnames(df) = c("parent_state", "child_state", "pct")
-  df$pct = df$pct * 100
-  lvls_r = rownames(pmat); lvls_c = colnames(pmat)
-  df = df |>
-    mutate(
-      parent_state = factor(parent_state, levels = lvls_r),
-      child_state  = factor(child_state,  levels = lvls_c),
-      text_col     = ifelse(pct > zmax * 0.55, "white", "grey15")
-    )
-  ggplot(df, aes(x = child_state, y = fct_rev(parent_state), fill = pct)) +
-    geom_tile(color = "white", linewidth = 0.6) +
-    geom_text(aes(label = sprintf("%.1f%%", pct), color = text_col),
-              fontface = "bold", size = cell_size) +
-    scale_color_identity() +
-    scale_fill_gradient(low = "#f7fbff", high = "#08306b",
-                        limits = c(0, zmax), name = "Row %") +
-    theme_minimal(base_size = 10) +
-    theme(
-      panel.grid  = element_blank(),
-      axis.text.x = element_text(angle = 20, hjust = 1, size = axis_size, face = "bold"),
-      axis.text.y = element_text(size = axis_size, face = "bold"),
-      axis.title  = element_text(size = axis_size, face = "bold"),
-      plot.title  = element_text(face = "bold", size = 10),
-      plot.subtitle = element_text(color = "grey40", size = 8)
-    ) +
-    labs(title = title, subtitle = subtitle, x = "Child State", y = "Parent State")
-}
-
-# Shared colour ceiling from a list of row-normalised matrices
-compute_zmax = function(list_of_pmat) {
-  max(unlist(lapply(list_of_pmat, as.numeric)), na.rm = TRUE) * 100
-}
-
-# Replace integer dimnames with string labels from a named lookup vector
-relabel_tab = function(tab, row_lbl, col_lbl = row_lbl) {
-  rn = rownames(tab); cn = colnames(tab)
-  if (!is.null(row_lbl)) rownames(tab) = row_lbl[rn]
-  if (!is.null(col_lbl)) colnames(tab) = col_lbl[cn]
-  tab
-}
-
-# Bin birth years into cohort intervals of a given width
-make_cohort_bins = function(birth_years, binwidth, start_year = NULL) {
-  if (is.null(start_year)) start_year = min(birth_years, na.rm = TRUE)
-  bin_idx   = floor((birth_years - start_year) / binwidth)
-  bin_start = start_year + bin_idx * binwidth
-  bin_end   = bin_start + binwidth - 1L
-  ifelse(is.na(birth_years), NA_character_, paste0(bin_start, "-", bin_end))
-}
-
-# Survey-weighted transition matrices stratified by birth-cohort bin
-cohort_svytable = function(df, wt_col, fmla,
-                           complete_col = "complete_dyad",
-                           lbl_vec      = NULL,
-                           binwidth     = 5) {
-  df2  = df |> mutate(cohort_bin = make_cohort_bins(birth_year, binwidth))
-  des  = svydesign(ids     = ~CLUSTER2,
-                   weights = as.formula(paste0("~", wt_col)),
-                   data    = subset(df2, weight_valid),
-                   nest    = TRUE)
-  bins = df2 |>
-    filter(.data[[complete_col]] == TRUE, !is.na(cohort_bin)) |>
-    pull(cohort_bin) |> unique() |> sort()
-  lapply(setNames(bins, bins), function(b) {
-    cond  = parse(text = sprintf("%s == TRUE & cohort_bin == '%s'", complete_col, b))
-    sub_d = subset(des, eval(cond))
-    tab   = svytable(fmla, design = sub_d)
-    if (!is.null(lbl_vec)) tab = relabel_tab(tab, lbl_vec)
-    n = sum(df2[[complete_col]] == TRUE & !is.na(df2$cohort_bin) &
-              df2$cohort_bin == b, na.rm = TRUE)
-    list(P = prop.table(tab, 1), tab = tab, n = n)
-  })
-}
-
-# Patchwork grid of per-cohort heatmaps
-hm_cohort_grid = function(mats, section_title, zmax, cell_size = 4.2, axis_size = 11) {
-  plots = lapply(names(mats), function(b) {
-    make_hm(mats[[b]]$P, title = b, zmax = zmax, n = mats[[b]]$n,
-            cell_size = cell_size, axis_size = axis_size) +
-      theme(plot.title = element_text(size = 9, face = "bold", hjust = 0.5))
-  })
-  patchwork::wrap_plots(plots, ncol = 1) +
-    patchwork::plot_annotation(
-      title = section_title,
-      theme = theme(plot.title = element_text(face = "bold", size = 11))
-    )
-}
-
 # ── TRANSITION MATRICES ───────────────────────────────────────────────────────
-# Add matrix estimation code below, adapting state variable names to match
-# whichever state coding is implemented above.
 
 # ── 5×5 RELTRAD MATRIX SPLIT BY PARENT RELIGIOSITY (PA23–PA26) ───────────────
 # PA23–PA26 are used as splitting variables, not states. For each variable,

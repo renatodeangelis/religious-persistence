@@ -37,7 +37,7 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 | **GSS panel (2006–2010)** | Test-retest stability of RELIG16; instability correlated with religious switching = evidence of identity contamination | — |
 | **MIDUS twin subsample** | Twins who diverged in adult religiosity reporting on same childhood household | — |
 
-**Critical data gap**: No U.S. dataset combines parent-reported affiliation at time 1 with the child's later retrospective report of childhood religion. Add Health and NSYR parent interviews provide the parent's religion but later waves do not ask the adult child "what religion were you raised in?" The paper should note this gap and recommend it for future data collection.
+**Note on Add Health recall data**: Add Health Wave 3 includes `H3RE26`, a retrospective item asking the adult child what religion they were raised in — this is used in `matrix-validation.R` to test recall bias against `PA22` (parent's Wave 1 religion). Wave 4 does not include an equivalent retrospective item. NSYR does not appear to have a retrospective childhood religion variable in later waves. The paper should note the Wave 4 gap and the absence of a comparable item in NSYR.
 
 ---
 
@@ -62,9 +62,14 @@ Conclude with: direction and approximate magnitude of bias (citing Hayward et al
 
 ---
 
-## Recall Bias Analysis Plan (matrix-validation.R)
+## Recall Bias Analysis Plan
 
-### Relevant LSOG Variables (verify names in codebook before coding)
+### Add Health implementation (complete — `matrix-validation.R`)
+Uses `PA22` (parent's Wave 1 religion) as ground truth and `H3RE26` (adult child's Wave 3 retrospective recall) as the recall measure. Tests implemented: mismatch rate overall and by origin category, concordant-at-W1 subsample analysis, endogeneity regression (does current Wave 3 religion predict recalling a more secular upbringing?), logistic model with and without Wave 1 child religion to decompose identity vs. trajectory effects.
+
+### LSOG implementation (pending)
+
+#### Relevant LSOG Variables (verify names in codebook before coding)
 
 | Variable type | What to look for |
 |---------------|-----------------|
@@ -132,13 +137,13 @@ Hout (2017): ~20% of Americans are "liminal" (cycling between affiliation and no
 | 3 | 13 | Formal results assembly — all figures and tables |
 | 3 | 14–15 | Paper skeleton; draft introduction + measurement section |
 
-**Current status** (as of April 2026): GSS downloaded; Hout (2016) replicated/extended; basic exploratory graphs complete. LSOG data downloaded to Dropbox and loaded via shared link in `matrix-validation.R`.
+**Current status** (as of June 2026): Weeks 1–2 complete. GSS transition matrices built, λ₂ and memory curves computed for national and regional cohort windows (5/10/20-year bins). Hout (2016) replicated and extended (Figs 1–6). Add Health W1/W3 recall bias analysis complete (`matrix-validation.R`); Add Health W1/W4 religiosity-split matrices complete (`transition-matrices-add-health.R`). NSYR comparison, sensitivity analysis, and LSOG validation remain pending (Week 3).
 
 ---
 
 ## Key Unresolved Issues
 
-1. **Add Health codebook**: Does any later wave ask the adult child a retrospective "what religion were you raised in?" question? If yes, Add Health becomes the ideal recall-bias diagnostic.
+1. **Add Health W3 recall item confirmed**: Wave 3 includes `H3RE26` (retrospective childhood religion recall), used in `matrix-validation.R`. Wave 4 does not include an equivalent item.
 2. **Pew ATP**: Has the childhood religion item been asked at multiple ATP waves separated by enough time to test recall drift? Worth contacting Pew directly.
 3. **State-space construction**: Requires cell-count analysis. 3–4 category scheme is leading candidate; binary affiliated/unaffiliated is the fallback.
 4. **λ₂ CI width**: If CIs are too wide to detect cohort trends, emphasis shifts from eigenvalue trends to diagonal persistence and Altham indices, with memory curves becoming illustrative.
@@ -176,12 +181,19 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 
 | File | Purpose |
 |------|---------|
-| `Code/summary-stats.R` | GSS data loading, Hout replication, exploratory figures |
-| `Code/matrix-validation.R` | LSOG-based recall bias estimation (in progress) |
+| `Code/summary-stats.R` | GSS data loading (Dropbox .dta), Hout replication, Figs 1–6 |
+| `Code/transition-matrices.R` | Main analysis: cohort transition matrices, λ₂, memory curves, mobility decomposition (uses `gssr` package) |
+| `Code/transition-matrices-add-health.R` | Add Health W1/W4 religiosity-split transition matrices |
+| `Code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
+| `Code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
+| `Code/presentation.qmd` | Quarto slide deck |
 
 ## File Locations
 
 | Data | Location |
 |------|----------|
-| GSS | Dropbox shared link (loaded via URL in summary-stats.R) |
-| LSOG (ICPSR 22100) | Dropbox shared link (loaded via URL in matrix-validation.R) |
+| GSS (summary-stats.R) | Dropbox shared link (loaded via URL) |
+| GSS (transition-matrices.R) | `gssr` R package (`data(gss_all)`) |
+| Add Health W1/W3 (matrix-validation.R) | `~/Downloads/` (w1inhome_dvn.RData, w3inhome_dvn.RData) |
+| Add Health W1/W4 (transition-matrices-add-health.R) | `add-health/` directory (w1inhome.rds, w4inhome.rds) |
+| LSOG (ICPSR 22100) | Pending — not yet loaded in any script |

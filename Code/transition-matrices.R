@@ -71,12 +71,12 @@ data = data |>
 
 # ── COVERAGE SUMMARY ─────────────────────────────────────────────────────────
 
-att_vars_all = c(
+att_vars = c(
   "evolved_bin", "abany_bin",
   "homosex_bin", "premarsx_bin", "pornlaw_bin"
 )
 
-att_coverage = lapply(att_vars_all, function(v) {
+att_coverage = lapply(att_vars, function(v) {
   data |>
     filter(!is.na(reltrad_alt), !is.na(reltrad16_alt)) |>
     summarise(
@@ -92,14 +92,9 @@ print(att_coverage, n = Inf)
 
 # ── CELL-COUNT FEASIBILITY (20-year cohort windows) ──────────────────────────
 
-att_check_vars = c(
-  "evolved_bin", "abany_bin",
-  "homosex_bin", "premarsx_bin", "pornlaw_bin"
-)
-
 cell_rows = list()
 
-for (v in att_check_vars) {
+for (v in att_vars) {
   for (grp in c(0L, 1L)) {
     for (coh in c(1920, 1940, 1960, 1980)) {
       sub = data[
@@ -131,8 +126,6 @@ print(cell_df, row.names = FALSE)
 # ── ATTITUDE MATRICES: POOLED (no cohort stratification) ─────────────────────
 # Mean birth year is tabulated to show cohort composition of each stratum.
 # Note: item coverage varies by GSS year — inspect mean_cohort for drift.
-
-att_vars = c("evolved_bin", "abany_bin", "homosex_bin", "premarsx_bin", "pornlaw_bin")
 
 P_list_att_pooled   = list()
 pi0_list_att_pooled = list()
