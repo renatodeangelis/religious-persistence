@@ -38,7 +38,7 @@ addhealth = inner_join(w1_relig, w3_relig, by = "AID")
 # leading numeric code into temporary columns, recode, then drop temporaries.
 # ---------------------------------------------------------------------------
 
-relig_lvls = c("None", "Protestant", "Catholic", "Other")
+relig_lvls = c("none", "other", "protestant", "catholic")
 
 addhealth = addhealth |>
   mutate(
@@ -53,10 +53,10 @@ addhealth = addhealth |>
     # 0=None, 1–19=Protestant denominations, 22=Catholic, 27=Unitarian → Protestant
     # 20=Baha'i, 21=Buddhist, 23=E. Orthodox, 24=Hindu, 25=Islam, 26=Jewish, 28=Other → Other
     h1re1_relig = case_when(
-      .h1re1 == 0                               ~ "None",
-      .h1re1 %in% c(1:19, 27)                   ~ "Protestant",
-      .h1re1 == 22                               ~ "Catholic",
-      .h1re1 %in% c(20, 21, 23, 24, 25, 26, 28) ~ "Other",
+      .h1re1 == 0                               ~ "none",
+      .h1re1 %in% c(1:19, 27)                   ~ "protestant",
+      .h1re1 == 22                               ~ "catholic",
+      .h1re1 %in% c(20, 21, 23, 24, 25, 26, 28) ~ "other",
       TRUE                                       ~ NA_character_
     ),
 
@@ -64,29 +64,29 @@ addhealth = addhealth |>
     # 7=Catholic; 28=None; Protestant denominations → Protestant
     # 6=Buddhist, 11=E. Orthodox, 14=Hindu, 16=Islam, 18=Jewish, 24=Other → Other
     pa22_relig = case_when(
-      .pa22 == 28                                            ~ "None",
+      .pa22 == 28                                            ~ "none",
       .pa22 %in% c(1:3, 5, 8:10, 12:13, 15, 20, 21,
-                   23, 25:27)                               ~ "Protestant",
-      .pa22 == 7                                             ~ "Catholic",
-      .pa22 %in% c(6, 11, 14, 16:19, 24)                   ~ "Other",
+                   23, 25:27)                               ~ "protestant",
+      .pa22 == 7                                             ~ "catholic",
+      .pa22 %in% c(6, 11, 14, 16:19, 24)                   ~ "other",
       TRUE                                                   ~ NA_character_
     ),
 
     # H3RE1: respondent's current religion at Wave 3
     h3re1_relig = case_when(
-      .h3re1 == 0 | (.h3re1 == 7 & .h3re2 %in% c(0, 11)) ~ "None",
-      .h3re1 %in% c(1, 8) | (.h3re1 == 7 & .h3re2 == 1) ~ "Protestant",
-      .h3re1 == 2 | (.h3re1 == 7 & .h3re2 == 2) ~ "Catholic",
-      .h3re1 %in% c(3, 4, 5, 6, 7)  ~ "Other",
+      .h3re1 == 0 | (.h3re1 == 7 & .h3re2 %in% c(0, 11)) ~ "none",
+      .h3re1 %in% c(1, 8) | (.h3re1 == 7 & .h3re2 == 1) ~ "protestant",
+      .h3re1 == 2 | (.h3re1 == 7 & .h3re2 == 2) ~ "catholic",
+      .h3re1 %in% c(3, 4, 5, 6, 7)  ~ "other",
       TRUE ~ NA_character_
     ),
 
     # H3RE26: retrospective recall of childhood religion at Wave 3
     h3re26_relig = case_when(
-      .h3re26 == 0                    ~ "None",
-      .h3re26 %in% c(1, 8)           ~ "Protestant",
-      .h3re26 == 2                    ~ "Catholic",
-      .h3re26 %in% c(3, 4, 5, 6, 7)  ~ "Other",
+      .h3re26 == 0                    ~ "none",
+      .h3re26 %in% c(1, 8)           ~ "protestant",
+      .h3re26 == 2                    ~ "catholic",
+      .h3re26 %in% c(3, 4, 5, 6, 7)  ~ "other",
       TRUE                            ~ NA_character_
     )
   ) |>
@@ -242,8 +242,8 @@ endogeneity_dat = addhealth |>
     recall = factor(h3re26_relig, levels = relig_lvls),
     mismatch_type = case_when(
       recall == parent                          ~ "Concordant",
-      recall == "None" & parent != "None"       ~ "Recalled more secular",
-      parent == "None" & recall != "None"       ~ "Recalled more religious",
+      recall == "none" & parent != "none"       ~ "Recalled more secular",
+      parent == "none" & recall != "none"       ~ "Recalled more religious",
       TRUE                                      ~ "Recalled different religion"
     )
   )
@@ -270,11 +270,11 @@ endogeneity_dat |>
 # ---------------------------------------------------------------------------
 
 logreg_dat = endogeneity_dat |>
-  filter(parent != "None") |>
+  filter(parent != "none") |>
   mutate(
     more_secular = as.integer(mismatch_type == "Recalled more secular"),
-    adult_f  = relevel(droplevels(adult),  ref = "Protestant"),
-    parent_f = relevel(droplevels(parent), ref = "Protestant")
+    adult_f  = relevel(droplevels(adult),  ref = "protestant"),
+    parent_f = relevel(droplevels(parent), ref = "protestant")
   )
 
 mod = glm(more_secular ~ adult_f + parent_f,
@@ -304,7 +304,7 @@ logreg_dat2 = logreg_dat |>
   filter(!is.na(h1re1_relig)) |>
   mutate(child_f = relevel(
     factor(h1re1_relig, levels = relig_lvls),
-    ref = "Protestant"
+    ref = "protestant"
   ))
 
 # Refit baseline on same restricted sample for a clean comparison
@@ -334,8 +334,8 @@ cat("\nModel 2 (+ respondent religion at age ~16) | n =", nrow(logreg_dat2), "\n
 print(fmt_or(mod_child), row.names = FALSE)
 
 cat("\nAttenuation in None OR:",
-    round(exp(coef(mod_base2)["adult_fNone"]), 3), "->",
-    round(exp(coef(mod_child)["adult_fNone"]), 3), "\n")
+    round(exp(coef(mod_base2)["adult_fnone"]), 3), "->",
+    round(exp(coef(mod_child)["adult_fnone"]), 3), "\n")
 
 # ---------------------------------------------------------------------------
 # Transition matrices: PA22 → H3RE1 and H3RE26 → H3RE1
