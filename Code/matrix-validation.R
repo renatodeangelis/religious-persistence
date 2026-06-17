@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+source("Code/utils.R")
 
 # ---------------------------------------------------------------------------
 # Load Add Health data (Wave 1 and Wave 3 in-home surveys)
@@ -24,23 +25,9 @@ w1_relig = addhealth_w1 |>
   select(AID, H1RE1, PA22)
 
 w3_relig = addhealth_w3 |>
-  select(AID, H3RE1, H3RE6, H3RE26)
-
-glimpse(w1_relig)
-glimpse(w3_relig)
-
-# ---------------------------------------------------------------------------
-# Join waves on AID (inner join — keep only respondents present in both waves)
-# W1: 6,504 | W3: 4,882 | Joined: 4,882
-# All W3 AIDs matched to W1; 1,622 W1 respondents dropped due to Wave 3 attrition
-# ---------------------------------------------------------------------------
+  select(AID, H3RE1, H3RE2, H3RE6, H3RE26)
 
 addhealth = inner_join(w1_relig, w3_relig, by = "AID")
-
-cat("W1 rows:    ", nrow(w1_relig), "\n")
-cat("W3 rows:    ", nrow(w3_relig), "\n")
-cat("Joined rows:", nrow(addhealth), "\n")
-cat("Dropped (W1 attrition):", nrow(w1_relig) - nrow(addhealth), "\n")
 
 # ---------------------------------------------------------------------------
 # Recode PA22, H3RE1, and H3RE26 to a 4-category scheme:
@@ -59,6 +46,7 @@ addhealth = addhealth |>
     .h1re1  = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H1RE1))),
     .pa22   = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(PA22))),
     .h3re1  = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H3RE1))),
+    .h3re2  = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H3RE2))),
     .h3re26 = as.integer(sub("^\\(([0-9]+)\\).*", "\\1", as.character(H3RE26))),
 
     # H1RE1: respondent's own religion at Wave 1
@@ -77,20 +65,20 @@ addhealth = addhealth |>
     # 6=Buddhist, 11=E. Orthodox, 14=Hindu, 16=Islam, 18=Jewish, 24=Other → Other
     pa22_relig = case_when(
       .pa22 == 28                                            ~ "None",
-      .pa22 %in% c(1:3, 5, 8:10, 12:13, 15, 17, 19:21,
+      .pa22 %in% c(1:3, 5, 8:10, 12:13, 15, 20, 21,
                    23, 25:27)                               ~ "Protestant",
       .pa22 == 7                                             ~ "Catholic",
-      .pa22 %in% c(6, 11, 14, 16, 18, 24)                   ~ "Other",
+      .pa22 %in% c(6, 11, 14, 16:19, 24)                   ~ "Other",
       TRUE                                                   ~ NA_character_
     ),
 
-    # H3RE1: respondent's current religion at Wave 3 ("just Christian" (8) → Protestant)
+    # H3RE1: respondent's current religion at Wave 3
     h3re1_relig = case_when(
-      .h3re1 == 0                    ~ "None",
-      .h3re1 %in% c(1, 8)           ~ "Protestant",
-      .h3re1 == 2                    ~ "Catholic",
+      .h3re1 == 0 | (.h3re1 == 7 & .h3re2 %in% c(0, 11)) ~ "None",
+      .h3re1 %in% c(1, 8) | (.h3re1 == 7 & .h3re2 == 1) ~ "Protestant",
+      .h3re1 == 2 | (.h3re1 == 7 & .h3re2 == 2) ~ "Catholic",
       .h3re1 %in% c(3, 4, 5, 6, 7)  ~ "Other",
-      TRUE                           ~ NA_character_
+      TRUE ~ NA_character_
     ),
 
     # H3RE26: retrospective recall of childhood religion at Wave 3
@@ -102,7 +90,7 @@ addhealth = addhealth |>
       TRUE                            ~ NA_character_
     )
   ) |>
-  select(-.h1re1, -.pa22, -.h3re1, -.h3re26)
+  select(-.h1re1, -.pa22, -.h3re1, -.h3re2, -.h3re26)
 
 # ---------------------------------------------------------------------------
 # PA22 missingness diagnostic
@@ -348,3 +336,44 @@ print(fmt_or(mod_child), row.names = FALSE)
 cat("\nAttenuation in None OR:",
     round(exp(coef(mod_base2)["adult_fNone"]), 3), "->",
     round(exp(coef(mod_child)["adult_fNone"]), 3), "\n")
+
+# ---------------------------------------------------------------------------
+# Transition matrices: PA22 → H3RE1 and H3RE26 → H3RE1
+# Compare "true" parent-to-child transmission (PA22) against the
+# recall-based origin measure (H3RE26) as a diagnostic for recall bias
+# ---------------------------------------------------------------------------
+
+dir.create("output/figures/validation", recursive = TRUE, showWarnings = FALSE)
+
+# Matrix 1: actual parental religion (PA22) → respondent's adult religion (W3)
+pmat_dat_pa22 = addhealth |>
+  filter(!is.na(pa22_relig), !is.na(h3re1_relig))
+
+P_pa22   = p_matrix(pmat_dat_pa22, "pa22_relig",  "h3re1_relig", levels = relig_lvls)
+pi0_pa22 = pi_0(pmat_dat_pa22, "pa22_relig")
+pis_pa22 = pi_star(P_pa22)
+
+# Matrix 2: recalled childhood religion (H3RE26) → respondent's adult religion (W3)
+pmat_dat_h3re26 = addhealth |>
+  filter(!is.na(h3re26_relig), !is.na(h3re1_relig))
+
+P_h3re26   = p_matrix(pmat_dat_h3re26, "h3re26_relig", "h3re1_relig", levels = relig_lvls)
+pi0_h3re26 = pi_0(pmat_dat_h3re26, "h3re26_relig")
+pis_h3re26 = pi_star(P_h3re26)
+
+p_pa22 = make_combined(
+  P_pa22, pi0_pa22, pis_pa22,
+  levels    = relig_lvls,
+  title_str = "PA22 → H3RE1\n(Actual parent religion W1 → Adult religion W3)"
+)
+
+p_h3re26 = make_combined(
+  P_h3re26, pi0_h3re26, pis_h3re26,
+  levels    = relig_lvls,
+  title_str = "H3RE26 → H3RE1\n(Recalled childhood religion W3 → Adult religion W3)"
+)
+
+ggsave("output/figures/validation/pmat_pa22_h3re1.png",
+       p_pa22,   width = 10, height = 7, dpi = 200)
+ggsave("output/figures/validation/pmat_h3re26_h3re1.png",
+       p_h3re26, width = 10, height = 7, dpi = 200)
