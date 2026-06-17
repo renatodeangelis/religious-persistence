@@ -674,3 +674,79 @@ p_persist_2x2 = ggplot(persistence_2x2,
 
 ggsave("output/figures/binary/persistence_2x2_10yr.png", p_persist_2x2,
        width = 8, height = 5, dpi = 200)
+
+# ── ATTITUDE TRENDS BY RELTRAD AND BIRTH COHORT ──────────────────────────────
+# Conservative positions: evolved_bin == 0, abany_bin == 0, homosex_bin == 0
+
+dir.create("output/figures/attitude/cohort_trends", recursive = TRUE, showWarnings = FALSE)
+
+reltrad_colors_att = c(
+  "Catholic"    = "#0072B2",
+  "Evangelical" = "#D55E00",
+  "Mainline"    = "#009E73",
+  "Other"       = "#CC79A7",
+  "None"        = "#E69F00"
+)
+
+att_cohort_df = data |>
+  filter(!is.na(reltrad_alt), cohort_5 >= 1940, cohort_5 <= 1980) |>
+  pivot_longer(
+    cols      = c(evolved_bin, abany_bin, homosex_bin),
+    names_to  = "attitude",
+    values_to = "liberal"
+  ) |>
+  filter(!is.na(liberal)) |>
+  group_by(attitude, reltrad_alt, cohort_5) |>
+  summarise(
+    n                = n(),
+    pct_conservative = mean(liberal == 0L) * 100,
+    se               = sqrt(pct_conservative / 100 * (1 - pct_conservative / 100) / n) * 100,
+    .groups          = "drop"
+  ) |>
+  mutate(
+    attitude = factor(attitude,
+      levels = c("evolved_bin", "abany_bin", "homosex_bin"),
+      labels = c("Evolution (% deny)", "Abortion (% oppose)", "Homosexuality (% morally wrong)")
+    ),
+    reltrad_alt = factor(reltrad_alt,
+      levels = c("catholic", "evangelical", "mainline", "other", "none"),
+      labels = c("Catholic", "Evangelical", "Mainline", "Other", "None")
+    )
+  )
+
+make_att_cohort_plot = function(att_label) {
+  att_cohort_df |>
+    filter(attitude == att_label) |>
+    ggplot(aes(x = cohort_5, y = pct_conservative, color = reltrad_alt, fill = reltrad_alt, group = reltrad_alt)) +
+    geom_ribbon(aes(ymin = pct_conservative - 1.96 * se, ymax = pct_conservative + 1.96 * se),
+                alpha = 0.15, color = NA, na.rm = TRUE) +
+    geom_line(linewidth = 0.9, na.rm = TRUE) +
+    geom_point(size = 2, na.rm = TRUE) +
+    scale_color_manual(values = reltrad_colors_att, name = NULL) +
+    scale_fill_manual(values = reltrad_colors_att, name = NULL) +
+    scale_x_continuous(breaks = seq(1940, 1980, by = 10)) +
+    scale_y_continuous(limits = c(0, 100), labels = function(x) paste0(x, "%")) +
+    labs(title = att_label, x = NULL, y = sub(".*\\((.+)\\)", "\\1", att_label)) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "bottom", plot.title = element_text(size = 12, face = "bold"))
+}
+
+p_evolved = make_att_cohort_plot("Evolution (% deny)")
+p_abany   = make_att_cohort_plot("Abortion (% oppose)")
+p_homosex = make_att_cohort_plot("Homosexuality (% morally wrong)")
+
+caption_str = "Source: GSS. 5-year birth cohort bins, 1940–1980. Ribbons show 95% CIs. Current religious affiliation (reltrad_alt)."
+
+p_evolved = p_evolved + labs(x = "Birth cohort (5-year bin)") +
+  plot_annotation(caption = caption_str)
+p_abany   = p_abany   + labs(x = "Birth cohort (5-year bin)") +
+  plot_annotation(caption = caption_str)
+p_homosex = p_homosex + labs(x = "Birth cohort (5-year bin)") +
+  plot_annotation(caption = caption_str)
+
+ggsave("output/figures/attitude/cohort_trends/att_trends_evolution.png",
+       p_evolved, width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends/att_trends_abortion.png",
+       p_abany,   width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends/att_trends_homosexuality.png",
+       p_homosex, width = 7, height = 5, dpi = 200)
