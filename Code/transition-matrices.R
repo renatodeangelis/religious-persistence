@@ -15,7 +15,7 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 
 data(gss_all)
 data = gss_all |>
-  select(year, cohort, reltrad, reltrad16, region, evolved, abany, homosex, premarsx, pornlaw) |>
+  select(year, cohort, reltrad, reltrad16, region, evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -62,18 +62,21 @@ states_alt = states_alt[!is.na(states_alt)]
 
 data = data |>
   mutate(
-    evolved_bin  = case_when(evolved  == 1 ~ 1L, evolved  == 2 ~ 0L),
-    abany_bin    = case_when(abany    == 1 ~ 1L, abany    == 2 ~ 0L),
-    homosex_bin  = case_when(homosex  %in% 3:4 ~ 1L, homosex  %in% 1:2 ~ 0L),
-    premarsx_bin = case_when(premarsx %in% 3:4 ~ 1L, premarsx %in% 1:2 ~ 0L),
-    pornlaw_bin  = case_when(pornlaw  %in% 2:3 ~ 1L, pornlaw  == 1      ~ 0L)
+    evolved_bin   = case_when(evolved  == 1 ~ 1L, evolved  == 2 ~ 0L),
+    abany_bin     = case_when(abany    == 1 ~ 1L, abany    == 2 ~ 0L),
+    homosex_bin   = case_when(homosex  %in% 3:4 ~ 1L, homosex  %in% 1:2 ~ 0L),
+    premarsx_bin  = case_when(premarsx %in% 3:4 ~ 1L, premarsx %in% 1:2 ~ 0L),
+    pornlaw_bin   = case_when(pornlaw  %in% 2:3 ~ 1L, pornlaw  == 1      ~ 0L),
+    # cappun2 covers 1972-73; cappun covers 1974-present; same 1/2 coding
+    cappun_merged = coalesce(as.numeric(cappun), as.numeric(cappun2)),
+    cappun_bin    = case_when(cappun_merged == 2 ~ 1L, cappun_merged == 1 ~ 0L)
   )
 
 # ── COVERAGE SUMMARY ─────────────────────────────────────────────────────────
 
 att_vars = c(
   "evolved_bin", "abany_bin",
-  "homosex_bin", "premarsx_bin", "pornlaw_bin"
+  "homosex_bin", "premarsx_bin", "pornlaw_bin", "cappun_bin"
 )
 
 att_coverage = lapply(att_vars, function(v) {
@@ -201,7 +204,8 @@ att_labels = c(
   abany_bin    = "Abortion (any reason)",
   homosex_bin  = "Homosexuality",
   premarsx_bin = "Premarital sex",
-  pornlaw_bin  = "Pornography law"
+  pornlaw_bin  = "Pornography law",
+  cappun_bin   = "Capital punishment"
 )
 
 dir.create("output/figures/attitude/pooled", recursive = TRUE, showWarnings = FALSE)
@@ -691,7 +695,7 @@ reltrad_colors_att = c(
 att_cohort_df = data |>
   filter(!is.na(reltrad_alt), cohort_5 >= 1940, cohort_5 <= 1980) |>
   pivot_longer(
-    cols      = c(evolved_bin, abany_bin, homosex_bin),
+    cols      = c(evolved_bin, abany_bin, homosex_bin, cappun_bin),
     names_to  = "attitude",
     values_to = "liberal"
   ) |>
@@ -705,8 +709,9 @@ att_cohort_df = data |>
   ) |>
   mutate(
     attitude = factor(attitude,
-      levels = c("evolved_bin", "abany_bin", "homosex_bin"),
-      labels = c("Evolution (% deny)", "Abortion (% oppose)", "Homosexuality (% morally wrong)")
+      levels = c("evolved_bin", "abany_bin", "homosex_bin", "cappun_bin"),
+      labels = c("Evolution (% deny)", "Abortion (% oppose)", "Homosexuality (% morally wrong)",
+                 "Capital punishment (% favor)")
     ),
     reltrad_alt = factor(reltrad_alt,
       levels = c("catholic", "evangelical", "mainline", "other", "none"),
@@ -734,6 +739,7 @@ make_att_cohort_plot = function(att_label) {
 p_evolved = make_att_cohort_plot("Evolution (% deny)")
 p_abany   = make_att_cohort_plot("Abortion (% oppose)")
 p_homosex = make_att_cohort_plot("Homosexuality (% morally wrong)")
+p_cappun  = make_att_cohort_plot("Capital punishment (% favor)")
 
 caption_str = "Source: GSS. 5-year birth cohort bins, 1940–1980. Ribbons show 95% CIs. Current religious affiliation (reltrad_alt)."
 
@@ -743,6 +749,8 @@ p_abany   = p_abany   + labs(x = "Birth cohort (5-year bin)") +
   plot_annotation(caption = caption_str)
 p_homosex = p_homosex + labs(x = "Birth cohort (5-year bin)") +
   plot_annotation(caption = caption_str)
+p_cappun  = p_cappun  + labs(x = "Birth cohort (5-year bin)") +
+  plot_annotation(caption = caption_str)
 
 ggsave("output/figures/attitude/cohort_trends/att_trends_evolution.png",
        p_evolved, width = 7, height = 5, dpi = 200)
@@ -750,3 +758,5 @@ ggsave("output/figures/attitude/cohort_trends/att_trends_abortion.png",
        p_abany,   width = 7, height = 5, dpi = 200)
 ggsave("output/figures/attitude/cohort_trends/att_trends_homosexuality.png",
        p_homosex, width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends/att_trends_cappun.png",
+       p_cappun,  width = 7, height = 5, dpi = 200)
