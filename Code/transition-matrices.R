@@ -760,3 +760,71 @@ ggsave("output/figures/attitude/cohort_trends/att_trends_homosexuality.png",
        p_homosex, width = 7, height = 5, dpi = 200)
 ggsave("output/figures/attitude/cohort_trends/att_trends_cappun.png",
        p_cappun,  width = 7, height = 5, dpi = 200)
+
+# ── ATTITUDE TRENDS BY RELTRAD16 (CHILDHOOD RELIGION) AND BIRTH COHORT ────────
+
+dir.create("output/figures/attitude/cohort_trends16", recursive = TRUE, showWarnings = FALSE)
+
+att_cohort_df16 = data |>
+  filter(!is.na(reltrad16_alt), cohort_5 >= 1940, cohort_5 <= 1980) |>
+  pivot_longer(
+    cols      = c(evolved_bin, abany_bin, homosex_bin, cappun_bin),
+    names_to  = "attitude",
+    values_to = "liberal"
+  ) |>
+  filter(!is.na(liberal)) |>
+  group_by(attitude, reltrad16_alt, cohort_5) |>
+  summarise(
+    n                = n(),
+    pct_conservative = mean(liberal == 0L) * 100,
+    se               = sqrt(pct_conservative / 100 * (1 - pct_conservative / 100) / n) * 100,
+    .groups          = "drop"
+  ) |>
+  mutate(
+    attitude = factor(attitude,
+      levels = c("evolved_bin", "abany_bin", "homosex_bin", "cappun_bin"),
+      labels = c("Evolution (% deny)", "Abortion (% oppose)", "Homosexuality (% morally wrong)",
+                 "Capital punishment (% favor)")
+    ),
+    reltrad16_alt = factor(reltrad16_alt,
+      levels = c("catholic", "evangelical", "mainline", "other", "none"),
+      labels = c("Catholic", "Evangelical", "Mainline", "Other", "None")
+    )
+  )
+
+make_att_cohort_plot16 = function(att_label) {
+  att_cohort_df16 |>
+    filter(attitude == att_label) |>
+    ggplot(aes(x = cohort_5, y = pct_conservative, color = reltrad16_alt, fill = reltrad16_alt, group = reltrad16_alt)) +
+    geom_ribbon(aes(ymin = pct_conservative - 1.96 * se, ymax = pct_conservative + 1.96 * se),
+                alpha = 0.15, color = NA, na.rm = TRUE) +
+    geom_line(linewidth = 0.9, na.rm = TRUE) +
+    geom_point(size = 2, na.rm = TRUE) +
+    scale_color_manual(values = reltrad_colors_att, name = NULL) +
+    scale_fill_manual(values = reltrad_colors_att, name = NULL) +
+    scale_x_continuous(breaks = seq(1940, 1980, by = 10)) +
+    scale_y_continuous(limits = c(0, 100), labels = function(x) paste0(x, "%")) +
+    labs(title = att_label, x = NULL, y = sub(".*\\((.+)\\)", "\\1", att_label)) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "bottom", plot.title = element_text(size = 12, face = "bold"))
+}
+
+caption_str16 = "Source: GSS. 5-year birth cohort bins, 1940–1980. Ribbons show 95% CIs. Childhood religious affiliation (reltrad16_alt)."
+
+p_evolved16 = make_att_cohort_plot16("Evolution (% deny)") +
+  labs(x = "Birth cohort (5-year bin)") + plot_annotation(caption = caption_str16)
+p_abany16   = make_att_cohort_plot16("Abortion (% oppose)") +
+  labs(x = "Birth cohort (5-year bin)") + plot_annotation(caption = caption_str16)
+p_homosex16 = make_att_cohort_plot16("Homosexuality (% morally wrong)") +
+  labs(x = "Birth cohort (5-year bin)") + plot_annotation(caption = caption_str16)
+p_cappun16  = make_att_cohort_plot16("Capital punishment (% favor)") +
+  labs(x = "Birth cohort (5-year bin)") + plot_annotation(caption = caption_str16)
+
+ggsave("output/figures/attitude/cohort_trends16/att_trends16_evolution.png",
+       p_evolved16, width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends16/att_trends16_abortion.png",
+       p_abany16,   width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends16/att_trends16_homosexuality.png",
+       p_homosex16, width = 7, height = 5, dpi = 200)
+ggsave("output/figures/attitude/cohort_trends16/att_trends16_cappun.png",
+       p_cappun16,  width = 7, height = 5, dpi = 200)
