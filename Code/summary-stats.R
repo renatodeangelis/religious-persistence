@@ -428,3 +428,35 @@ p_fig7_bottom = patchwork::plot_spacer() + p_fig7_strip + patchwork::plot_spacer
 patchwork::wrap_plots(p_fig7_main, p_fig7_bottom, ncol = 1, heights = c(5, 1.2))
 
 ggsave("output/figures/catholic/fig7.png", width = 9, height = 6)
+
+## 5-STATE TRANSITION MATRICES BY BIRTH COHORT AND NATIVITY
+
+state_levels = c("Catholic", "Mainline", "Conservative", "No religion", "Other")
+
+mat_base = data_filtered |>
+  filter(!is.na(relig), !is.na(relig16), !is.na(cohort),
+         as.numeric(born) %in% c(1, 2),
+         cohort >= 1950, cohort < 1980) |>
+  mutate(
+    origin  = factor(classify_relig(relig16, denom16, oth16), levels = state_levels),
+    dest    = factor(classify_relig(relig,   denom,   other),  levels = state_levels),
+    cohort_10 = case_when(
+      cohort < 1960 ~ "1950-1959",
+      cohort < 1970 ~ "1960-1969",
+      cohort < 1980 ~ "1970-1979"
+    ),
+    nativity = if_else(as.numeric(born) == 1, "Born in US", "Born abroad")
+  ) |>
+  filter(!is.na(origin), !is.na(dest))
+
+cohort_windows = c("1950-1959", "1960-1969", "1970-1979")
+nativity_groups = c("Born in US", "Born abroad")
+
+for (coh in cohort_windows) {
+  for (nat in nativity_groups) {
+    sub = filter(mat_base, cohort_10 == coh, nativity == nat)
+    cat("\n=== Cohort:", coh, "|", nat, "(N =", nrow(sub), ") ===\n")
+    tbl = table(Origin = sub$origin, Destination = sub$dest)
+    print(round(prop.table(tbl, margin = 1), 3))
+  }
+}

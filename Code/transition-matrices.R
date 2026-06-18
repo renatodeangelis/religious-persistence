@@ -15,7 +15,8 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 
 data(gss_all)
 data = gss_all |>
-  select(year, cohort, reltrad, reltrad16, region, evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2) |>
+  select(year, cohort, reltrad, reltrad16, region, born,
+         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -44,6 +45,10 @@ data = gss_all |>
       as.numeric(region) == 3 ~ "South",
       as.numeric(region) == 4 ~ "West",
       TRUE ~ NA_character_
+    ),
+    nativity = case_when(
+      as.numeric(born) == 1 ~ "Born in US",
+      as.numeric(born) == 2 ~ "Born abroad"
     )
   )
 
@@ -828,3 +833,52 @@ ggsave("output/figures/attitude/cohort_trends16/att_trends16_homosexuality.png",
        p_homosex16, width = 7, height = 5, dpi = 200)
 ggsave("output/figures/attitude/cohort_trends16/att_trends16_cappun.png",
        p_cappun16,  width = 7, height = 5, dpi = 200)
+
+# ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
+
+cohorts_nat    = c(1950, 1960, 1970)
+nativity_groups = c("Born in US", "Born abroad")
+
+P_list_nat      = list()
+pi0_list_nat    = list()
+pistar_list_nat = list()
+n_list_nat      = list()
+
+for (nat in nativity_groups) {
+  for (coh in cohorts_nat) {
+    sub = data[
+      !is.na(data$cohort_10)     & data$cohort_10 == coh &
+      !is.na(data$nativity)      & data$nativity   == nat &
+      !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+    if (nrow(sub) < 30) next
+    key = paste(gsub(" ", "_", nat), coh, sep = "_")
+
+    P_list_nat[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+    pi0_list_nat[[key]]    = pi_0(sub, "reltrad16_alt")
+    pistar_list_nat[[key]] = pi_star(P_list_nat[[key]])
+    n_list_nat[[key]]      = nrow(sub)
+  }
+}
+
+for (key in names(P_list_nat)) {
+  cat("\n── ", gsub("_", " ", sub("_(\\d{4})$", "", key)),
+      " | Cohort", sub(".*_(\\d{4})$", "\\1", key), "–",
+      as.integer(sub(".*_(\\d{4})$", "\\1", key)) + 9,
+      "  (N =", n_list_nat[[key]], ") ──\n")
+  print(round(P_list_nat[[key]], 3))
+}
+
+dir.create("output/figures/nativity", recursive = TRUE, showWarnings = FALSE)
+
+for (key in names(P_list_nat)) {
+  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  nat_lbl = gsub("_", " ", sub("_(\\d{4})$", "", key))
+  p = make_combined(
+    P_list_nat[[key]], pi0_list_nat[[key]], pistar_list_nat[[key]],
+    levels    = rel_level_order,
+    title_str = paste0(nat_lbl, " – ", coh_yr, "–", coh_yr + 9,
+                       "  (N = ", n_list_nat[[key]], ")")
+  )
+  ggsave(paste0("output/figures/nativity/trans_", key, "_10yr.png"),
+         p, width = 10, height = 7, dpi = 200)
+}
