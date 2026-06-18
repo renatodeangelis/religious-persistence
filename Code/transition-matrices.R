@@ -434,14 +434,18 @@ p_im_20 = ggplot(im_df_20, aes(x = t, y = im, color = origin, group = origin)) +
 ggsave("output/figures/im_memory_20yr.png", p_im_20, width = 10, height = 5, dpi = 200)
 
 p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
-  geom_point(size = 1.5, alpha = 0.6) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.4) +
+  geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
+  geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2,
+              color = "#0072B2", fill = "#0072B2") +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort", y = "Overall mobility (1 − weighted diagonal)",
-       title = "Religious Mobility by Birth Cohort (pooled, 1-year bins)") +
-  theme_minimal()
+  labs(x = "Birth cohort", y = "Probability to Move",
+       title = "Overall Mobility by Birth Cohort") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.title    = element_text(size = 12),
+        legend.text     = element_text(size = 11))
 
-ggsave("output/figures/mobility_pooled.png", p_mob, width = 9, height = 5, dpi = 200)
+ggsave("output/figures/mobility_pooled.png", p_mob, width = 8, height = 5, dpi = 200)
 
 em_sm_long = pivot_longer(
   em_sm_df[em_sm_df$cohort >= 1930 & em_sm_df$cohort <= 1985, ],
