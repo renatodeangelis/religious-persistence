@@ -445,7 +445,7 @@ p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = 
         legend.title    = element_text(size = 12),
         legend.text     = element_text(size = 11))
 
-ggsave("output/figures/mobility_pooled.png", p_mob, width = 8, height = 5, dpi = 200)
+ggsave("output/figures/overall_mobility.png", p_mob, width = 8, height = 5, dpi = 200)
 
 em_sm_long = pivot_longer(
   em_sm_df[em_sm_df$cohort >= 1930 & em_sm_df$cohort <= 1985, ],
