@@ -350,19 +350,19 @@ mob_rows = lapply(1920:1980, function(coh) {
 })
 mob_df = do.call(rbind, Filter(Negate(is.null), mob_rows))
 
-# ── EXCHANGE/STRUCTURAL MOBILITY (10-year cohorts, t = 0:4) ──────────────────
+# ── EXCHANGE/STRUCTURAL MOBILITY (1-year cohorts, t = 0) ─────────────────────
 
-em_sm_rows_10 = lapply(names(P_list_10), function(key) {
-  P   = P_list_10[[key]]
-  pi0 = pi0_list_10[[key]]
-  lapply(0:4, function(t) {
-    om_v = overall_mobility(P, mu_t(pi0, P, t))
-    sm_v = sm(P, pi0, t)
-    data.frame(cohort = as.integer(key), t = t, EM = om_v - sm_v, SM = sm_v, OM = om_v,
-               row.names = NULL)
-  })
+em_sm_rows = lapply(1920:1985, function(coh) {
+  sub = data[!is.na(data$cohort) & data$cohort == coh &
+               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+  if (nrow(sub) < 30) return(NULL)
+  P   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+  pi0 = pi_0(sub, "reltrad16_alt")
+  om_v = overall_mobility(P, pi0)
+  sm_v = sm(P, pi0, t = 0)
+  data.frame(cohort = coh, EM = om_v - sm_v, SM = sm_v, OM = om_v)
 })
-em_sm_df_10 = do.call(rbind, unlist(em_sm_rows_10, recursive = FALSE))
+em_sm_df = do.call(rbind, Filter(Negate(is.null), em_sm_rows))
 
 # ── NATIONAL FIGURES ──────────────────────────────────────────────────────────
 
@@ -442,34 +442,33 @@ p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
 
 ggsave("output/figures/mobility_pooled.png", p_mob, width = 9, height = 5, dpi = 200)
 
-em_sm_long = pivot_longer(em_sm_df_10, cols = c(EM, OM),
-                           names_to = "measure", values_to = "value")
+em_sm_long = pivot_longer(
+  em_sm_df[em_sm_df$cohort >= 1930 & em_sm_df$cohort <= 1985, ],
+  cols = c(EM, SM, OM),
+  names_to = "measure", values_to = "value"
+)
 
-p_em_sm = ggplot(em_sm_long, aes(x = t, y = value, color = measure,
-                                  linetype = measure, shape = measure, group = measure)) +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 2) +
-  facet_wrap(~ cohort, nrow = 2) +
+p_em_sm = ggplot(em_sm_long, aes(x = cohort, y = value, color = measure,
+                                  fill = measure, group = measure)) +
+  geom_point(size = 1.5, alpha = 0.6) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2) +
   scale_color_manual(name   = "Measure",
-                     values = c(EM = "#D55E00", OM = "#0072B2"),
-                     labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
-  scale_linetype_manual(name   = "Measure",
-                        values = c(EM = "dashed", OM = "solid"),
-                        labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
-  scale_shape_manual(name   = "Measure",
-                     values = c(EM = 17, OM = 16),
-                     labels = c(EM = "Exchange mobility", OM = "Overall mobility")) +
-  scale_x_continuous(breaks = 0:4) +
+                     values = c(EM = "#D55E00", SM = "#009E73", OM = "#0072B2"),
+                     labels = c(EM = "Exchange mobility", SM = "Structural mobility",
+                                OM = "Overall mobility")) +
+  scale_fill_manual(name   = "Measure",
+                    values = c(EM = "#D55E00", SM = "#009E73", OM = "#0072B2"),
+                    labels = c(EM = "Exchange mobility", SM = "Structural mobility",
+                               OM = "Overall mobility")) +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Step (t)", y = "Probability to move",
-       title = "Exchange and Structural Mobility by Cohort (10-year bins, t = 0–4)") +
+  labs(x = "Birth cohort", y = "Mobility (t = 0)",
+       title = "Exchange and Structural Mobility by Birth Cohort (pooled, 1-year bins)") +
   theme_minimal() +
-  theme(strip.text      = element_text(size = 12),
-        legend.position = "bottom",
+  theme(legend.position = "bottom",
         legend.title    = element_text(size = 12),
         legend.text     = element_text(size = 11))
 
-ggsave("output/figures/em_sm_10yr.png", p_em_sm, width = 12, height = 7, dpi = 200)
+ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 9, height = 5, dpi = 200)
 
 # ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
