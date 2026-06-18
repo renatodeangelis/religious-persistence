@@ -1,12 +1,15 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(haven)
+library(patchwork)
+library(gssr)
 
-data = read_dta(
-  file = "https://www.dropbox.com/scl/fi/4tvctfek9wqskk7v34k57/gss7224_r3.dta?rlkey=dm9c0smlgbqneutvordpnr8yr&st=76655say&dl=1",
-  col_select = c(year, cohort, relig, relig16, denom, denom16, other, oth16,
-                 attend, reliten, relitenv, relitennv, sprel, spden, sprel16, spden16, educ))
+data(gss_all)
+data = gss_all |>
+  select(year, cohort, relig, relig16, denom, denom16, other, oth16,
+         attend, reliten, relitenv, relitennv, sprel, spden, sprel16, spden16, educ,
+         race, hispanic, born, parborn) |>
+  filter(!(year %in% c(1972, 2021)))
 
 data_filtered = data |>
   mutate(age = year - cohort,
@@ -18,11 +21,15 @@ data_filtered = data |>
          relitenv   = as.numeric(relitenv),
          relitennv  = as.numeric(relitennv),
          reliten_comb = coalesce(reliten, relitenv, relitennv),
+         cohort_5 = floor((cohort - 1900) / 5) * 5 + 1900,
          educ_group = case_when(
            educ < 12       ~ "Less than HS",
            educ %in% 12:15 ~ "HS or some college",
            educ >= 16      ~ "College or more"
          ))
+
+dir.create("output/figures/hout",     recursive = TRUE, showWarnings = FALSE)
+dir.create("output/figures/catholic", recursive = TRUE, showWarnings = FALSE)
 
 ## HOUT FIGURE 1
 
@@ -51,7 +58,7 @@ ggplot(fig1_data, aes(x = year, y = pct, color = series)) +
   theme_minimal() +
   theme(legend.position = "bottom")
 
-ggsave("Figures/fig1.png", width = 7, height = 5)
+ggsave("output/figures/hout/fig1.png", width = 7, height = 5)
 
 ## HOUT FIGURE 2
 fig2_data = data_filtered |>
@@ -120,7 +127,7 @@ fig2_data |>
   theme(panel.grid.minor = element_blank(),
         axis.text.y.right = element_text(color = "gray50"))
 
-ggsave("Figures/fig2.png", width = 7, height = 5)
+ggsave("output/figures/hout/fig2.png", width = 7, height = 5)
 
 ## HOUT FIGURE 3
 fig3_data = data_filtered |>
@@ -174,7 +181,7 @@ fig3_data |>
   theme(panel.grid.minor = element_blank(),
         axis.text.y.right = element_text(color = "gray50"))
 
-ggsave("Figures/fig3.png", width = 7, height = 5)
+ggsave("output/figures/hout/fig3.png", width = 7, height = 5)
 
 ## HOUT FIGURE 4
 
@@ -277,7 +284,7 @@ fig4_data |>
         legend.position = "bottom",
         legend.direction = "horizontal")
 
-ggsave("Figures/fig4.png", width = 10, height = 5)
+ggsave("output/figures/hout/fig4.png", width = 10, height = 5)
 
 ## FIGURE 5: PERSISTENCE BY EDUCATION
 
@@ -300,7 +307,7 @@ fig5_data |>
   theme_minimal() +
   theme(panel.grid.minor = element_blank())
 
-ggsave("Figures/fig5.png", width = 10, height = 5)
+ggsave("output/figures/hout/fig5.png", width = 10, height = 5)
 
 ## FIGURE 6: CURRENTLY VS RAISED CATHOLIC BY EDUCATION AND YEAR
 
@@ -333,4 +340,91 @@ fig6_data |>
   theme(panel.grid.minor = element_blank(),
         legend.position = "bottom")
 
-ggsave("Figures/fig6.png", width = 10, height = 5)
+ggsave("output/figures/hout/fig6.png", width = 10, height = 5)
+
+## FIGURE 7: RAISED VS CURRENTLY CATHOLIC BY NATIVITY (5-YEAR BIRTH COHORT)
+
+fig7_base = data_filtered |>
+  filter(!is.na(relig), !is.na(relig16), !is.na(cohort_5),
+         year >= 1977,
+         cohort >= 1930, cohort <= 1985,
+         as.numeric(born) %in% c(1, 2)) |>
+  mutate(
+    raised_catholic  = relig16 == 2,
+    current_catholic = relig   == 2,
+    nativity = factor(
+      if_else(as.numeric(born) == 1, "Born in US", "Born abroad"),
+      levels = c("Born in US", "Born abroad")
+    )
+  )
+
+fig7_catholic = fig7_base |>
+  group_by(cohort_5, nativity) |>
+  summarise(
+    n_obs       = n(),
+    pct_raised  = mean(raised_catholic,  na.rm = TRUE),
+    pct_current = mean(current_catholic, na.rm = TRUE),
+    .groups     = "drop"
+  ) |>
+  pivot_longer(cols = c(pct_raised, pct_current),
+               names_to = "series", values_to = "pct") |>
+  mutate(
+    se     = sqrt(pct * (1 - pct) / n_obs),
+    ymin   = pct - 1.96 * se,
+    ymax   = pct + 1.96 * se,
+    series = recode(series, pct_raised = "Raised Catholic", pct_current = "Currently Catholic"),
+    series = factor(series, levels = c("Raised Catholic", "Currently Catholic"))
+  )
+
+fig7_abroad = fig7_base |>
+  group_by(cohort_5) |>
+  summarise(n_obs = n(), pct = mean(nativity == "Born abroad"), .groups = "drop") |>
+  mutate(
+    se   = sqrt(pct * (1 - pct) / n_obs),
+    ymin = pct - 1.96 * se,
+    ymax = pct + 1.96 * se
+  )
+
+# Duplicate abroad line for both facet panels
+fig7_abroad_faceted = bind_rows(
+  fig7_abroad |> mutate(nativity = factor("Born in US",  levels = c("Born in US", "Born abroad"))),
+  fig7_abroad |> mutate(nativity = factor("Born abroad", levels = c("Born in US", "Born abroad")))
+)
+
+fig7_colors = c("Raised Catholic" = "black", "Currently Catholic" = "#0072B2")
+
+p_fig7_main = ggplot() +
+  geom_ribbon(data = fig7_catholic,
+              aes(x = cohort_5, ymin = ymin, ymax = ymax, fill = series, group = series),
+              alpha = 0.2, color = NA) +
+  geom_line(data  = fig7_catholic,
+            aes(x = cohort_5, y = pct, color = series, group = series),
+            linewidth = 0.8) +
+  geom_point(data = fig7_catholic,
+             aes(x = cohort_5, y = pct, color = series, group = series),
+             shape = 1, size = 2) +
+  facet_wrap(~ nativity) +
+  scale_y_continuous(name = "Proportion Catholic") +
+  scale_color_manual(values = fig7_colors, name = NULL) +
+  scale_fill_manual(values  = fig7_colors, name = NULL, guide = "none") +
+  labs(x = NULL) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position  = "bottom")
+
+# Strip: % born abroad by 5-year cohort bin
+p_fig7_strip = ggplot(fig7_abroad, aes(x = cohort_5, y = pct)) +
+  geom_line(color = "#E69F00", linewidth = 0.8) +
+  geom_point(color = "#E69F00", shape = 1, size = 2) +
+  scale_x_continuous(breaks = seq(1930, 1985, by = 10)) +
+  scale_y_continuous(limits = c(0, 0.20), labels = scales::percent_format(accuracy = 1)) +
+  labs(x = "Birth cohort (5-year bin)", y = "Born\nabroad") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
+p_fig7_bottom = patchwork::plot_spacer() + p_fig7_strip + patchwork::plot_spacer() +
+  patchwork::plot_layout(ncol = 3, widths = c(1, 2, 1))
+
+patchwork::wrap_plots(p_fig7_main, p_fig7_bottom, ncol = 1, heights = c(5, 1.2))
+
+ggsave("output/figures/catholic/fig7.png", width = 9, height = 6)
