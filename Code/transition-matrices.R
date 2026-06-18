@@ -433,11 +433,11 @@ p_im_20 = ggplot(im_df_20, aes(x = t, y = im, color = origin, group = origin)) +
 
 ggsave("output/figures/im_memory_20yr.png", p_im_20, width = 10, height = 5, dpi = 200)
 
-p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
+p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = cohort, y = mobility)) +
   geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
   geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2,
               color = "#0072B2", fill = "#0072B2") +
-  scale_y_continuous(limits = c(0, NA)) +
+  scale_y_continuous(limits = c(0.15, 0.45)) +
   labs(x = "Birth cohort", y = "Probability to Move",
        title = "Overall Mobility by Birth Cohort") +
   theme_minimal() +
@@ -464,14 +464,14 @@ p_em_sm = ggplot(em_sm_long, aes(x = cohort, y = value, color = measure,
                     values = c(EM = "#D55E00", SM = "#009E73"),
                     labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort", y = "Mobility (t = 0)",
+  labs(x = "Birth cohort", y = "Probability to Move",
        title = "Exchange and Structural Mobility by Birth Cohort") +
   theme_minimal() +
   theme(legend.position = "bottom",
         legend.title    = element_text(size = 12),
         legend.text     = element_text(size = 11))
 
-ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 9, height = 5, dpi = 200)
+ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 8, height = 5, dpi = 200)
 
 # ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
