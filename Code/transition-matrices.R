@@ -392,11 +392,12 @@ for (key in names(P_list_20)) {
          width = 10, height = 7, dpi = 200)
 }
 
+im_df_10 = im_df_10[im_df_10$cohort != 1920, ]
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
 p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
   geom_line(linewidth = 0.8) +
-  geom_point(size = 2) +
+  geom_point(size = 1.2) +
   facet_wrap(~ cohort, nrow = 2) +
   scale_color_brewer(palette = "Set1") +
   scale_x_continuous(breaks = 0:4) +
@@ -410,7 +411,7 @@ p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
     legend.text     = element_text(size = 11)
   )
 
-ggsave("output/figures/im_memory_10yr.png", p_im, width = 12, height = 7, dpi = 200)
+ggsave("output/figures/im_memory_10yr.png", p_im, width = 8, height = 6, dpi = 200)
 
 im_df_20$origin = factor(im_df_20$origin, levels = rel_level_order)
 
@@ -444,7 +445,7 @@ ggsave("output/figures/mobility_pooled.png", p_mob, width = 9, height = 5, dpi =
 
 em_sm_long = pivot_longer(
   em_sm_df[em_sm_df$cohort >= 1930 & em_sm_df$cohort <= 1985, ],
-  cols = c(EM, SM, OM),
+  cols = c(EM, SM),
   names_to = "measure", values_to = "value"
 )
 
@@ -453,16 +454,14 @@ p_em_sm = ggplot(em_sm_long, aes(x = cohort, y = value, color = measure,
   geom_point(size = 1.5, alpha = 0.6) +
   geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2) +
   scale_color_manual(name   = "Measure",
-                     values = c(EM = "#D55E00", SM = "#009E73", OM = "#0072B2"),
-                     labels = c(EM = "Exchange mobility", SM = "Structural mobility",
-                                OM = "Overall mobility")) +
+                     values = c(EM = "#D55E00", SM = "#009E73"),
+                     labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
   scale_fill_manual(name   = "Measure",
-                    values = c(EM = "#D55E00", SM = "#009E73", OM = "#0072B2"),
-                    labels = c(EM = "Exchange mobility", SM = "Structural mobility",
-                               OM = "Overall mobility")) +
+                    values = c(EM = "#D55E00", SM = "#009E73"),
+                    labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(x = "Birth cohort", y = "Mobility (t = 0)",
-       title = "Exchange and Structural Mobility by Birth Cohort (pooled, 1-year bins)") +
+       title = "Exchange and Structural Mobility by Birth Cohort") +
   theme_minimal() +
   theme(legend.position = "bottom",
         legend.title    = element_text(size = 12),
