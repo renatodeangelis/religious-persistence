@@ -313,7 +313,7 @@ im_rows_10 = vector("list", length(P_list_10))
 names(im_rows_10) = names(P_list_10)
 
 for (key in names(P_list_10)) {
-  rows = lapply(0:4, function(t) {
+  rows = lapply(0:6, function(t) {
     vals = im_from_P(P_list_10[[key]], t = t)
     data.frame(cohort = as.integer(key), t = t, origin = names(vals), im = vals,
                row.names = NULL)
@@ -412,11 +412,13 @@ im_df_10 = im_df_10[im_df_10$cohort != 1920, ]
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
 p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
+  geom_hline(yintercept = log(0.05), linetype = "dashed", color = "gray70", linewidth = 0.5) +
+  geom_hline(yintercept = log(0.01), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.2) +
   facet_wrap(~ cohort, nrow = 2) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = 0:4) +
+  scale_x_continuous(breaks = 0:6) +
   labs(x = "Step (t)", y = "log(TV distance from π*)",
        color = NULL, title = "Individual Memory by Cohort (10-year bins, t = 0–4)") +
   healy_theme
