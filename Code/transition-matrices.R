@@ -15,7 +15,7 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 
 data(gss_all)
 data = gss_all |>
-  select(year, cohort, reltrad, reltrad16, region, born,
+  select(year, cohort, sex, reltrad, reltrad16, region, born,
          evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
@@ -392,6 +392,22 @@ for (key in names(P_list_20)) {
          width = 10, height = 7, dpi = 200)
 }
 
+# Okabe-Ito palette (Healy) — lowercase keys match rel_level_order
+reltrad_colors = c(
+  catholic    = "#0072B2",
+  evangelical = "#D55E00",
+  mainline    = "#009E73",
+  other       = "#CC79A7",
+  none        = "#999999"
+)
+reltrad_labels_tc = c(
+  catholic    = "Catholic",
+  evangelical = "Evangelical",
+  mainline    = "Mainline",
+  other       = "Other",
+  none        = "None"
+)
+
 im_df_10 = im_df_10[im_df_10$cohort != 1920, ]
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
@@ -399,17 +415,11 @@ p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.2) +
   facet_wrap(~ cohort, nrow = 2) +
-  scale_color_brewer(palette = "Set1") +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_x_continuous(breaks = 0:4) +
   labs(x = "Step (t)", y = "log(TV distance from π*)",
-       color = "Origin", title = "Individual Memory by Cohort (10-year bins, t = 0–4)") +
-  theme_minimal() +
-  theme(
-    strip.text      = element_text(size = 12),
-    legend.position = "bottom",
-    legend.title    = element_text(size = 12),
-    legend.text     = element_text(size = 11)
-  )
+       color = NULL, title = "Individual Memory by Cohort (10-year bins, t = 0–4)") +
+  healy_theme
 
 ggsave("output/figures/im_memory_10yr.png", p_im, width = 8, height = 6, dpi = 200)
 
@@ -419,17 +429,11 @@ p_im_20 = ggplot(im_df_20, aes(x = t, y = im, color = origin, group = origin)) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 2) +
   facet_wrap(~ cohort, nrow = 1) +
-  scale_color_brewer(palette = "Set1") +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_x_continuous(breaks = 0:4) +
   labs(x = "Step (t)", y = "log(TV distance from π*)",
-       color = "Origin", title = "Individual Memory by Cohort (20-year bins, t = 0–4)") +
-  theme_minimal() +
-  theme(
-    strip.text      = element_text(size = 12),
-    legend.position = "bottom",
-    legend.title    = element_text(size = 12),
-    legend.text     = element_text(size = 11)
-  )
+       color = NULL, title = "Individual Memory by Cohort (20-year bins, t = 0–4)") +
+  healy_theme
 
 ggsave("output/figures/im_memory_20yr.png", p_im_20, width = 10, height = 5, dpi = 200)
 
@@ -440,10 +444,7 @@ p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = 
   scale_y_continuous(limits = c(0.15, 0.45)) +
   labs(x = "Birth cohort", y = "Probability to Move",
        title = "Overall Mobility by Birth Cohort") +
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.title    = element_text(size = 12),
-        legend.text     = element_text(size = 11))
+  healy_theme
 
 ggsave("output/figures/overall_mobility.png", p_mob, width = 8, height = 5, dpi = 200)
 
@@ -457,21 +458,68 @@ p_em_sm = ggplot(em_sm_long, aes(x = cohort, y = value, color = measure,
                                   fill = measure, group = measure)) +
   geom_point(size = 1.5, alpha = 0.6) +
   geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2) +
-  scale_color_manual(name   = "Measure",
+  scale_color_manual(name   = NULL,
                      values = c(EM = "#D55E00", SM = "#009E73"),
                      labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
-  scale_fill_manual(name   = "Measure",
+  scale_fill_manual(name   = NULL,
                     values = c(EM = "#D55E00", SM = "#009E73"),
                     labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(x = "Birth cohort", y = "Probability to Move",
        title = "Exchange and Structural Mobility by Birth Cohort") +
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.title    = element_text(size = 12),
-        legend.text     = element_text(size = 11))
+  healy_theme
 
 ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 8, height = 5, dpi = 200)
+
+# ── MTE TIME SERIES (5-year cohorts, 1930–1980) ───────────────────────────────
+
+mte_rows_5 = lapply(names(P_list_5), function(key) {
+  coh = as.integer(key)
+  if (coh < 1930 | coh > 1980) return(NULL)
+  vals = mte(P_list_5[[key]])
+  data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
+})
+mte_df_5 = do.call(rbind, Filter(Negate(is.null), mte_rows_5))
+mte_df_5$origin = factor(mte_df_5$origin, levels = rel_level_order)
+
+p_mte = ggplot(mte_df_5, aes(x = cohort, y = mte, color = origin, group = origin)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_x_continuous(breaks = seq(1930, 1980, by = 10)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(x = "Birth cohort (5-year bins)", y = "Mean time to exit (steps)",
+       color = NULL,
+       title = "Mean Time to Exit by Religious Origin (5-year cohorts, 1930–1980)") +
+  healy_theme
+
+ggsave("output/figures/mte_5yr.png", p_mte, width = 8, height = 5, dpi = 200)
+
+# ── MTE TIME SERIES (1-year cohorts, 1930–1980) ───────────────────────────────
+
+mte_rows_1 = lapply(1930:1980, function(coh) {
+  sub = data[!is.na(data$cohort) & data$cohort == coh &
+               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+  if (nrow(sub) < 30) return(NULL)
+  P    = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+  vals = mte(P)
+  data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
+})
+mte_df_1 = do.call(rbind, Filter(Negate(is.null), mte_rows_1))
+mte_df_1$origin = factor(mte_df_1$origin, levels = rel_level_order)
+
+p_mte_1 = ggplot(mte_df_1, aes(x = cohort, y = mte, color = origin, group = origin)) +
+  geom_point(size = 1.5, alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE, span = 0.4) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_x_continuous(breaks = seq(1930, 1980, by = 10)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  labs(x = "Birth cohort", y = "Mean time to exit (steps)",
+       color = NULL,
+       title = "Mean Time to Exit by Religious Origin (1-year cohorts, 1930–1980)") +
+  healy_theme
+
+ggsave("output/figures/mte_1yr.png", p_mte_1, width = 8, height = 5, dpi = 200)
 
 # ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
@@ -565,14 +613,14 @@ for (reg in regions_broad) {
 mob_reg_df$region = factor(mob_reg_df$region, levels = regions_broad)
 
 p_mob_reg = ggplot(mob_reg_df, aes(x = cohort, y = mobility)) +
-  geom_point(size = 1.5, alpha = 0.6) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.5) +
+  geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
+  geom_smooth(method = "loess", se = TRUE, span = 0.5,
+              color = "#0072B2", fill = "#0072B2", alpha = 0.2) +
   facet_wrap(~ region, nrow = 2) +
   scale_y_continuous(limits = c(0, NA)) +
   labs(x = "Birth cohort", y = "Overall mobility (1 − weighted diagonal)",
        title = "Religious Mobility by Birth Cohort and Region (1-year bins)") +
-  theme_minimal() +
-  theme(strip.text = element_text(size = 12))
+  healy_theme
 
 ggsave("output/figures/region/mobility_region.png", p_mob_reg,
        width = 11, height = 7, dpi = 200)
@@ -650,13 +698,12 @@ p_cells_2x2 = ggplot(cells_2x2,
                unaffiliated = "Origin: Unaffiliated"))) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   scale_color_manual(
-    values = c(affiliated = "#0072B2", unaffiliated = "#D55E00"),
+    values = c(affiliated = "#0072B2", unaffiliated = "#999999"),
     labels = c(affiliated = "→ Affiliated", unaffiliated = "→ Unaffiliated")) +
   labs(x = "Birth cohort (10-year bins)", y = "Transition probability",
        color = NULL,
        title = "2×2 Transition Probabilities by Birth Cohort") +
-  theme_minimal() +
-  theme(legend.position = "bottom", strip.text = element_text(size = 11))
+  healy_theme
 
 ggsave("output/figures/binary/cells_2x2_10yr.png", p_cells_2x2,
        width = 10, height = 5, dpi = 200)
@@ -675,13 +722,13 @@ p_persist_2x2 = ggplot(persistence_2x2,
   geom_point(size = 2.5) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
   scale_color_manual(
-    values = c(affiliated = "#0072B2", unaffiliated = "#D55E00")) +
+    values = c(affiliated = "#0072B2", unaffiliated = "#999999"),
+    labels = c(affiliated = "Affiliated", unaffiliated = "Unaffiliated")) +
   labs(x = "Birth cohort (10-year bins)",
        y = "Diagonal persistence P[i → i]",
-       color = "Origin state",
+       color = NULL,
        title = "Diagonal Persistence: Affiliated vs. Unaffiliated (10-year cohorts)") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+  healy_theme
 
 ggsave("output/figures/binary/persistence_2x2_10yr.png", p_persist_2x2,
        width = 8, height = 5, dpi = 200)
@@ -696,7 +743,7 @@ reltrad_colors_att = c(
   "Evangelical" = "#D55E00",
   "Mainline"    = "#009E73",
   "Other"       = "#CC79A7",
-  "None"        = "#E69F00"
+  "None"        = "#999999"
 )
 
 att_cohort_df = data |>
@@ -739,8 +786,8 @@ make_att_cohort_plot = function(att_label) {
     scale_x_continuous(breaks = seq(1940, 1980, by = 10)) +
     scale_y_continuous(limits = c(0, 100), labels = function(x) paste0(x, "%")) +
     labs(title = att_label, x = NULL, y = sub(".*\\((.+)\\)", "\\1", att_label)) +
-    theme_minimal(base_size = 12) +
-    theme(legend.position = "bottom", plot.title = element_text(size = 12, face = "bold"))
+    healy_theme +
+    theme(plot.title = element_text(size = 12, face = "plain"))
 }
 
 p_evolved = make_att_cohort_plot("Evolution (% deny)")
@@ -812,8 +859,8 @@ make_att_cohort_plot16 = function(att_label) {
     scale_x_continuous(breaks = seq(1940, 1980, by = 10)) +
     scale_y_continuous(limits = c(0, 100), labels = function(x) paste0(x, "%")) +
     labs(title = att_label, x = NULL, y = sub(".*\\((.+)\\)", "\\1", att_label)) +
-    theme_minimal(base_size = 12) +
-    theme(legend.position = "bottom", plot.title = element_text(size = 12, face = "bold"))
+    healy_theme +
+    theme(plot.title = element_text(size = 12, face = "plain"))
 }
 
 caption_str16 = "Source: GSS. 5-year birth cohort bins, 1940–1980. Ribbons show 95% CIs. Childhood religious affiliation (reltrad16_alt)."
@@ -882,5 +929,54 @@ for (key in names(P_list_nat)) {
                        "  (N = ", n_list_nat[[key]], ")")
   )
   ggsave(paste0("output/figures/nativity/trans_", key, "_10yr.png"),
+         p, width = 10, height = 7, dpi = 200)
+}
+
+# ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1940–1980) ─────────────
+
+cohorts_sex = c(1940, 1950, 1960, 1970, 1980)
+sex_labels  = c("1" = "male", "2" = "female")
+
+P_list_sex      = list()
+pi0_list_sex    = list()
+pistar_list_sex = list()
+n_list_sex      = list()
+
+for (sx in c(1, 2)) {
+  for (coh in cohorts_sex) {
+    sub = data[
+      !is.na(data$cohort_10)     & data$cohort_10         == coh &
+      !is.na(data$sex)           & as.numeric(data$sex)   == sx  &
+      !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+    if (nrow(sub) < 30) next
+    key = paste(sex_labels[as.character(sx)], coh, sep = "_")
+
+    P_list_sex[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+    pi0_list_sex[[key]]    = pi_0(sub, "reltrad16_alt")
+    pistar_list_sex[[key]] = pi_star(P_list_sex[[key]])
+    n_list_sex[[key]]      = nrow(sub)
+  }
+}
+
+for (key in names(P_list_sex)) {
+  cat("\n──", tools::toTitleCase(sub("_(\\d{4})$", "", key)),
+      "| Cohort", sub(".*_(\\d{4})$", "\\1", key), "–",
+      as.integer(sub(".*_(\\d{4})$", "\\1", key)) + 9,
+      " (N =", n_list_sex[[key]], ") ──\n")
+  print(round(P_list_sex[[key]], 3))
+}
+
+dir.create("output/figures/sex", recursive = TRUE, showWarnings = FALSE)
+
+for (key in names(P_list_sex)) {
+  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  sex_lbl = tools::toTitleCase(sub("_(\\d{4})$", "", key))
+  p = make_combined(
+    P_list_sex[[key]], pi0_list_sex[[key]], pistar_list_sex[[key]],
+    levels    = rel_level_order,
+    title_str = paste0(sex_lbl, " – ", coh_yr, "–", coh_yr + 9,
+                       "  (N = ", n_list_sex[[key]], ")")
+  )
+  ggsave(paste0("output/figures/sex/trans_", key, "_10yr.png"),
          p, width = 10, height = 7, dpi = 200)
 }

@@ -1,6 +1,19 @@
 library(ggplot2)
 library(patchwork)
 
+# Shared Healy theme (theme_bw + Okabe-Ito palette conventions)
+healy_theme = theme_bw(base_size = 12) +
+  theme(
+    panel.grid.minor  = element_blank(),
+    legend.position   = "bottom",
+    legend.title      = element_text(size = 12),
+    legend.text       = element_text(size = 11),
+    axis.title        = element_text(size = 12),
+    plot.title        = element_text(size = 13, face = "plain"),
+    strip.background  = element_rect(fill = "grey92", color = NA),
+    strip.text        = element_text(size = 11)
+  )
+
 # ── MATRIX MATH ──────────────────────────────────────────────────────────────
 
 # Matrix power operator (replaces expm::`%^%`)
@@ -73,6 +86,13 @@ im_from_P = function(P, t = 1) {
   setNames(log(im_i), rownames(P))
 }
 
+# Mean time to exit state i: geometric sojourn with exit prob (1 - P_ii).
+# Closed form: MTE_i = 1 / (1 - P_ii). Returns Inf for absorbing states (P_ii = 1).
+mte = function(P) {
+  d = diag(as.matrix(P))
+  setNames(1 / (1 - d), rownames(P))
+}
+
 # π₀-weighted mean probability of leaving origin state; defaults to uniform π₀
 overall_mobility = function(P, pi0 = NULL) {
   if (is.null(pi0)) pi0 = rep(1 / nrow(P), nrow(P))
@@ -107,25 +127,25 @@ plot_pmat_heatmap = function(P, levels = NULL, text_size = 5, title_str = "P") {
     df$current = factor(df$current, levels = rev(levels))
   }
   ggplot(df, aes(x = current, y = origin, fill = est)) +
-    geom_tile(color = "white") +
+    geom_tile(color = "white", linewidth = 0.5) +
     geom_text(aes(label = sprintf("%.2f", est)), size = text_size) +
-    scale_fill_gradient(low = "lightyellow", high = "firebrick") +
-    labs(x = "Current religion", y = "Origin religion",
-         fill = "Transition Prob.", title = title_str) +
-    theme_minimal() +
-    theme(axis.text.x     = element_text(angle = 45, hjust = 1, size = 13),
-          axis.text.y     = element_text(angle = 45, hjust = 1, size = 13),
-          axis.ticks.x    = element_blank(),
-          axis.ticks.y    = element_blank(),
-          axis.title      = element_text(size = 13),
+    scale_fill_distiller(palette = "Blues", direction = 1,
+                         limits = c(0, 1), name = "Prob.") +
+    labs(x = "Current religion", y = "Origin religion", title = title_str) +
+    theme_bw(base_size = 12) +
+    theme(axis.text.x     = element_text(angle = 45, hjust = 1, size = 11),
+          axis.text.y     = element_text(size = 11),
+          axis.ticks      = element_blank(),
+          axis.title      = element_text(size = 12),
           legend.position = "bottom",
-          legend.text     = element_text(size = 11),
-          legend.title    = element_text(size = 12),
-          plot.title      = element_text(hjust = 0.5, size = 16),
-          panel.grid      = element_blank())
+          legend.text     = element_text(size = 10),
+          legend.title    = element_text(size = 11),
+          plot.title      = element_text(hjust = 0.5, size = 14, face = "plain"),
+          panel.grid      = element_blank(),
+          panel.border    = element_blank())
 }
 
-plot_pi_column = function(vec, title_str, levels = NULL) {
+plot_pi_column = function(vec, title_str, levels = NULL, text_size = 5) {
   df = data.frame(origin = names(vec), value = as.numeric(vec))
   if (!is.null(levels)) {
     df$origin = factor(df$origin, levels = levels)
@@ -133,22 +153,23 @@ plot_pi_column = function(vec, title_str, levels = NULL) {
     df$origin = factor(df$origin, levels = rev(unique(df$origin)))
   }
   ggplot(df, aes(x = 1, y = origin, fill = value)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = sprintf("%.2f", value)), size = 5, color = "black") +
-    scale_fill_gradient(low = "lightyellow", high = "firebrick") +
+    geom_tile(color = "white", linewidth = 0.5) +
+    geom_text(aes(label = sprintf("%.2f", value)), size = text_size, color = "black") +
+    scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1)) +
     labs(title = title_str) +
-    theme_minimal() +
-    theme(axis.title.x = element_blank(), axis.text.x  = element_blank(),
-          axis.ticks.x = element_blank(), axis.title.y = element_blank(),
-          axis.text.y  = element_blank(), axis.ticks.y = element_blank(),
+    theme_bw(base_size = 12) +
+    theme(axis.title.x   = element_blank(), axis.text.x  = element_blank(),
+          axis.ticks.x   = element_blank(), axis.title.y = element_blank(),
+          axis.text.y    = element_blank(), axis.ticks.y = element_blank(),
           legend.position = "none",
-          plot.title   = element_text(hjust = 0.5, size = 16),
-          panel.grid   = element_blank())
+          plot.title     = element_text(hjust = 0.5, size = 13, face = "plain"),
+          panel.grid     = element_blank(),
+          panel.border   = element_blank())
 }
 
-make_combined = function(P, pi0, pistar, levels = NULL, title_str = "P") {
-  g      = plot_pmat_heatmap(P,      levels = levels, title_str = title_str)
-  g0     = plot_pi_column(pi0,    title_str = "π₀", levels = levels)
-  g_star = plot_pi_column(pistar, title_str = "π*",      levels = levels)
+make_combined = function(P, pi0, pistar, levels = NULL, title_str = "P", text_size = 5) {
+  g      = plot_pmat_heatmap(P,      levels = levels, title_str = title_str, text_size = text_size)
+  g0     = plot_pi_column(pi0,    title_str = "π₀", levels = levels, text_size = text_size)
+  g_star = plot_pi_column(pistar, title_str = "π*", levels = levels, text_size = text_size)
   patchwork::wrap_plots(g, g0, g_star, widths = c(6, 1, 1))
 }
