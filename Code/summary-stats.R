@@ -3,6 +3,7 @@ library(tidyr)
 library(ggplot2)
 library(patchwork)
 library(gssr)
+source("Code/utils.R")
 
 data(gss_all)
 data = gss_all |>
@@ -376,6 +377,7 @@ fig7_catholic = fig7_base |>
     series = factor(series, levels = c("Raised Catholic", "Currently Catholic"))
   )
 
+# Nativity composition strip: % born abroad by 5-year cohort
 fig7_abroad = fig7_base |>
   group_by(cohort_5) |>
   summarise(n_obs = n(), pct = mean(nativity == "Born abroad"), .groups = "drop") |>
@@ -385,13 +387,8 @@ fig7_abroad = fig7_base |>
     ymax = pct + 1.96 * se
   )
 
-# Duplicate abroad line for both facet panels
-fig7_abroad_faceted = bind_rows(
-  fig7_abroad |> mutate(nativity = factor("Born in US",  levels = c("Born in US", "Born abroad"))),
-  fig7_abroad |> mutate(nativity = factor("Born abroad", levels = c("Born in US", "Born abroad")))
-)
-
-fig7_colors = c("Raised Catholic" = "black", "Currently Catholic" = "#0072B2")
+# Gray = raised (baseline); blue = currently (outcome) — both Okabe-Ito compliant
+fig7_colors = c("Raised Catholic" = "#999999", "Currently Catholic" = "#0072B2")
 
 p_fig7_main = ggplot() +
   geom_ribbon(data = fig7_catholic,
@@ -402,32 +399,35 @@ p_fig7_main = ggplot() +
             linewidth = 0.8) +
   geom_point(data = fig7_catholic,
              aes(x = cohort_5, y = pct, color = series, group = series),
-             shape = 1, size = 2) +
+             shape = 16, size = 2) +
   facet_wrap(~ nativity) +
+  scale_x_continuous(breaks = seq(1930, 1980, by = 10),
+                     expand = expansion(mult = c(0.02, 0.04))) +
   scale_y_continuous(name = "Proportion Catholic") +
   scale_color_manual(values = fig7_colors, name = NULL) +
   scale_fill_manual(values  = fig7_colors, name = NULL, guide = "none") +
   labs(x = NULL) +
-  theme_minimal() +
-  theme(panel.grid.minor = element_blank(),
-        legend.position  = "bottom")
+  healy_theme
 
-# Strip: % born abroad by 5-year cohort bin
+# Strip spans full width below both panels — no spacers, so referent is unambiguous
 p_fig7_strip = ggplot(fig7_abroad, aes(x = cohort_5, y = pct)) +
-  geom_line(color = "#E69F00", linewidth = 0.8) +
-  geom_point(color = "#E69F00", shape = 1, size = 2) +
-  scale_x_continuous(breaks = seq(1930, 1985, by = 10)) +
-  scale_y_continuous(limits = c(0, 0.20), labels = scales::percent_format(accuracy = 1)) +
-  labs(x = "Birth cohort (5-year bin)", y = "Born\nabroad") +
-  theme_minimal() +
-  theme(panel.grid.minor = element_blank())
+  geom_ribbon(aes(ymin = ymin, ymax = ymax), alpha = 0.15, fill = "#555555", color = NA) +
+  geom_line(color = "#555555", linewidth = 0.8) +
+  geom_point(color = "#555555", shape = 16, size = 2) +
+  scale_x_continuous(breaks = seq(1930, 1980, by = 10),
+                     expand = expansion(mult = c(0.02, 0.04))) +
+  scale_y_continuous(limits = c(0, 0.22),
+                     labels = scales::percent_format(accuracy = 1)) +
+  labs(x = "Birth cohort (5-year bin)", y = "Share\nborn abroad") +
+  healy_theme
 
-p_fig7_bottom = patchwork::plot_spacer() + p_fig7_strip + patchwork::plot_spacer() +
-  patchwork::plot_layout(ncol = 3, widths = c(1, 2, 1))
+patchwork::wrap_plots(p_fig7_main, p_fig7_strip, ncol = 1, heights = c(5, 1.5)) +
+  patchwork::plot_annotation(
+    caption = "Source: GSS, 1977–present. 5-year birth cohort bins, 1930–1985. Ribbons are 95% CIs.",
+    theme   = theme(plot.caption = element_text(size = 9, hjust = 0))
+  )
 
-patchwork::wrap_plots(p_fig7_main, p_fig7_bottom, ncol = 1, heights = c(5, 1.2))
-
-ggsave("output/figures/catholic/fig7.png", width = 9, height = 6)
+ggsave("output/figures/catholic/fig7.png", width = 9, height = 6.5, dpi = 200)
 
 ## 5-STATE TRANSITION MATRICES BY BIRTH COHORT AND NATIVITY
 
