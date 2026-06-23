@@ -16,7 +16,7 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
-         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2) |>
+         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2, race) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
