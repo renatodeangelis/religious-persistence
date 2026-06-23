@@ -16,7 +16,8 @@ rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
 data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
-         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2, race) |>
+         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2,
+        race, polviews, partyid) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -75,6 +76,34 @@ data = data |>
     # cappun2 covers 1972-73; cappun covers 1974-present; same 1/2 coding
     cappun_merged = coalesce(as.numeric(cappun), as.numeric(cappun2)),
     cappun_bin    = case_when(cappun_merged == 2 ~ 1L, cappun_merged == 1 ~ 0L)
+  )
+
+# ── PARTY ID AND POLITICAL VIEWS RECODES ─────────────────────────────────────
+# partyid: 0 = strong dem … 6 = strong rep, 7 = other party
+# polviews: 1 = extremely liberal … 7 = extremely conservative
+
+data = data |>
+  mutate(
+    partyid_narrow = case_when(
+      as.numeric(partyid) %in% 0:1            ~ "dem",
+      as.numeric(partyid) %in% 5:6            ~ "rep",
+      as.numeric(partyid) %in% c(2, 3, 4, 7) ~ "other"
+    ),
+    partyid_broad = case_when(
+      as.numeric(partyid) %in% 0:2        ~ "dem",
+      as.numeric(partyid) %in% 4:6        ~ "rep",
+      as.numeric(partyid) %in% c(3, 7)    ~ "other"
+    ),
+    polviews_narrow = case_when(
+      as.numeric(polviews) %in% 1:3 ~ "liberal",
+      as.numeric(polviews) == 4      ~ "moderate",
+      as.numeric(polviews) %in% 5:7 ~ "conservative"
+    ),
+    polviews_broad = case_when(
+      as.numeric(polviews) %in% 1:2 ~ "liberal",
+      as.numeric(polviews) %in% 3:5 ~ "moderate",
+      as.numeric(polviews) %in% 6:7 ~ "conservative"
+    )
   )
 
 # ── COVERAGE SUMMARY ─────────────────────────────────────────────────────────
@@ -980,5 +1009,61 @@ for (key in names(P_list_sex)) {
                        "  (N = ", n_list_sex[[key]], ")")
   )
   ggsave(paste0("output/figures/sex/trans_", key, "_10yr.png"),
+         p, width = 10, height = 7, dpi = 200)
+}
+
+# ── POLITICAL STRATIFICATION DECADAL MATRICES (10-year cohorts, 1940–1989) ───
+
+pol_vars = list(
+  partyid_narrow  = c("dem", "rep", "other"),
+  partyid_broad   = c("dem", "rep", "other"),
+  polviews_narrow = c("liberal", "moderate", "conservative"),
+  polviews_broad  = c("liberal", "moderate", "conservative")
+)
+
+cohorts_pol = c(1940, 1950, 1960, 1970, 1980)
+
+P_list_pol      = list()
+pi0_list_pol    = list()
+pistar_list_pol = list()
+n_list_pol      = list()
+
+for (vname in names(pol_vars)) {
+  for (grp in pol_vars[[vname]]) {
+    for (coh in cohorts_pol) {
+      sub = data[
+        !is.na(data$cohort_10)     & data$cohort_10 == coh &
+        !is.na(data[[vname]])      & data[[vname]]  == grp &
+        !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+      if (nrow(sub) < 30) next
+      key = paste(vname, grp, coh, sep = "_")
+      P_list_pol[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+      pi0_list_pol[[key]]    = pi_0(sub, "reltrad16_alt")
+      pistar_list_pol[[key]] = pi_star(P_list_pol[[key]])
+      n_list_pol[[key]]      = nrow(sub)
+    }
+  }
+}
+
+for (key in names(P_list_pol)) {
+  coh_yr = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  lbl    = gsub("_", " ", sub("_\\d{4}$", "", key))
+  cat("\n──", lbl, "| Cohort", coh_yr, "–", coh_yr + 9,
+      " (N =", n_list_pol[[key]], ") ──\n")
+  print(round(P_list_pol[[key]], 3))
+}
+
+dir.create("output/figures/political", recursive = TRUE, showWarnings = FALSE)
+
+for (key in names(P_list_pol)) {
+  coh_yr = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  lbl    = gsub("_", " ", sub("_\\d{4}$", "", key))
+  p = make_combined(
+    P_list_pol[[key]], pi0_list_pol[[key]], pistar_list_pol[[key]],
+    levels    = rel_level_order,
+    title_str = paste0(lbl, " – ", coh_yr, "–", coh_yr + 9,
+                       "  (N = ", n_list_pol[[key]], ")")
+  )
+  ggsave(paste0("output/figures/political/trans_", key, "_10yr.png"),
          p, width = 10, height = 7, dpi = 200)
 }
