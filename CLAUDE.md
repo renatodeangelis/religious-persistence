@@ -181,12 +181,15 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 
 | File | Purpose |
 |------|---------|
-| `Code/summary-stats.R` | GSS data loading (Dropbox .dta), Hout replication, Figs 1–6 |
-| `Code/transition-matrices.R` | Main analysis: cohort transition matrices, λ₂, memory curves, mobility decomposition (uses `gssr` package) |
-| `Code/transition-matrices-add-health.R` | Add Health W1/W4 religiosity-split transition matrices |
-| `Code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
-| `Code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
-| `Code/presentation.qmd` | Quarto slide deck |
+| `code/summary-stats.R` | GSS data loading (Dropbox .dta), Hout replication, Figs 1–6 |
+| `code/transition-matrices.R` | Main analysis: cohort transition matrices, λ₂, memory curves, mobility decomposition (uses `gssr` package) |
+| `code/transition-matrices-add-health.R` | Add Health W1/W4 religiosity-split transition matrices |
+| `code/transition-matrices-bp.R` | 6-state RELTRAD scheme (Black Protestant as separate category); memory curves and diagonal persistence → `output/figures/bp/` |
+| `code/transition-matrices-gss-decade.R` | Transition matrices stratified by GSS survey decade (not birth cohort) → `output/figures/gss-decade/` |
+| `code/transition-matrices-nonblack.R` | Main analysis restricted to non-Black sample; includes difference plots vs. full sample → `output/figures/nonblack/` |
+| `code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
+| `code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
+| `code/presentation.qmd` | Quarto slide deck |
 
 ## File Locations
 
