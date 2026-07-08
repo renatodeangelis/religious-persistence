@@ -30,7 +30,7 @@ data = gss_all |>
                 ),
                 .names = "{.col}_alt")) |>
   mutate(age = year - cohort) |>
-  filter(age > 25, cohort >= 1900) |>
+  filter(age >= 25, age <= 75, cohort >= 1900) |>
   mutate(
     cohort_5   = floor((cohort - 1900) / 5)  * 5  + 1900,
     cohort_10  = floor((cohort - 1900) / 10) * 10 + 1900,
@@ -57,6 +57,35 @@ data = gss_all |>
 
 states_alt = sort(unique(c(data$reltrad_alt, data$reltrad16_alt)))
 states_alt = states_alt[!is.na(states_alt)]
+
+# ── COHORT SAMPLE SIZES (5/10/20-year windows) ───────────────────────────────
+# N per cohort window feeding the main RELIG16 -> RELIG transition matrices
+# below (same non-missing filter as the P_list_* loops). The n < 30 threshold
+# matches the exclusion rule used in those loops.
+
+valid_rows = !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt)
+
+cohort_n_table = function(cohort_var, label) {
+  coh = data[[cohort_var]]
+  keep = valid_rows & !is.na(coh) & coh >= 1920 & coh <= 1980
+  tab = table(coh[keep])
+  data.frame(
+    window   = label,
+    cohort   = as.integer(names(tab)),
+    n        = as.integer(tab),
+    below_30 = as.integer(tab) < 30,
+    row.names = NULL
+  )
+}
+
+cohort_n_df = do.call(rbind, list(
+  cohort_n_table("cohort",    "1-year"),
+  cohort_n_table("cohort_5",  "5-year"),
+  cohort_n_table("cohort_10", "10-year"),
+  cohort_n_table("cohort_20", "20-year")
+))
+
+print(cohort_n_df, row.names = FALSE)
 
 # ── ATTITUDE BINARY RECODES ───────────────────────────────────────────────────
 # GSS codings:
