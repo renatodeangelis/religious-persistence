@@ -173,3 +173,105 @@ make_combined = function(P, pi0, pistar, levels = NULL, title_str = "P", text_si
   g_star = plot_pi_column(pistar, title_str = "π*", levels = levels, text_size = text_size)
   patchwork::wrap_plots(g, g0, g_star, widths = c(6, 1, 1))
 }
+
+count_matrix = function(data, origin, current, levels = NULL) {
+  f = if (!is.null(levels)) function(x) factor(x, levels = levels) else factor
+  tab = table(f(data[[origin]]), f(data[[current]]))
+  class(tab) = "matrix"
+  tab
+}
+
+calculate_phat_ij = function(count_list) {
+  # Step 1: element-wise sum across all T matrices  
+  N_pool = 
+    Reduce(
+      "+", 
+      lapply(
+        count_list, 
+        function(x) 
+          matrix(as.numeric(x),
+                 nrow = nrow(x), 
+                 ncol = ncol(x))
+      )
+    )
+  # Step 2: pooled row totals  
+  n_star_i = rowSums(N_pool)
+  # Step 3: divide each row by its pooled row total
+  p_hat_pool = N_pool / n_star_i   
+  # Preserve state names if present
+  dimnames(p_hat_pool) = dimnames(count_list[[1]])
+  return(p_hat_pool)
+}
+
+calculate_phat_ijt = function(count_lst){
+  phat_ijt =
+    lapply(
+      count_lst,
+      function(mat) {
+        row_sums = rowSums(mat)
+        mat / row_sums
+      }
+    )
+}
+
+chi2_row = function(count_list, alpha = 0.05) {
+  T_steps = length(count_list)
+  p_hat_pool = calculate_phat_ij(count_list)
+  p_hat_each = calculate_phat_ijt(count_list)
+  states  = rownames(p_hat_pool)
+  m       = nrow(p_hat_pool)
+  chi2_i = numeric(m)
+  mats = count_list
+  
+  for (i in seq_len(m)) {
+    p0_i   = p_hat_pool[i, ]          
+    active = p0_i > 0                  
+    for (t in seq_len(T_steps)) {
+      n_i_t  = rowSums(mats[[t]])[i]   
+      if (n_i_t == 0) next
+      pt_i   = p_hat_each[[t]][i, ]     
+      chi2_i[i] = chi2_i[i] +
+        n_i_t * sum((pt_i[active] - p0_i[active])^2 / p0_i[active])
+    }
+  }
+  
+  df_i = sapply(seq_len(m), function(i) {
+    n_zero = sum(p_hat_pool[i, ] == 0)
+    (m - 1 - n_zero) * (T_steps - 1)
+  })
+  
+  p_val = mapply(function(x, df) pchisq(x, df, lower.tail = FALSE), chi2_i, df_i)
+  
+  data.frame(
+    state       = states,
+    chi2        = round(chi2_i, 4),
+    df          = df_i,
+    p_value     = round(p_val,  4),
+    significant = p_val < alpha,
+    row.names   = NULL
+  )
+}
+
+chi2_joint = function(count_list, alpha = 0.05) {
+  row_results = chi2_row(count_list, alpha)
+  chi2_total  = sum(row_results$chi2)
+  df_total    = sum(row_results$df)
+  p_val       = pchisq(chi2_total, df = df_total, lower.tail = FALSE)
+  
+  cat("\n--- Joint test (eq. 3.8) ---\n")
+  cat(sprintf("chi2 = %.4f,  df = %d,  p-value = %.4f\n",
+              chi2_total, df_total, p_val))
+  cat(sprintf("Decision at alpha = %.2f: %s\n", alpha,
+              ifelse(p_val < alpha,
+                     "REJECT H0 — transition probabilities are not stationary",
+                     "Fail to reject H0 — stationarity is consistent with data")))
+  
+  joint_result = data.frame(
+    state       = "Joint",
+    chi2        = round(chi2_total, 4),
+    df          = df_total,
+    p_value     = round(p_val, 4),
+    significant = p_val < alpha
+  )
+  return(joint_result)
+}
