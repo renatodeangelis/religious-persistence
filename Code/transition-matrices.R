@@ -3,7 +3,7 @@ library(tidyr)
 library(ggplot2)
 library(patchwork)
 library(gssr)
-source("Code/utils.R")
+source("code/utils.R")
 
 reltrad_labels  = c(
   "1" = "evangelical", "2" = "mainline",  "3" = "black protestant",

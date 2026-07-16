@@ -51,6 +51,9 @@ rsconnect/
 # macOS metadata
 .DS_Store
 
+# Regenerable pipeline artifacts (rebuild via code/00-run-all.R)
+data/derived/*.rds
+
 # R default plot output
 Rplots.pdf
 

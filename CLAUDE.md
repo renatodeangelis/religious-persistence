@@ -182,7 +182,15 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | File | Purpose |
 |------|---------|
 | `code/summary-stats.R` | GSS data loading (Dropbox .dta), Hout replication, Figs 1–6 |
-| `code/transition-matrices.R` | Main analysis: cohort transition matrices, λ₂, memory curves, mobility decomposition (uses `gssr` package) |
+| `code/00-run-all.R` | Sources 01–07 in dependency order (the whole main pipeline in one command) |
+| `code/01-prepare-data.R` | Loads `gss_all`, builds/cleans the master frame (all recodes, cohort bins, belief, state space), strips haven labels → `data/derived/gss_clean.rds` |
+| `code/02-estimate-matrices.R` | Builds every count/P/pi0/pistar list for all stratifications → `data/derived/matrices.rds`. Raw counts (N) saved for national 5/10-year (feed homogeneity tests) |
+| `code/03-diagnostics.R` | Cohort-N, attitude coverage, and cell-count feasibility tables (console) |
+| `code/04-homogeneity.R` | Anderson-Goodman chi-square homogeneity tests (consumes N), figures + LaTeX table → `output/figures/homogeneity/`, `output/tables/` |
+| `code/05-memory-measures.R` | National IM/memory curves, overall/exchange/structural mobility, MTE, transition heatmaps |
+| `code/06-stratified-matrices.R` | Region/binary 2×2/nativity/sex/political matrix figures + console tables |
+| `code/07-attitudes.R` | Attitude-stratified matrix figures + % conservative cohort-trend panels (reltrad & reltrad16) |
+| `code/transition-matrices.R` | **Superseded** by `01`–`07` above; retained for reference. Has a latent `focal`-undefined bug in the rolling-window block (fixed in `04`) |
 | `code/transition-matrices-add-health.R` | Add Health W1/W4 religiosity-split transition matrices |
 | `code/transition-matrices-bp.R` | 6-state RELTRAD scheme (Black Protestant as separate category); memory curves and diagonal persistence → `output/figures/bp/` |
 | `code/transition-matrices-gss-decade.R` | Transition matrices stratified by GSS survey decade (not birth cohort) → `output/figures/gss-decade/` |
@@ -196,7 +204,8 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | Data | Location |
 |------|----------|
 | GSS (summary-stats.R) | Dropbox shared link (loaded via URL) |
-| GSS (transition-matrices.R) | `gssr` R package (`data(gss_all)`) |
+| GSS (main pipeline, 01-prepare-data.R) | `gssr` R package (`data(gss_all)`) |
+| Derived matrices/clean data (02–07) | `data/derived/*.rds` (gitignored; rebuild via `code/00-run-all.R`) |
 | Add Health W1/W3 (matrix-validation.R) | `~/Downloads/` (w1inhome_dvn.RData, w3inhome_dvn.RData) |
 | Add Health W1/W4 (transition-matrices-add-health.R) | `add-health/` directory (w1inhome.rds, w4inhome.rds) |
 | LSOG (ICPSR 22100) | Pending — not yet loaded in any script |

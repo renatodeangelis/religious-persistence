@@ -1,6 +1,19 @@
 library(ggplot2)
 library(patchwork)
 
+# ── SHARED CONSTANTS ──────────────────────────────────────────────────────────
+# Config used across the split pipeline (01–07). Data-derived constants such as
+# `states_alt` live in gss_clean.rds instead, because they depend on the data.
+
+# Column order for the 5-state scheme in every figure and homogeneity test.
+rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
+
+# Binary attitude items feeding the attitude transition matrices and diagnostics.
+att_vars = c(
+  "evolved_bin", "abany_bin",
+  "homosex_bin", "premarsx_bin", "pornlaw_bin", "cappun_bin"
+)
+
 # Shared Healy theme (theme_bw + Okabe-Ito palette conventions)
 healy_theme = theme_bw(base_size = 12) +
   theme(
