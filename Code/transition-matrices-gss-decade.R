@@ -198,6 +198,101 @@ p_diag_gd = ggplot(diag_df_gd,
 ggsave("output/figures/gss-decade/diagonal_persistence_gss_decade.png",
        p_diag_gd, width = 8, height = 5, dpi = 200)
 
+# ── YEAR-BY-YEAR DIAGONAL PERSISTENCE ────────────────────────────────────────
+# One transition matrix per individual survey year (existing exclusions already
+# applied in data_gd). We keep only the diagonal P[i -> i] = share of origin i
+# who still report i as adults. Points are suppressed where an origin has fewer
+# than `min_origin_n` respondents in that year, to avoid spiky lines from thin
+# cells (small-N years such as biennial gaps).
+
+min_origin_n = 25
+
+diag_year = do.call(rbind, lapply(sort(unique(data_gd$year)), function(yr) {
+  sub = data_gd[data_gd$year == yr &
+                !is.na(data_gd$reltrad16_alt) & !is.na(data_gd$reltrad_alt), ]
+  if (nrow(sub) < 30) return(NULL)
+
+  tab      = table(factor(sub$reltrad16_alt, levels = states_alt),
+                   factor(sub$reltrad_alt,   levels = states_alt))
+  row_tot  = rowSums(tab)
+  stay     = diag(tab)
+  pii      = ifelse(row_tot > 0, stay / row_tot, NA_real_)
+
+  data.frame(
+    year        = as.numeric(yr),
+    origin      = states_alt,
+    persistence = as.numeric(pii),
+    origin_n    = as.numeric(row_tot),
+    row.names   = NULL
+  )
+}))
+
+# Suppress thin-cell points
+diag_year$persistence[diag_year$origin_n < min_origin_n] = NA_real_
+diag_year$origin = factor(diag_year$origin, levels = rel_level_order)
+
+p_diag_year = ggplot(diag_year,
+    aes(x = year, y = persistence, color = origin, group = origin)) +
+  geom_line(linewidth = 0.7, na.rm = TRUE) +
+  geom_point(size = 1.8, na.rm = TRUE) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1),
+                     labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = seq(1975, 2020, 5)) +
+  labs(x = "GSS survey year", y = "Percent staying  P[i → i]",
+       color = NULL,
+       title = "Year-by-Year Diagonal Persistence by Religion (5-state)") +
+  healy_theme
+
+ggsave("output/figures/gss-decade/diagonal_persistence_by_year.png",
+       p_diag_year, width = 10, height = 5, dpi = 200)
+
+# ── YEAR-BY-YEAR STATIONARY DISTRIBUTION (π*) ────────────────────────────────
+# One transition matrix per individual survey year, then its implied stationary
+# distribution π* (left eigenvector for eigenvalue 1). Unlike diagonal
+# persistence, π* is a property of the whole matrix, so a year is dropped
+# entirely if ANY origin has fewer than `min_origin_n` respondents (a thin row
+# destabilizes the eigen-decomposition). Same exclusions as data_gd throughout.
+
+pistar_year = do.call(rbind, lapply(sort(unique(data_gd$year)), function(yr) {
+  sub = data_gd[data_gd$year == yr &
+                !is.na(data_gd$reltrad16_alt) & !is.na(data_gd$reltrad_alt), ]
+  if (nrow(sub) < 30) return(NULL)
+
+  tab = table(factor(sub$reltrad16_alt, levels = states_alt),
+              factor(sub$reltrad_alt,   levels = states_alt))
+  if (any(rowSums(tab) < min_origin_n)) return(NULL)   # thin row → skip year
+
+  P  = tab / rowSums(tab)
+  class(P) = "matrix"
+  ps = pi_star(P)
+
+  data.frame(
+    year   = as.numeric(yr),
+    origin = names(ps),
+    pistar = as.numeric(ps),
+    row.names = NULL
+  )
+}))
+
+pistar_year$origin = factor(pistar_year$origin, levels = rel_level_order)
+
+p_pistar_year = ggplot(pistar_year,
+    aes(x = year, y = pistar, color = origin, group = origin)) +
+  geom_line(linewidth = 0.7, na.rm = TRUE) +
+  geom_point(size = 1.8, na.rm = TRUE) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1),
+                     labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = seq(1975, 2020, 5)) +
+  labs(x = "GSS survey year", y = "Stationary share (π*)",
+       color = NULL,
+       title = "Year-by-Year Implied Stationary Distribution (π*) by Religion (5-state)") +
+  healy_theme
+
+ggsave("output/figures/gss-decade/pistar_by_year.png",
+       p_pistar_year, width = 10, height = 5, dpi = 200)
+
 # π* over GSS windows — tracks long-run composition implied by each period's matrix
 pistar_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
   data.frame(gss_decade = dw, origin = names(pistar_list_gd[[dw]]),
