@@ -21,11 +21,6 @@ P_list_att_pooled   = matrices$att_pooled$P
 pi0_list_att_pooled = matrices$att_pooled$pi0
 pooled_summary      = matrices$att_pooled$summary
 
-P_list_att_3coh   = matrices$att_3coh$P
-pi0_list_att_3coh = matrices$att_3coh$pi0
-coh3_summary      = matrices$att_3coh$summary
-cohort_3_levels   = matrices$att_3coh$levels
-
 # ── ATTITUDE FIGURES ──────────────────────────────────────────────────────────
 
 att_labels = c(
@@ -38,7 +33,6 @@ att_labels = c(
 )
 
 dir.create("output/figures/attitude/pooled", recursive = TRUE, showWarnings = FALSE)
-dir.create("output/figures/attitude/3coh",   recursive = TRUE, showWarnings = FALSE)
 
 for (v in att_vars) {
   for (grp_lbl in c("conservative", "liberal")) {
@@ -57,23 +51,6 @@ for (v in att_vars) {
   }
 }
 
-for (v in att_vars) {
-  for (grp_lbl in c("conservative", "liberal")) {
-    for (cg in cohort_3_levels) {
-      key = paste(v, grp_lbl, cg, sep = "_")
-      if (is.null(P_list_att_3coh[[key]])) next
-      P      = P_list_att_3coh[[key]]
-      pi0    = pi0_list_att_3coh[[key]]
-      pistar = pi_star(P)
-      ttl    = paste0(att_labels[v], " — ", tools::toTitleCase(grp_lbl), " — ", cg)
-      p      = make_combined(P, pi0, pistar, levels = rel_level_order, title_str = ttl)
-      safe_cg = gsub("[^a-zA-Z0-9]", "_", cg)
-      ggsave(paste0("output/figures/attitude/3coh/", v, "_", grp_lbl, "_", safe_cg, ".png"),
-             p, width = 10, height = 7, dpi = 200)
-    }
-  }
-}
-
 # ── ATTITUDE TRENDS BY RELTRAD AND BIRTH COHORT ──────────────────────────────
 # Conservative positions: evolved_bin == 0, abany_bin == 0, homosex_bin == 0
 
@@ -88,7 +65,7 @@ reltrad_colors_att = c(
 )
 
 att_cohort_df = data |>
-  filter(!is.na(reltrad_alt), cohort_5 >= 1940, cohort_5 <= 1980) |>
+  filter(!is.na(reltrad_alt), cohort_5 >= 1942.5, cohort_5 <= 1982.5) |>
   pivot_longer(
     cols      = c(evolved_bin, abany_bin, homosex_bin, cappun_bin),
     names_to  = "attitude",
@@ -161,7 +138,7 @@ ggsave("output/figures/attitude/cohort_trends/att_trends_cappun.png",
 dir.create("output/figures/attitude/cohort_trends16", recursive = TRUE, showWarnings = FALSE)
 
 att_cohort_df16 = data |>
-  filter(!is.na(reltrad16_alt), cohort_5 >= 1940, cohort_5 <= 1980) |>
+  filter(!is.na(reltrad16_alt), cohort_5 >= 1942.5, cohort_5 <= 1982.5) |>
   pivot_longer(
     cols      = c(evolved_bin, abany_bin, homosex_bin, cappun_bin),
     names_to  = "attitude",

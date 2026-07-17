@@ -34,7 +34,7 @@ names(im_rows_10) = names(P_list_10)
 for (key in names(P_list_10)) {
   rows = lapply(0:6, function(t) {
     vals = im_from_P(P_list_10[[key]], t = t)
-    data.frame(cohort = as.integer(key), t = t, origin = names(vals), im = vals,
+    data.frame(cohort = as.numeric(key), t = t, origin = names(vals), im = vals,
                row.names = NULL)
   })
   im_rows_10[[key]] = do.call(rbind, rows)
@@ -49,7 +49,7 @@ names(im_rows_20) = names(P_list_20)
 for (key in names(P_list_20)) {
   rows = lapply(0:4, function(t) {
     vals = im_from_P(P_list_20[[key]], t = t)
-    data.frame(cohort = as.integer(key), t = t, origin = names(vals), im = vals,
+    data.frame(cohort = as.numeric(key), t = t, origin = names(vals), im = vals,
                row.names = NULL)
   })
   im_rows_20[[key]] = do.call(rbind, rows)
@@ -87,27 +87,32 @@ em_sm_df = do.call(rbind, Filter(Negate(is.null), em_sm_rows))
 
 dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
 
+# Keys are bin midpoints (edge + halfwidth); recover the integer left edge for
+# titles/filenames so each figure still labels its actual cohort range.
 for (key in names(P_list_5)) {
+  edge = as.numeric(key) - 2.5
   p = make_combined(P_list_5[[key]], pi0_list_5[[key]], pistar_list_5[[key]],
                     levels = rel_level_order,
-                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 4))
-  ggsave(paste0("output/figures/trans_", key, "_5yr.png"), p,
+                    title_str = paste0("Cohort ", edge, "–", edge + 4))
+  ggsave(paste0("output/figures/trans_", edge, "_5yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
 for (key in names(P_list_10)) {
+  edge = as.numeric(key) - 5
   p = make_combined(P_list_10[[key]], pi0_list_10[[key]], pistar_list_10[[key]],
                     levels = rel_level_order,
-                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 9))
-  ggsave(paste0("output/figures/trans_", key, "_10yr.png"), p,
+                    title_str = paste0("Cohort ", edge, "–", edge + 9))
+  ggsave(paste0("output/figures/trans_", edge, "_10yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
 for (key in names(P_list_20)) {
+  edge = as.numeric(key) - 10
   p = make_combined(P_list_20[[key]], pi0_list_20[[key]], pistar_list_20[[key]],
                     levels = rel_level_order,
-                    title_str = paste0("Cohort ", key, "–", as.integer(key) + 19))
-  ggsave(paste0("output/figures/trans_", key, "_20yr.png"), p,
+                    title_str = paste0("Cohort ", edge, "–", edge + 19))
+  ggsave(paste0("output/figures/trans_", edge, "_20yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
@@ -127,7 +132,7 @@ reltrad_labels_tc = c(
   none        = "None"
 )
 
-im_df_10 = im_df_10[im_df_10$cohort != 1920, ]
+im_df_10 = im_df_10[im_df_10$cohort != 1925, ]   # drop earliest 10-yr bin (edge 1920, midpoint 1925)
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
 p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
@@ -195,8 +200,8 @@ ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 8, height = 5, dpi = 
 # ── MTE TIME SERIES (5-year cohorts, 1930–1980) ───────────────────────────────
 
 mte_rows_5 = lapply(names(P_list_5), function(key) {
-  coh = as.integer(key)
-  if (coh < 1930 | coh > 1980) return(NULL)
+  coh = as.numeric(key)                          # 5-yr bin midpoint (e.g. 1932.5)
+  if (coh < 1932.5 | coh > 1982.5) return(NULL)  # edges 1930–1980
   vals = mte(P_list_5[[key]])
   data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
 })

@@ -49,47 +49,10 @@ for (v in att_vars) {
 
 pooled_summary = do.call(rbind, pooled_summary_rows)
 
-# ── ATTITUDE MATRICES: THREE-COHORT STRATIFICATION ───────────────────────────
-# Groups: pre-1940 / 1940-1959 / 1960+ (open-ended)
-
-max_cohort_yr   = max(data$cohort, na.rm = TRUE)
-cohort_3_levels = c("1900-1939", "1940-1959", paste0("1960-", max_cohort_yr))
-
-P_list_att_3coh   = list()
-pi0_list_att_3coh = list()
-coh3_summary_rows = list()
-
-for (v in att_vars) {
-  for (grp in c(0L, 1L)) {
-    for (cg in cohort_3_levels) {
-      sub = data[!is.na(data$reltrad_alt) & !is.na(data$reltrad16_alt) &
-                 !is.na(data[[v]])        & data[[v]]     == grp &
-                 !is.na(data$cohort_3)   & data$cohort_3 == cg, ]
-      if (nrow(sub) < 30) next
-      grp_lbl = if (grp == 1L) "liberal" else "conservative"
-      key     = paste(v, grp_lbl, cg, sep = "_")
-
-      P_list_att_3coh[[key]]   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-      pi0_list_att_3coh[[key]] = pi_0(sub, "reltrad16_alt")
-
-      coh3_summary_rows[[key]] = data.frame(
-        variable    = v,
-        group       = grp_lbl,
-        cohort_grp  = cg,
-        n           = nrow(sub),
-        mean_cohort = round(mean(sub$cohort, na.rm = TRUE), 1),
-        row.names   = NULL
-      )
-    }
-  }
-}
-
-coh3_summary = do.call(rbind, coh3_summary_rows)
-
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
 # ── 5-year cohort loop ───────────────────────────────────────────────────────
-cohorts_5 = sort(unique(data$cohort_5[!is.na(data$cohort_5) & data$cohort_5 >= 1920 & data$cohort_5 <= 1980]))
+cohorts_5 = sort(unique(data$cohort_5[!is.na(data$cohort_5) & data$cohort_5 >= 1922.5 & data$cohort_5 <= 1982.5]))
 
 P_list_5      = list()
 pi0_list_5    = list()
@@ -109,7 +72,7 @@ for (coh in cohorts_5) {
 }
 
 # ── 10-year cohort loop ──────────────────────────────────────────────────────
-cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1920 & data$cohort_10 <= 1980]))
+cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1925 & data$cohort_10 <= 1985]))
 
 P_list_10      = list()
 pi0_list_10    = list()
@@ -129,7 +92,7 @@ for (coh in cohorts_10) {
 }
 
 # ── 20-year cohort loop ──────────────────────────────────────────────────────
-cohorts_20_pooled = sort(unique(data$cohort_20[!is.na(data$cohort_20) & data$cohort_20 >= 1920 & data$cohort_20 <= 1980]))
+cohorts_20_pooled = sort(unique(data$cohort_20[!is.na(data$cohort_20) & data$cohort_20 >= 1930 & data$cohort_20 <= 1990]))
 
 P_list_20      = list()
 pi0_list_20    = list()
@@ -148,7 +111,7 @@ for (coh in cohorts_20_pooled) {
 
 # ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
-cohorts_20    = c(1920, 1940, 1960)
+cohorts_20    = c(1930, 1950, 1970)   # 20-year bin midpoints (edges 1920/1940/1960)
 regions_broad = c("Midwest", "Northeast", "South", "West")
 
 P_list_reg      = list()
@@ -175,7 +138,7 @@ for (reg in regions_broad) {
 states_2x2 = c("affiliated", "unaffiliated")
 
 cohorts_10_2x2 = sort(unique(
-  data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1920 & data$cohort_10 <= 1980]
+  data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1925 & data$cohort_10 <= 1985]
 ))
 
 P_list_2x2      = list()
@@ -197,7 +160,7 @@ for (coh in cohorts_10_2x2) {
 
 # ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
 
-cohorts_nat    = c(1950, 1960, 1970)
+cohorts_nat    = c(1955, 1965, 1975)   # 10-year bin midpoints (edges 1950/1960/1970)
 nativity_groups = c("Born in US", "Born abroad")
 
 P_list_nat      = list()
@@ -223,7 +186,7 @@ for (nat in nativity_groups) {
 
 # ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1940–1980) ─────────────
 
-cohorts_sex = c(1940, 1950, 1960, 1970, 1980)
+cohorts_sex = c(1945, 1955, 1965, 1975, 1985)   # 10-year bin midpoints (edges 1940–1980)
 sex_labels  = c("1" = "male", "2" = "female")
 
 P_list_sex      = list()
@@ -256,7 +219,7 @@ pol_vars = list(
   polviews_broad  = c("liberal", "moderate", "conservative")
 )
 
-cohorts_pol = c(1940, 1950, 1960, 1970, 1980)
+cohorts_pol = c(1945, 1955, 1965, 1975, 1985)   # 10-year bin midpoints (edges 1940–1980)
 
 P_list_pol      = list()
 pi0_list_pol    = list()
@@ -285,8 +248,6 @@ for (vname in names(pol_vars)) {
 matrices = list(
   att_pooled = list(P = P_list_att_pooled, pi0 = pi0_list_att_pooled,
                     summary = pooled_summary),
-  att_3coh   = list(P = P_list_att_3coh,   pi0 = pi0_list_att_3coh,
-                    summary = coh3_summary, levels = cohort_3_levels),
   nat5  = list(P = P_list_5,  pi0 = pi0_list_5,  pistar = pistar_list_5,  N = N_list_5),
   nat10 = list(P = P_list_10, pi0 = pi0_list_10, pistar = pistar_list_10, N = N_list_10),
   nat20 = list(P = P_list_20, pi0 = pi0_list_20, pistar = pistar_list_20),

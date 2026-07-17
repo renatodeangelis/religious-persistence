@@ -21,11 +21,13 @@ valid_rows = !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt)
 
 cohort_n_table = function(cohort_var, label) {
   coh = data[[cohort_var]]
-  keep = valid_rows & !is.na(coh) & coh >= 1920 & coh <= 1980
+  # upper bound widened to 1990 so binned-midpoint labels (10-yr up to 1985,
+  # 20-yr up to 1990) are not clipped; the 1-year window is unaffected.
+  keep = valid_rows & !is.na(coh) & coh >= 1920 & coh <= 1990
   tab = table(coh[keep])
   data.frame(
     window   = label,
-    cohort   = as.integer(names(tab)),
+    cohort   = as.numeric(names(tab)),   # midpoint bins are non-integer (e.g. 1922.5)
     n        = as.integer(tab),
     below_30 = as.integer(tab) < 30,
     row.names = NULL
@@ -63,7 +65,7 @@ cell_rows = list()
 
 for (v in att_vars) {
   for (grp in c(0L, 1L)) {
-    for (coh in c(1920, 1940, 1960, 1980)) {
+    for (coh in c(1930, 1950, 1970, 1990)) {   # 20-year bin midpoints (edges 1920/1940/1960/1980)
       sub = data[
         !is.na(data$cohort_20) & data$cohort_20 == coh &
         !is.na(data[[v]])      & data[[v]]       == grp, ]

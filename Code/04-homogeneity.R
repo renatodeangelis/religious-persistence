@@ -113,7 +113,7 @@ joint_stat = function(mats) {
   c(chi2 = jc, df = jd, p = pchisq(jc, jd, lower.tail = FALSE))
 }
 
-roll_years = as.integer(names(N_list_5))   # ordered 5-year cohort starts
+roll_years = as.numeric(names(N_list_5))   # ordered 5-year cohort midpoints (non-integer, e.g. 1922.5)
 bin_widths = c(2, 3, 4, 5)                 # window width in number of 5-year bins
 
 roll_results = do.call(rbind, lapply(bin_widths, function(k) {

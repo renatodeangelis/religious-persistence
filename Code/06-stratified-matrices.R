@@ -40,7 +40,7 @@ pi0_list_pol    = matrices$political$pi0
 pistar_list_pol = matrices$political$pistar
 n_list_pol      = matrices$political$n
 
-cohorts_20    = c(1920, 1940, 1960)
+cohorts_20    = c(1930, 1950, 1970)   # 20-year bin midpoints (edges 1920/1940/1960)
 regions_broad = c("Midwest", "Northeast", "South", "West")
 
 # ── REGIONAL IM AND MOBILITY COMPUTATION ─────────────────────────────────────
@@ -81,11 +81,11 @@ mob_reg_df = do.call(rbind,
 dir.create("output/figures/region", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_reg)) {
-  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  edge    = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 10   # midpoint → left edge
   reg_lbl = gsub("_", " ", sub("_\\d{4}$", "", key))
   p = make_combined(P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
                     levels = rel_level_order,
-                    title_str = paste0(reg_lbl, " – ", coh_yr, "–", coh_yr + 19))
+                    title_str = paste0(reg_lbl, " – ", edge, "–", edge + 19))
   ggsave(paste0("output/figures/region/trans_", key, "_20yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
@@ -97,7 +97,7 @@ for (reg in regions_broad) {
       make_combined(
         P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
         levels    = rel_level_order,
-        title_str = paste0(reg, "\n", coh, "–", coh + 19)
+        title_str = paste0(reg, "\n", coh - 10, "–", coh + 9)   # midpoint → bin edges
       )
     } else {
       patchwork::plot_spacer()
@@ -127,7 +127,8 @@ ggsave("output/figures/region/mobility_region.png", p_mob_reg,
 
 # Print matrices with N
 for (key in names(P_list_2x2)) {
-  cat("\n── Cohort", key, "–", as.integer(key) + 9, "  (N =", n_list_2x2[[key]], ") ──\n")
+  edge = as.numeric(key) - 5   # 10-yr bin midpoint → left edge
+  cat("\n── Cohort", edge, "–", edge + 9, "  (N =", n_list_2x2[[key]], ") ──\n")
   print(round(P_list_2x2[[key]], 3))
 }
 
@@ -139,10 +140,10 @@ for (key in names(P_list_2x2)) {
   p = make_combined(
     P_list_2x2[[key]], pi0_list_2x2[[key]], pistar_list_2x2[[key]],
     levels    = states_2x2,
-    title_str = paste0("Cohort ", key, "–", as.integer(key) + 9,
+    title_str = paste0("Cohort ", as.numeric(key) - 5, "–", as.numeric(key) + 4,
                        "  (N = ", n_list_2x2[[key]], ")")
   )
-  ggsave(paste0("output/figures/binary/trans_", key, "_10yr_2x2.png"),
+  ggsave(paste0("output/figures/binary/trans_", as.numeric(key) - 5, "_10yr_2x2.png"),
          p, width = 7, height = 5, dpi = 200)
 }
 
@@ -152,7 +153,7 @@ cells_2x2 = do.call(rbind, lapply(names(P_list_2x2), function(key) {
   P   = P_list_2x2[[key]]
   df  = as.data.frame(as.table(P), stringsAsFactors = FALSE)
   names(df) = c("origin", "current", "prob")
-  df$cohort = as.integer(key)
+  df$cohort = as.numeric(key)   # 10-yr bin midpoint, used as continuous x
   df
 }))
 
@@ -180,7 +181,7 @@ ggsave("output/figures/binary/cells_2x2_10yr.png", p_cells_2x2,
 
 persistence_2x2 = do.call(rbind, lapply(names(P_list_2x2), function(key) {
   P = P_list_2x2[[key]]
-  data.frame(cohort = as.integer(key), state = rownames(P),
+  data.frame(cohort = as.numeric(key), state = rownames(P),
              persistence = diag(P), row.names = NULL)
 }))
 
@@ -204,9 +205,9 @@ ggsave("output/figures/binary/persistence_2x2_10yr.png", p_persist_2x2,
 # ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
 
 for (key in names(P_list_nat)) {
+  edge = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
   cat("\n── ", gsub("_", " ", sub("_(\\d{4})$", "", key)),
-      " | Cohort", sub(".*_(\\d{4})$", "\\1", key), "–",
-      as.integer(sub(".*_(\\d{4})$", "\\1", key)) + 9,
+      " | Cohort", edge, "–", edge + 9,
       "  (N =", n_list_nat[[key]], ") ──\n")
   print(round(P_list_nat[[key]], 3))
 }
@@ -214,12 +215,12 @@ for (key in names(P_list_nat)) {
 dir.create("output/figures/nativity", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_nat)) {
-  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  edge    = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
   nat_lbl = gsub("_", " ", sub("_(\\d{4})$", "", key))
   p = make_combined(
     P_list_nat[[key]], pi0_list_nat[[key]], pistar_list_nat[[key]],
     levels    = rel_level_order,
-    title_str = paste0(nat_lbl, " – ", coh_yr, "–", coh_yr + 9,
+    title_str = paste0(nat_lbl, " – ", edge, "–", edge + 9,
                        "  (N = ", n_list_nat[[key]], ")")
   )
   ggsave(paste0("output/figures/nativity/trans_", key, "_10yr.png"),
@@ -229,9 +230,9 @@ for (key in names(P_list_nat)) {
 # ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1940–1980) ─────────────
 
 for (key in names(P_list_sex)) {
+  edge = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
   cat("\n──", tools::toTitleCase(sub("_(\\d{4})$", "", key)),
-      "| Cohort", sub(".*_(\\d{4})$", "\\1", key), "–",
-      as.integer(sub(".*_(\\d{4})$", "\\1", key)) + 9,
+      "| Cohort", edge, "–", edge + 9,
       " (N =", n_list_sex[[key]], ") ──\n")
   print(round(P_list_sex[[key]], 3))
 }
@@ -239,12 +240,12 @@ for (key in names(P_list_sex)) {
 dir.create("output/figures/sex", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_sex)) {
-  coh_yr  = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  edge    = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
   sex_lbl = tools::toTitleCase(sub("_(\\d{4})$", "", key))
   p = make_combined(
     P_list_sex[[key]], pi0_list_sex[[key]], pistar_list_sex[[key]],
     levels    = rel_level_order,
-    title_str = paste0(sex_lbl, " – ", coh_yr, "–", coh_yr + 9,
+    title_str = paste0(sex_lbl, " – ", edge, "–", edge + 9,
                        "  (N = ", n_list_sex[[key]], ")")
   )
   ggsave(paste0("output/figures/sex/trans_", key, "_10yr.png"),
@@ -254,9 +255,9 @@ for (key in names(P_list_sex)) {
 # ── POLITICAL STRATIFICATION DECADAL MATRICES (10-year cohorts, 1940–1989) ───
 
 for (key in names(P_list_pol)) {
-  coh_yr = as.integer(sub(".*_(\\d{4})$", "\\1", key))
-  lbl    = gsub("_", " ", sub("_\\d{4}$", "", key))
-  cat("\n──", lbl, "| Cohort", coh_yr, "–", coh_yr + 9,
+  edge = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
+  lbl  = gsub("_", " ", sub("_\\d{4}$", "", key))
+  cat("\n──", lbl, "| Cohort", edge, "–", edge + 9,
       " (N =", n_list_pol[[key]], ") ──\n")
   print(round(P_list_pol[[key]], 3))
 }
@@ -264,12 +265,12 @@ for (key in names(P_list_pol)) {
 dir.create("output/figures/political", recursive = TRUE, showWarnings = FALSE)
 
 for (key in names(P_list_pol)) {
-  coh_yr = as.integer(sub(".*_(\\d{4})$", "\\1", key))
-  lbl    = gsub("_", " ", sub("_\\d{4}$", "", key))
+  edge = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 5   # midpoint → left edge
+  lbl  = gsub("_", " ", sub("_\\d{4}$", "", key))
   p = make_combined(
     P_list_pol[[key]], pi0_list_pol[[key]], pistar_list_pol[[key]],
     levels    = rel_level_order,
-    title_str = paste0(lbl, " – ", coh_yr, "–", coh_yr + 9,
+    title_str = paste0(lbl, " – ", edge, "–", edge + 9,
                        "  (N = ", n_list_pol[[key]], ")")
   )
   ggsave(paste0("output/figures/political/trans_", key, "_10yr.png"),
