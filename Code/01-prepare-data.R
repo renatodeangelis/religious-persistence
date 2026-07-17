@@ -1,7 +1,7 @@
 # ── 01 · DATA PREPARATION ─────────────────────────────────────────────────────
 # Loads GSS from the gssr package, builds and cleans the master analysis frame
-# with every derived column (reltrad recodes, cohort bins, attitude/party/
-# polviews binaries, affiliated/unaffiliated belief), and the state space.
+# with every derived column (reltrad recodes, cohort bins, party/polviews
+# binaries, affiliated/unaffiliated belief), and the state space.
 #
 # Output: data/derived/gss_clean.rds — a list(data, states_alt) consumed by the
 # estimation script (02) and every analysis script that recomputes matrices at
@@ -21,8 +21,7 @@ reltrad_labels = c(
 data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
-         evolved, abany, homosex, premarsx, pornlaw, cappun, cappun2,
-        race, polviews, partyid) |>
+         race, polviews, partyid) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -34,15 +33,23 @@ data = gss_all |>
                   TRUE                    ~ .
                 ),
                 .names = "{.col}_alt")) |>
+  # 6-state variant for the Black-Protestant robustness stage (12): collapse
+  # only jewish → other, keeping "black protestant" as its own state.
+  mutate(across(c(reltrad, reltrad16),
+                ~ if_else(. == "jewish", "other", .),
+                .names = "{.col}_bp")) |>
   # cohort arrives from gss_all as a haven_labelled vector; strip to plain
   # numeric so downstream median()/binning behave (median.haven_labelled errors)
   mutate(cohort = as.numeric(cohort)) |>
   mutate(age = year - cohort) |>
-  filter(age >= 30, age <= 75, cohort >= 1930) |>
+  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1994) |>
   mutate(
+    # Additional black/other oversample years, dropped only by the GSS-period
+    # robustness stage (11). Kept in the main frame so cohort matrices are
+    # unaffected; 1972 and 2021 are already excluded above for everyone.
+    oversample = year %in% c(1982, 1987, 2022, 2024),
     cohort_5   = (floor((cohort - 1900) / 5)  * 5  + 1900) + 2.5,
     cohort_10  = (floor((cohort - 1900) / 10) * 10 + 1900) + 5,
-    cohort_20  = (floor((cohort - 1900) / 20) * 20 + 1900) + 10,
     region_broad = case_when(
       as.numeric(region) == 1 ~ "Northeast",
       as.numeric(region) == 2 ~ "Midwest",
@@ -54,26 +61,6 @@ data = gss_all |>
       as.numeric(born) == 1 ~ "Born in US",
       as.numeric(born) == 2 ~ "Born abroad"
     )
-  )
-
-# ── ATTITUDE BINARY RECODES ───────────────────────────────────────────────────
-# GSS codings:
-#   evolved:   1 = True, 2 = False
-#   abany:     1 = Yes (any reason), 2 = No
-#   homosex:   1 = Always wrong … 4 = Not wrong at all  → 1–2 conservative, 3–4 liberal
-#   premarsx:  1 = Always wrong … 4 = Not wrong at all  → 1–2 conservative, 3–4 liberal
-#   pornlaw:   1 = Illegal to all, 2 = Illegal under 18, 3 = Legal to all → 1 conservative, 2–3 liberal
-
-data = data |>
-  mutate(
-    evolved_bin   = case_when(evolved  == 1 ~ 1L, evolved  == 2 ~ 0L),
-    abany_bin     = case_when(abany    == 1 ~ 1L, abany    == 2 ~ 0L),
-    homosex_bin   = case_when(homosex  %in% 3:4 ~ 1L, homosex  %in% 1:2 ~ 0L),
-    premarsx_bin  = case_when(premarsx %in% 3:4 ~ 1L, premarsx %in% 1:2 ~ 0L),
-    pornlaw_bin   = case_when(pornlaw  %in% 2:3 ~ 1L, pornlaw  == 1      ~ 0L),
-    # cappun2 covers 1972-73; cappun covers 1974-present; same 1/2 coding
-    cappun_merged = coalesce(as.numeric(cappun), as.numeric(cappun2)),
-    cappun_bin    = case_when(cappun_merged == 2 ~ 1L, cappun_merged == 1 ~ 0L)
   )
 
 # ── PARTY ID AND POLITICAL VIEWS RECODES ─────────────────────────────────────
@@ -118,6 +105,10 @@ data = data |>
 states_alt = sort(unique(c(data$reltrad_alt, data$reltrad16_alt)))
 states_alt = states_alt[!is.na(states_alt)]
 
+# 6-state space for the Black-Protestant robustness stage (12)
+states_bp = sort(unique(c(data$reltrad_bp, data$reltrad16_bp)))
+states_bp = states_bp[!is.na(states_bp)]
+
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 # Strip haven value labels so the saved frame is plain numeric/character. The
 # gssr columns arrive as haven_labelled, and as.numeric() on those only works
@@ -127,6 +118,6 @@ states_alt = states_alt[!is.na(states_alt)]
 data = haven::zap_labels(data)
 
 dir.create("data/derived", recursive = TRUE, showWarnings = FALSE)
-saveRDS(list(data = data, states_alt = states_alt),
+saveRDS(list(data = data, states_alt = states_alt, states_bp = states_bp),
         "data/derived/gss_clean.rds")
 cat("Wrote data/derived/gss_clean.rds  (", nrow(data), "rows )\n")

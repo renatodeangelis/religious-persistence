@@ -1,3 +1,9 @@
+# ── ROBUSTNESS: ADD HEALTH W1→W4 (external prospective validation) ───────────
+# Parent (Wave 1) → child (Wave 4) 5-state reltrad matrices, split by parental
+# religiosity. Console-only; no figures. Run manually — this needs the restricted
+# Add Health in-home files in add-health/ (not on the gssr package), so it is NOT
+# sourced by 00-run-all.R.
+
 library(dplyr)
 
 # ── PATHS ─────────────────────────────────────────────────────────────────────

@@ -17,38 +17,6 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-# ── ATTITUDE MATRICES: POOLED (no cohort stratification) ─────────────────────
-# Mean birth year is tabulated to show cohort composition of each stratum.
-# Note: item coverage varies by GSS year — inspect mean_cohort for drift.
-
-P_list_att_pooled   = list()
-pi0_list_att_pooled = list()
-pooled_summary_rows = list()
-
-for (v in att_vars) {
-  for (grp in c(0L, 1L)) {
-    sub = data[!is.na(data$reltrad_alt) & !is.na(data$reltrad16_alt) &
-               !is.na(data[[v]])        & data[[v]] == grp, ]
-    if (nrow(sub) < 30) next
-    grp_lbl = if (grp == 1L) "liberal" else "conservative"
-    key     = paste(v, grp_lbl, sep = "_")
-
-    P_list_att_pooled[[key]]   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-    pi0_list_att_pooled[[key]] = pi_0(sub, "reltrad16_alt")
-
-    pooled_summary_rows[[key]] = data.frame(
-      variable      = v,
-      group         = grp_lbl,
-      n             = nrow(sub),
-      mean_cohort   = round(mean(sub$cohort,   na.rm = TRUE), 1),
-      median_cohort = median(sub$cohort, na.rm = TRUE),
-      row.names     = NULL
-    )
-  }
-}
-
-pooled_summary = do.call(rbind, pooled_summary_rows)
-
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
 # ── 5-year cohort loop ───────────────────────────────────────────────────────
@@ -89,48 +57,6 @@ for (coh in cohorts_10) {
   pi0_list_10[[key]]    = pi_0(sub, "reltrad16_alt")
   pistar_list_10[[key]] = pi_star(P_list_10[[key]])
   N_list_10[[key]]      = count_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-}
-
-# ── 20-year cohort loop ──────────────────────────────────────────────────────
-cohorts_20_pooled = sort(unique(data$cohort_20[!is.na(data$cohort_20) & data$cohort_20 >= 1930 & data$cohort_20 <= 1990]))
-
-P_list_20      = list()
-pi0_list_20    = list()
-pistar_list_20 = list()
-
-for (coh in cohorts_20_pooled) {
-  sub = data[!is.na(data$cohort_20) & data$cohort_20 == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-  if (nrow(sub) < 30) next
-  key = as.character(coh)
-
-  P_list_20[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  pi0_list_20[[key]]    = pi_0(sub, "reltrad16_alt")
-  pistar_list_20[[key]] = pi_star(P_list_20[[key]])
-}
-
-# ── REGIONAL COHORT MATRICES ─────────────────────────────────────────────────
-
-cohorts_20    = c(1930, 1950, 1970)   # 20-year bin midpoints (edges 1920/1940/1960)
-regions_broad = c("Midwest", "Northeast", "South", "West")
-
-P_list_reg      = list()
-pi0_list_reg    = list()
-pistar_list_reg = list()
-
-for (reg in regions_broad) {
-  for (coh in cohorts_20) {
-    sub = data[
-      !is.na(data$cohort_20)     & data$cohort_20     == coh &
-      !is.na(data$region_broad)  & data$region_broad  == reg &
-      !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-    if (nrow(sub) < 30) next
-    key = paste(reg, coh, sep = "_")
-
-    P_list_reg[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-    pi0_list_reg[[key]]    = pi_0(sub, "reltrad16_alt")
-    pistar_list_reg[[key]] = pi_star(P_list_reg[[key]])
-  }
 }
 
 # ── BINARY (AFFILIATED / UNAFFILIATED) 2×2 MATRICES ──────────────────────────
@@ -246,12 +172,8 @@ for (vname in names(pol_vars)) {
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 
 matrices = list(
-  att_pooled = list(P = P_list_att_pooled, pi0 = pi0_list_att_pooled,
-                    summary = pooled_summary),
   nat5  = list(P = P_list_5,  pi0 = pi0_list_5,  pistar = pistar_list_5,  N = N_list_5),
   nat10 = list(P = P_list_10, pi0 = pi0_list_10, pistar = pistar_list_10, N = N_list_10),
-  nat20 = list(P = P_list_20, pi0 = pi0_list_20, pistar = pistar_list_20),
-  region    = list(P = P_list_reg, pi0 = pi0_list_reg, pistar = pistar_list_reg),
   binary    = list(P = P_list_2x2, pi0 = pi0_list_2x2, pistar = pistar_list_2x2,
                    n = n_list_2x2, states = states_2x2),
   nativity  = list(P = P_list_nat, pi0 = pi0_list_nat, pistar = pistar_list_nat,

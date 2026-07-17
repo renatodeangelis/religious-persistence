@@ -25,7 +25,7 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 ## Data Architecture
 
 ### Primary estimation sample
-**GSS RELIG16 → RELIG** (full time series, 1974–present). Maximum statistical power. Transition matrices stratified by birth cohort in 15- or 20-year windows.
+**GSS RELIG16 → RELIG** (full time series, 1974–present). Maximum statistical power. Transition matrices stratified by birth cohort in 5- or 10-year windows.
 
 ### Calibration/diagnostic samples
 
@@ -137,7 +137,7 @@ Hout (2017): ~20% of Americans are "liminal" (cycling between affiliation and no
 | 3 | 13 | Formal results assembly — all figures and tables |
 | 3 | 14–15 | Paper skeleton; draft introduction + measurement section |
 
-**Current status** (as of June 2026): Weeks 1–2 complete. GSS transition matrices built, λ₂ and memory curves computed for national and regional cohort windows (5/10/20-year bins). Hout (2016) replicated and extended (Figs 1–6). Add Health W1/W3 recall bias analysis complete (`matrix-validation.R`); Add Health W1/W4 religiosity-split matrices complete (`transition-matrices-add-health.R`). NSYR comparison, sensitivity analysis, and LSOG validation remain pending (Week 3).
+**Current status** (as of June 2026): Weeks 1–2 complete. GSS transition matrices built, λ₂ and memory curves computed for national cohort windows (5/10-year bins). Hout (2016) replicated and extended (Figs 1–6). Add Health W1/W3 recall bias analysis complete (`matrix-validation.R`); Add Health W1/W4 religiosity-split matrices complete (`robustness-add-health.R`). Pipeline reorganized: main analysis is stages 01–06, robustness re-cuts (non-Black, GSS-period, 6-state Black-Protestant) folded in as stages 10–12 consuming `gss_clean.rds`. The 20-year cohort bins, the regional stratification, and the attitude-stratified analysis were removed. NSYR comparison, sensitivity analysis, and LSOG validation remain pending (Week 3).
 
 ---
 
@@ -182,19 +182,19 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | File | Purpose |
 |------|---------|
 | `code/summary-stats.R` | GSS data loading (Dropbox .dta), Hout replication, Figs 1–6 |
-| `code/00-run-all.R` | Sources 01–07 in dependency order (the whole main pipeline in one command) |
-| `code/01-prepare-data.R` | Loads `gss_all`, builds/cleans the master frame (all recodes, cohort bins, belief, state space), strips haven labels → `data/derived/gss_clean.rds` |
-| `code/02-estimate-matrices.R` | Builds every count/P/pi0/pistar list for all stratifications → `data/derived/matrices.rds`. Raw counts (N) saved for national 5/10-year (feed homogeneity tests) |
-| `code/03-diagnostics.R` | Cohort-N, attitude coverage, and cell-count feasibility tables (console) |
+| `code/00-run-all.R` | Sources 01–06 (main pipeline) then robustness stages 10–12 in dependency order. 08/09 (explore) and `robustness-add-health.R` are deliberately **not** sourced — run those manually |
+| `code/01-prepare-data.R` | Loads `gss_all`, builds/cleans the master frame (all recodes, 5/10-year cohort bins, belief, party/polviews binaries, 5-state `_alt` + 6-state `_bp` state spaces, `oversample` flag), strips haven labels → `data/derived/gss_clean.rds`. Sample: age 30–75, cohort 1925–1994 |
+| `code/02-estimate-matrices.R` | Builds every count/P/pi0/pistar list for all stratifications (national 5/10-year, binary, nativity, sex, political) → `data/derived/matrices.rds`. Raw counts (N) saved for national 5/10-year (feed homogeneity tests) |
+| `code/03-diagnostics.R` | Cohort-N sample-size tables, 5/10-year windows (console) |
 | `code/04-homogeneity.R` | Anderson-Goodman chi-square homogeneity tests (consumes N), figures + LaTeX table → `output/figures/homogeneity/`, `output/tables/` |
-| `code/05-memory-measures.R` | National IM/memory curves, overall/exchange/structural mobility, MTE, transition heatmaps |
-| `code/06-stratified-matrices.R` | Region/binary 2×2/nativity/sex/political matrix figures + console tables |
-| `code/07-attitudes.R` | Attitude-stratified matrix figures + % conservative cohort-trend panels (reltrad & reltrad16) |
-| `code/transition-matrices.R` | **Superseded** by `01`–`07` above; retained for reference. Has a latent `focal`-undefined bug in the rolling-window block (fixed in `04`) |
-| `code/transition-matrices-add-health.R` | Add Health W1/W4 religiosity-split transition matrices |
-| `code/transition-matrices-bp.R` | 6-state RELTRAD scheme (Black Protestant as separate category); memory curves and diagonal persistence → `output/figures/bp/` |
-| `code/transition-matrices-gss-decade.R` | Transition matrices stratified by GSS survey decade (not birth cohort) → `output/figures/gss-decade/` |
-| `code/transition-matrices-nonblack.R` | Main analysis restricted to non-Black sample; includes difference plots vs. full sample → `output/figures/nonblack/` |
+| `code/05-memory-measures.R` | National IM/memory curves (5/10-year), overall/exchange/structural mobility, MTE, transition heatmaps |
+| `code/06-stratified-matrices.R` | Binary 2×2/nativity/sex/political matrix figures + console tables |
+| `code/08-age-standardization-explore.R` | **Exploratory** (run manually): age-standardized λ₂/mean-diagonal sensitivity, U-vs-S matrix grids → `output/figures/explore/` |
+| `code/09-period-cohort-decomp-explore.R` | **Exploratory** (run manually): age-period-cohort decomposition grids and two-way effects → `output/figures/explore/apc/` |
+| `code/10-robustness-nonblack.R` | **Robustness**: re-estimates national 10-year matrices on the non-Black sample (`race != 2`) + difference heatmaps vs. full sample → `output/figures/nonblack/`. Consumes `gss_clean.rds` |
+| `code/11-robustness-gss-decade.R` | **Robustness**: matrices stratified by GSS survey period (not birth cohort), plus year-by-year diagonal persistence and π*. Drops `oversample` years → `output/figures/gss-decade/`. Consumes `gss_clean.rds` |
+| `code/12-robustness-bp.R` | **Robustness**: 6-state scheme (Black Protestant separate) via `reltrad_bp`; 10-year memory curves + diagonal persistence → `output/figures/bp/`. Consumes `gss_clean.rds` |
+| `code/robustness-add-health.R` | **Robustness** (run manually — needs restricted `add-health/` files): Add Health W1→W4 religiosity-split transition matrices, console-only |
 | `code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
 | `code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
 | `code/presentation.qmd` | Quarto slide deck |
@@ -205,7 +205,7 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 |------|----------|
 | GSS (summary-stats.R) | Dropbox shared link (loaded via URL) |
 | GSS (main pipeline, 01-prepare-data.R) | `gssr` R package (`data(gss_all)`) |
-| Derived matrices/clean data (02–07) | `data/derived/*.rds` (gitignored; rebuild via `code/00-run-all.R`) |
-| Add Health W1/W3 (matrix-validation.R) | `~/Downloads/` (w1inhome_dvn.RData, w3inhome_dvn.RData) |
-| Add Health W1/W4 (transition-matrices-add-health.R) | `add-health/` directory (w1inhome.rds, w4inhome.rds) |
+| Derived matrices/clean data (02–12) | `data/derived/*.rds` (gitignored; rebuild via `code/00-run-all.R`) |
+| Add Health W1/W3 (matrix-validation.R) | `add-health/` directory (w1inhome.rds, w3inhome.rds) |
+| Add Health W1/W4 (robustness-add-health.R) | `add-health/` directory (w1inhome.rds, w4inhome.rds) |
 | LSOG (ICPSR 22100) | Pending — not yet loaded in any script |

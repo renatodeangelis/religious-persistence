@@ -21,9 +21,6 @@ pistar_list_5 = matrices$nat5$pistar
 P_list_10      = matrices$nat10$P
 pi0_list_10    = matrices$nat10$pi0
 pistar_list_10 = matrices$nat10$pistar
-P_list_20      = matrices$nat20$P
-pi0_list_20    = matrices$nat20$pi0
-pistar_list_20 = matrices$nat20$pistar
 
 # ── NATIONAL IM COMPUTATION ──────────────────────────────────────────────────
 
@@ -41,21 +38,6 @@ for (key in names(P_list_10)) {
 }
 
 im_df_10 = do.call(rbind, im_rows_10)
-
-# ── IM LOOP (20-year cohorts, t = 0:4) ──────────────────────────────────────
-im_rows_20 = vector("list", length(P_list_20))
-names(im_rows_20) = names(P_list_20)
-
-for (key in names(P_list_20)) {
-  rows = lapply(0:4, function(t) {
-    vals = im_from_P(P_list_20[[key]], t = t)
-    data.frame(cohort = as.numeric(key), t = t, origin = names(vals), im = vals,
-               row.names = NULL)
-  })
-  im_rows_20[[key]] = do.call(rbind, rows)
-}
-
-im_df_20 = do.call(rbind, im_rows_20)
 
 # ── NATIONAL MOBILITY ────────────────────────────────────────────────────────
 
@@ -107,15 +89,6 @@ for (key in names(P_list_10)) {
          width = 10, height = 7, dpi = 200)
 }
 
-for (key in names(P_list_20)) {
-  edge = as.numeric(key) - 10
-  p = make_combined(P_list_20[[key]], pi0_list_20[[key]], pistar_list_20[[key]],
-                    levels = rel_level_order,
-                    title_str = paste0("Cohort ", edge, "–", edge + 19))
-  ggsave(paste0("output/figures/trans_", edge, "_20yr.png"), p,
-         width = 10, height = 7, dpi = 200)
-}
-
 # Okabe-Ito palette (Healy) — lowercase keys match rel_level_order
 reltrad_colors = c(
   catholic    = "#0072B2",
@@ -148,20 +121,6 @@ p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
   healy_theme
 
 ggsave("output/figures/im_memory_10yr.png", p_im, width = 8, height = 6, dpi = 200)
-
-im_df_20$origin = factor(im_df_20$origin, levels = rel_level_order)
-
-p_im_20 = ggplot(im_df_20, aes(x = t, y = im, color = origin, group = origin)) +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 2) +
-  facet_wrap(~ cohort, nrow = 1) +
-  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = 0:4) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)",
-       color = NULL, title = "Individual Memory by Cohort (20-year bins, t = 0–4)") +
-  healy_theme
-
-ggsave("output/figures/im_memory_20yr.png", p_im_20, width = 10, height = 5, dpi = 200)
 
 p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = cohort, y = mobility)) +
   geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +

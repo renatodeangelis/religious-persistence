@@ -1,11 +1,10 @@
 # ── 06 · STRATIFIED TRANSITION MATRICES ────────────────────────────────────────
 # Console tables and figures for every stratified matrix set built in 02:
-# region × cohort, binary affiliated/unaffiliated 2×2, nativity, sex, and
-# political (party ID / polviews). Regional overall-mobility recomputes at
-# 1-year resolution from the cleaned data.
+# binary affiliated/unaffiliated 2×2, nativity, sex, and political (party ID /
+# polviews).
 #
 # Input:  data/derived/matrices.rds, data/derived/gss_clean.rds
-# Output: output/figures/{region,binary,nativity,sex,political}/*.png
+# Output: output/figures/{binary,nativity,sex,political}/*.png
 
 library(patchwork)
 source("code/utils.R")
@@ -14,10 +13,6 @@ matrices   = readRDS("data/derived/matrices.rds")
 clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
-
-P_list_reg      = matrices$region$P
-pi0_list_reg    = matrices$region$pi0
-pistar_list_reg = matrices$region$pistar
 
 P_list_2x2      = matrices$binary$P
 pi0_list_2x2    = matrices$binary$pi0
@@ -39,89 +34,6 @@ P_list_pol      = matrices$political$P
 pi0_list_pol    = matrices$political$pi0
 pistar_list_pol = matrices$political$pistar
 n_list_pol      = matrices$political$n
-
-cohorts_20    = c(1930, 1950, 1970)   # 20-year bin midpoints (edges 1920/1940/1960)
-regions_broad = c("Midwest", "Northeast", "South", "West")
-
-# ── REGIONAL IM AND MOBILITY COMPUTATION ─────────────────────────────────────
-
-im_rows_reg = vector("list", length(P_list_reg))
-names(im_rows_reg) = names(P_list_reg)
-
-for (key in names(P_list_reg)) {
-  parts = strsplit(key, "_")[[1]]
-  reg   = paste(parts[-length(parts)], collapse = "_")
-  coh   = as.integer(parts[length(parts)])
-  rows  = lapply(0:4, function(t) {
-    vals = im_from_P(P_list_reg[[key]], t = t)
-    data.frame(region = reg, cohort = coh, t = t, origin = names(vals), im = vals,
-               row.names = NULL)
-  })
-  im_rows_reg[[key]] = do.call(rbind, rows)
-}
-
-im_df_reg = do.call(rbind, im_rows_reg)
-
-mob_reg_rows = lapply(regions_broad, function(reg) {
-  lapply(1920:1980, function(coh) {
-    sub = data[!is.na(data$cohort)        & data$cohort        == coh &
-                 !is.na(data$region_broad) & data$region_broad  == reg &
-                 !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-    if (nrow(sub) < 30) return(NULL)
-    P   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-    pi0 = pi_0(sub, "reltrad16_alt")
-    data.frame(cohort = coh, region = reg, mobility = overall_mobility(P, pi0))
-  })
-})
-mob_reg_df = do.call(rbind,
-  Filter(Negate(is.null), unlist(mob_reg_rows, recursive = FALSE)))
-
-# ── REGIONAL FIGURES ──────────────────────────────────────────────────────────
-
-dir.create("output/figures/region", recursive = TRUE, showWarnings = FALSE)
-
-for (key in names(P_list_reg)) {
-  edge    = as.integer(sub(".*_(\\d{4})$", "\\1", key)) - 10   # midpoint → left edge
-  reg_lbl = gsub("_", " ", sub("_\\d{4}$", "", key))
-  p = make_combined(P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
-                    levels = rel_level_order,
-                    title_str = paste0(reg_lbl, " – ", edge, "–", edge + 19))
-  ggsave(paste0("output/figures/region/trans_", key, "_20yr.png"), p,
-         width = 10, height = 7, dpi = 200)
-}
-
-for (reg in regions_broad) {
-  reg_plots = lapply(cohorts_20, function(coh) {
-    key = paste(reg, coh, sep = "_")
-    if (!is.null(P_list_reg[[key]])) {
-      make_combined(
-        P_list_reg[[key]], pi0_list_reg[[key]], pistar_list_reg[[key]],
-        levels    = rel_level_order,
-        title_str = paste0(reg, "\n", coh - 10, "–", coh + 9)   # midpoint → bin edges
-      )
-    } else {
-      patchwork::plot_spacer()
-    }
-  })
-  p_reg = patchwork::wrap_plots(reg_plots, nrow = 1, ncol = length(cohorts_20))
-  fname = paste0("output/figures/region/trans_grid_", gsub(" ", "_", reg), "_20yr.png")
-  ggsave(fname, p_reg, width = 30, height = 7, dpi = 200)
-}
-
-mob_reg_df$region = factor(mob_reg_df$region, levels = regions_broad)
-
-p_mob_reg = ggplot(mob_reg_df, aes(x = cohort, y = mobility)) +
-  geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
-  geom_smooth(method = "loess", se = TRUE, span = 0.5,
-              color = "#0072B2", fill = "#0072B2", alpha = 0.2) +
-  facet_wrap(~ region, nrow = 2) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort", y = "Overall mobility (1 − weighted diagonal)",
-       title = "Religious Mobility by Birth Cohort and Region (1-year bins)") +
-  healy_theme
-
-ggsave("output/figures/region/mobility_region.png", p_mob_reg,
-       width = 11, height = 7, dpi = 200)
 
 # ── BINARY (AFFILIATED / UNAFFILIATED) 2×2 MATRICES ──────────────────────────
 
