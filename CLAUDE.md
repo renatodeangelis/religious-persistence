@@ -188,12 +188,14 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | `code/03-diagnostics.R` | Cohort-N sample-size tables, 5/10-year windows (console) |
 | `code/04-homogeneity.R` | Anderson-Goodman chi-square homogeneity tests (consumes N), figures + LaTeX table → `output/figures/homogeneity/`, `output/tables/` |
 | `code/05-memory-measures.R` | National IM/memory curves (5/10-year), overall/exchange/structural mobility, MTE, transition heatmaps |
-| `code/06-stratified-matrices.R` | Binary 2×2/nativity/sex/political matrix figures + console tables |
 | `code/08-age-standardization-explore.R` | **Exploratory** (run manually): age-standardized λ₂/mean-diagonal sensitivity, U-vs-S matrix grids → `output/figures/explore/` |
 | `code/09-period-cohort-decomp-explore.R` | **Exploratory** (run manually): age-period-cohort decomposition grids and two-way effects → `output/figures/explore/apc/` |
 | `code/10-robustness-nonblack.R` | **Robustness**: re-estimates national 10-year matrices on the non-Black sample (`race != 2`) + difference heatmaps vs. full sample → `output/figures/nonblack/`. Consumes `gss_clean.rds` |
 | `code/11-robustness-gss-decade.R` | **Robustness**: matrices stratified by GSS survey period (not birth cohort), plus year-by-year diagonal persistence and π*. Drops `oversample` years → `output/figures/gss-decade/`. Consumes `gss_clean.rds` |
 | `code/12-robustness-bp.R` | **Robustness**: 6-state scheme (Black Protestant separate) via `reltrad_bp`; 10-year memory curves + diagonal persistence → `output/figures/bp/`. Consumes `gss_clean.rds` |
+| `code/13-robustness-nativity.R` | **Robustness**: nativity-stratified 10-year matrices (US-born vs. foreign-born, 3 cohort windows 1950–1979) + diagonal persistence figure → `output/figures/nativity/`. Consumes `gss_clean.rds` |
+| `code/14-robustness-sex.R` | **Robustness**: sex-stratified 10-year matrices (male/female, 5 cohort windows 1940–1989) + diagonal persistence figure → `output/figures/sex/`. Consumes `gss_clean.rds` |
+| `code/15-robustness-political.R` | **Robustness**: political-stratified 10-year matrices (partyid narrow/broad, polviews narrow/broad; 5 cohort windows 1940–1989) + per-variable diagonal persistence figures → `output/figures/political/`. Consumes `gss_clean.rds` |
 | `code/robustness-add-health.R` | **Robustness** (run manually — needs restricted `add-health/` files): Add Health W1→W4 religiosity-split transition matrices, console-only |
 | `code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
 | `code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |

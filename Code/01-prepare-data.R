@@ -1,7 +1,7 @@
 # ── 01 · DATA PREPARATION ─────────────────────────────────────────────────────
 # Loads GSS from the gssr package, builds and cleans the master analysis frame
 # with every derived column (reltrad recodes, cohort bins, party/polviews
-# binaries, affiliated/unaffiliated belief), and the state space.
+# binaries), and the state space.
 #
 # Output: data/derived/gss_clean.rds — a list(data, states_alt) consumed by the
 # estimation script (02) and every analysis script that recomputes matrices at
@@ -22,7 +22,7 @@ data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
          race, polviews, partyid) |>
-  filter(!(year %in% c(1972, 2021))) |>
+  filter(!(year %in% c(1972, 1982, 1987, 2021, 2022, 2024))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
@@ -44,10 +44,6 @@ data = gss_all |>
   mutate(age = year - cohort) |>
   filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1994) |>
   mutate(
-    # Additional black/other oversample years, dropped only by the GSS-period
-    # robustness stage (11). Kept in the main frame so cohort matrices are
-    # unaffected; 1972 and 2021 are already excluded above for everyone.
-    oversample = year %in% c(1982, 1987, 2022, 2024),
     cohort_5   = (floor((cohort - 1900) / 5)  * 5  + 1900) + 2.5,
     cohort_10  = (floor((cohort - 1900) / 10) * 10 + 1900) + 5,
     region_broad = case_when(
@@ -89,15 +85,6 @@ data = data |>
       as.numeric(polviews) %in% 3:5 ~ "moderate",
       as.numeric(polviews) %in% 6:7 ~ "conservative"
     )
-  )
-
-# ── BINARY AFFILIATED / UNAFFILIATED RECODE ──────────────────────────────────
-# Affiliated = any reltrad_alt other than "none"; unaffiliated = "none"
-
-data = data |>
-  mutate(
-    belief   = if_else(reltrad_alt   == "none", "unaffiliated", "affiliated"),
-    belief16 = if_else(reltrad16_alt == "none", "unaffiliated", "affiliated")
   )
 
 # ── STATE SPACE ───────────────────────────────────────────────────────────────

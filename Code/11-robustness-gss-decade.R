@@ -1,9 +1,8 @@
 # ── 11 · ROBUSTNESS: GSS SURVEY-PERIOD STRATIFICATION ────────────────────────
 # Stratifies the 5-state transition matrix by GSS *survey period* (not birth
 # cohort): five decade windows plus year-by-year diagonal persistence and
-# year-by-year implied stationary distribution π*. Drops the additional
-# oversample years flagged in 01 (1982, 1987, 2022, 2024); 1972 and 2021 are
-# already excluded upstream.
+# year-by-year implied stationary distribution π*. Oversample years (1982,
+# 1987, 2022, 2024) are excluded upstream in 01 along with 1972 and 2021.
 #
 # Input:  data/derived/gss_clean.rds
 # Output: output/figures/gss-decade/*.png
@@ -31,8 +30,8 @@ reltrad_labels_tc = c(
 
 decade_windows = c("1973-1981", "1983-1992", "1993-2002", "2003-2012", "2013-2020")
 
-# Drop the flagged oversample years, then assign each survey year to a window.
-data_gd = data[!data$oversample, ] |>
+# Assign each survey year to a decade window.
+data_gd = data |>
   mutate(gss_decade = case_when(
     year >= 1973 & year <= 1981 ~ "1973-1981",
     year >= 1983 & year <= 1992 ~ "1983-1992",

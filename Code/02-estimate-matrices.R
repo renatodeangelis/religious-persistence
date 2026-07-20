@@ -59,31 +59,6 @@ for (coh in cohorts_10) {
   N_list_10[[key]]      = count_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
 }
 
-# ── BINARY (AFFILIATED / UNAFFILIATED) 2×2 MATRICES ──────────────────────────
-
-states_2x2 = c("affiliated", "unaffiliated")
-
-cohorts_10_2x2 = sort(unique(
-  data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1925 & data$cohort_10 <= 1985]
-))
-
-P_list_2x2      = list()
-pi0_list_2x2    = list()
-pistar_list_2x2 = list()
-n_list_2x2      = list()
-
-for (coh in cohorts_10_2x2) {
-  sub = data[!is.na(data$cohort_10) & data$cohort_10 == coh &
-               !is.na(data$belief16) & !is.na(data$belief), ]
-  if (nrow(sub) < 30) next
-  key = as.character(coh)
-
-  P_list_2x2[[key]]      = p_matrix(sub, "belief16", "belief", levels = states_2x2)
-  pi0_list_2x2[[key]]    = pi_0(sub, "belief16")
-  pistar_list_2x2[[key]] = pi_star(P_list_2x2[[key]])
-  n_list_2x2[[key]]      = nrow(sub)
-}
-
 # ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
 
 cohorts_nat    = c(1955, 1965, 1975)   # 10-year bin midpoints (edges 1950/1960/1970)
@@ -174,8 +149,6 @@ for (vname in names(pol_vars)) {
 matrices = list(
   nat5  = list(P = P_list_5,  pi0 = pi0_list_5,  pistar = pistar_list_5,  N = N_list_5),
   nat10 = list(P = P_list_10, pi0 = pi0_list_10, pistar = pistar_list_10, N = N_list_10),
-  binary    = list(P = P_list_2x2, pi0 = pi0_list_2x2, pistar = pistar_list_2x2,
-                   n = n_list_2x2, states = states_2x2),
   nativity  = list(P = P_list_nat, pi0 = pi0_list_nat, pistar = pistar_list_nat,
                    n = n_list_nat),
   sex       = list(P = P_list_sex, pi0 = pi0_list_sex, pistar = pistar_list_sex,
