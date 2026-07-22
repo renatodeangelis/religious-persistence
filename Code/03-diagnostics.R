@@ -23,7 +23,7 @@ cohort_n_table = function(cohort_var, label) {
   coh = data[[cohort_var]]
   # upper bound widened to 1990 so binned-midpoint labels (10-yr up to 1985)
   # are not clipped; the 1-year window is unaffected.
-  keep = valid_rows & !is.na(coh) & coh >= 1920 & coh <= 1990
+  keep = valid_rows & !is.na(coh) & coh >= 1920 & coh <= 1995
   tab = table(coh[keep])
   data.frame(
     window   = label,

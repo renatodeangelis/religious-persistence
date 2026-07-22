@@ -42,7 +42,7 @@ reltrad_labels = c("1"="evangelical","2"="mainline","3"="black protestant",
 data(gss_all)
 d = gss_all |>
   select(year, cohort, reltrad, reltrad16) |>
-  filter(!(year %in% c(1972, 2021))) |>
+  filter(!(year %in% c(1972, 1982, 1987, 2021, 2022, 2024)), year < 2020) |>
   mutate(across(c(reltrad, reltrad16), ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
   mutate(across(c(reltrad, reltrad16),
@@ -52,8 +52,7 @@ d = gss_all |>
   filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984)
 d = as.data.frame(d)
 d$coh <- (floor((d$cohort - 1905) / 10) * 10 + 1905) + 5      # 5-basis 10-yr midpoint
-d$per <- floor((d$year   - 1900) / 10) * 10 + 1900            # period decade (1970..2020)
-d$per[d$per >= 2020] <- 2020
+d$per <- floor((d$year   - 1900) / 10) * 10 + 1900            # period decade (1970..2010)
 
 MINCELL = 150
 dir.create("output/figures/explore/apc", recursive = TRUE, showWarnings = FALSE)
@@ -66,10 +65,11 @@ grid = do.call(rbind, lapply(seq_len(nrow(grid)), function(k) {
   s = d[d$coh == cc & d$per == pp, ]
   n = nrow(s)
   if (n < MINCELL) return(data.frame(coh = cc, per = pp, n = n, age = NA,
-                                     retention = NA, lambda2 = NA))
+                                     retention = NA, lambda2 = NA, pistar_none = NA))
   m = pm(s)
   data.frame(coh = cc, per = pp, n = n, age = round(mean(s$age), 1),
-             retention = round(retention(m), 3), lambda2 = round(lambda2(m$P), 3))
+             retention = round(retention(m), 3), lambda2 = round(lambda2(m$P), 3),
+             pistar_none = round(pi_star(m$P)["none"], 3))
 }))
 
 cat("==== PART A: cohort × period cell counts (blank = structurally impossible / n<150) ====\n")
@@ -94,6 +94,13 @@ ggsave("output/figures/explore/apc/grid_retention.png",
     scale_fill_distiller(palette = "Blues", direction = 1, na.value = "grey92", limits = c(0.5, 0.9)) +
     labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
          title = "Overall retention by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_pistar_none.png",
+  ggplot(gf, aes(per, coh, fill = pistar_none)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(pistar_none), "", sprintf("%.2f", pistar_none))), size = 3) +
+    scale_fill_distiller(palette = "Oranges", direction = 1, na.value = "grey92") +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "Steady-state share 'None' (π*) by cohort × period") + healy_theme,
   width = 8, height = 5, dpi = 200)
 
 # ── PART B · TWO-WAY ADDITIVE DECOMPOSITION (identified given age set aside) ──

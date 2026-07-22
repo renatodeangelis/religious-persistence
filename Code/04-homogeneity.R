@@ -150,7 +150,7 @@ p_roll = ggplot(roll_results, aes(x = center, y = p_value,
     values = c("indianred4", "goldenrod2", "darkgreen", "royalblue4"),
     name   = "Adjacent 5-yr\ncohort matrices") +
   scale_shape_manual(values = c(15, 16, 17, 18), name = "Adjacent 5-yr\ncohort matrices") +
-  scale_x_continuous(breaks = seq(1925, 1985, by = 5), guide = guide_axis(angle = 45)) +
+  scale_x_continuous(breaks = seq(1925, 1995, by = 5), guide = guide_axis(angle = 45)) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
   labs(
     x       = "Center birth cohort",

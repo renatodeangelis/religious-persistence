@@ -1,13 +1,12 @@
 # ── 05 · NATIONAL MEMORY MEASURES & FIGURES ────────────────────────────────────
-# Individual memory curves (IM), overall/exchange/structural mobility, mean time
-# to exit (MTE), and the national transition-matrix heatmaps. Figure blocks use
-# the pre-built national matrices from 02; the mobility and MTE time series
-# recompute at 1-year cohort resolution from the cleaned data.
+# Individual memory curves (IM), overall mobility, mean time to exit (MTE), and
+# the national transition-matrix heatmaps. Figure blocks use the pre-built
+# national matrices from 02; the mobility and MTE time series recompute at
+# 1-year cohort resolution from the cleaned data.
 #
 # Input:  data/derived/matrices.rds, data/derived/gss_clean.rds
 # Output: output/figures/*.png
 
-library(tidyr)
 source("code/utils.R")
 
 matrices   = readRDS("data/derived/matrices.rds")
@@ -51,20 +50,6 @@ mob_rows = lapply(1920:1980, function(coh) {
 })
 mob_df = do.call(rbind, Filter(Negate(is.null), mob_rows))
 
-# ── EXCHANGE/STRUCTURAL MOBILITY (1-year cohorts, t = 0) ─────────────────────
-
-em_sm_rows = lapply(1920:1985, function(coh) {
-  sub = data[!is.na(data$cohort) & data$cohort == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-  if (nrow(sub) < 30) return(NULL)
-  P   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  pi0 = pi_0(sub, "reltrad16_alt")
-  om_v = overall_mobility(P, pi0)
-  sm_v = sm(P, pi0, t = 0)
-  data.frame(cohort = coh, EM = om_v - sm_v, SM = sm_v, OM = om_v)
-})
-em_sm_df = do.call(rbind, Filter(Negate(is.null), em_sm_rows))
-
 # ── NATIONAL FIGURES ──────────────────────────────────────────────────────────
 
 dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
@@ -105,7 +90,6 @@ reltrad_labels_tc = c(
   none        = "None"
 )
 
-im_df_10 = im_df_10[im_df_10$cohort != 1925, ]   # drop earliest 10-yr bin (edge 1920, midpoint 1925)
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
 p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
@@ -133,34 +117,11 @@ p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = 
 
 ggsave("output/figures/overall_mobility.png", p_mob, width = 8, height = 5, dpi = 200)
 
-em_sm_long = pivot_longer(
-  em_sm_df[em_sm_df$cohort >= 1930 & em_sm_df$cohort <= 1985, ],
-  cols = c(EM, SM),
-  names_to = "measure", values_to = "value"
-)
-
-p_em_sm = ggplot(em_sm_long, aes(x = cohort, y = value, color = measure,
-                                  fill = measure, group = measure)) +
-  geom_point(size = 1.5, alpha = 0.6) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2) +
-  scale_color_manual(name   = NULL,
-                     values = c(EM = "#D55E00", SM = "#009E73"),
-                     labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
-  scale_fill_manual(name   = NULL,
-                    values = c(EM = "#D55E00", SM = "#009E73"),
-                    labels = c(EM = "Exchange mobility", SM = "Structural mobility")) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort", y = "Probability to Move",
-       title = "Exchange and Structural Mobility by Birth Cohort") +
-  healy_theme
-
-ggsave("output/figures/em_sm_pooled.png", p_em_sm, width = 8, height = 5, dpi = 200)
-
 # ── MTE TIME SERIES (5-year cohorts, 1930–1980) ───────────────────────────────
 
 mte_rows_5 = lapply(names(P_list_5), function(key) {
   coh = as.numeric(key)                          # 5-yr bin midpoint (e.g. 1932.5)
-  if (coh < 1932.5 | coh > 1982.5) return(NULL)  # edges 1930–1980
+  if (coh < 1927.5 | coh > 1992.5) return(NULL)  # edges 1925–1990
   vals = mte(P_list_5[[key]])
   data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
 })

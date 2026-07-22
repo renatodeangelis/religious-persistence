@@ -20,7 +20,7 @@ states_alt = clean$states_alt
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
 # ── 5-year cohort loop ───────────────────────────────────────────────────────
-cohorts_5 = sort(unique(data$cohort_5[!is.na(data$cohort_5) & data$cohort_5 >= 1922.5 & data$cohort_5 <= 1982.5]))
+cohorts_5 = sort(unique(data$cohort_5[!is.na(data$cohort_5) & data$cohort_5 >= 1927.5 & data$cohort_5 <= 1992.5]))
 
 P_list_5      = list()
 pi0_list_5    = list()
@@ -40,7 +40,7 @@ for (coh in cohorts_5) {
 }
 
 # ── 10-year cohort loop ──────────────────────────────────────────────────────
-cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1925 & data$cohort_10 <= 1985]))
+cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1930 & data$cohort_10 <= 1990]))
 
 P_list_10      = list()
 pi0_list_10    = list()
@@ -61,7 +61,7 @@ for (coh in cohorts_10) {
 
 # ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
 
-cohorts_nat    = c(1955, 1965, 1975)   # 10-year bin midpoints (edges 1950/1960/1970)
+cohorts_nat    = c(1950, 1960, 1970)   # 10-year bin midpoints (edges 1945/1955/1965)
 nativity_groups = c("Born in US", "Born abroad")
 
 P_list_nat      = list()
@@ -87,7 +87,7 @@ for (nat in nativity_groups) {
 
 # ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1940–1980) ─────────────
 
-cohorts_sex = c(1945, 1955, 1965, 1975, 1985)   # 10-year bin midpoints (edges 1940–1980)
+cohorts_sex = c(1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1935–1975)
 sex_labels  = c("1" = "male", "2" = "female")
 
 P_list_sex      = list()
@@ -120,7 +120,7 @@ pol_vars = list(
   polviews_broad  = c("liberal", "moderate", "conservative")
 )
 
-cohorts_pol = c(1945, 1955, 1965, 1975, 1985)   # 10-year bin midpoints (edges 1940–1980)
+cohorts_pol = c(1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1935–1975)
 
 P_list_pol      = list()
 pi0_list_pol    = list()
