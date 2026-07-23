@@ -74,6 +74,12 @@ p_matrix = function(data, origin, current, levels = NULL) {
   P
 }
 
+# Shannon entropy of a probability vector: E(μ) = −Σ μᵢ ln(μᵢ)
+shannon_entropy = function(mu) {
+  mu = mu[mu > 0]
+  -sum(mu * log(mu))
+}
+
 # ── MEMORY MEASURES ──────────────────────────────────────────────────────────
 
 # Individual memory (IM): log TV distance from π* for each origin state at step t.

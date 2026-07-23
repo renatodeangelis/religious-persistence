@@ -65,11 +65,20 @@ grid = do.call(rbind, lapply(seq_len(nrow(grid)), function(k) {
   s = d[d$coh == cc & d$per == pp, ]
   n = nrow(s)
   if (n < MINCELL) return(data.frame(coh = cc, per = pp, n = n, age = NA,
-                                     retention = NA, lambda2 = NA, pistar_none = NA))
+                                     retention = NA, lambda2 = NA, pistar_none = NA,
+                                     pct_none_current = NA, diag_none = NA,
+                                     diag_catholic = NA, diag_evangelical = NA,
+                                     outflow_to_none = NA))
   m = pm(s)
+  non_none = setdiff(rownames(m$P), "none")
   data.frame(coh = cc, per = pp, n = n, age = round(mean(s$age), 1),
              retention = round(retention(m), 3), lambda2 = round(lambda2(m$P), 3),
-             pistar_none = round(pi_star(m$P)["none"], 3))
+             pistar_none = round(pi_star(m$P)["none"], 3),
+             pct_none_current = round(sum(m$N[, "none"]) / sum(m$N), 3),
+             diag_none       = round(m$P["none",      "none"],      3),
+             diag_catholic   = round(m$P["catholic",  "catholic"],  3),
+             diag_evangelical = round(m$P["evangelical","evangelical"], 3),
+             outflow_to_none = round(sum(m$pi0[non_none] * m$P[non_none, "none"]), 3))
 }))
 
 cat("==== PART A: cohort × period cell counts (blank = structurally impossible / n<150) ====\n")
@@ -95,12 +104,55 @@ ggsave("output/figures/explore/apc/grid_retention.png",
     labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
          title = "Overall retention by cohort × period") + healy_theme,
   width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_lambda2.png",
+  ggplot(gf, aes(per, coh, fill = lambda2)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(lambda2), "", sprintf("%.2f", lambda2))), size = 3) +
+    scale_fill_distiller(palette = "Blues", direction = 1, na.value = "grey92") +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "Second eigenvalue (λ₂) by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
 ggsave("output/figures/explore/apc/grid_pistar_none.png",
   ggplot(gf, aes(per, coh, fill = pistar_none)) + geom_tile(color = "white") +
     geom_text(aes(label = ifelse(is.na(pistar_none), "", sprintf("%.2f", pistar_none))), size = 3) +
     scale_fill_distiller(palette = "Oranges", direction = 1, na.value = "grey92") +
     labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
          title = "Steady-state share 'None' (π*) by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+
+ggsave("output/figures/explore/apc/grid_pct_none_current.png",
+  ggplot(gf, aes(per, coh, fill = pct_none_current)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(pct_none_current), "", sprintf("%.2f", pct_none_current))), size = 3) +
+    scale_fill_distiller(palette = "Reds", direction = 1, na.value = "grey92") +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "Share currently 'None' by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_diag_none.png",
+  ggplot(gf, aes(per, coh, fill = diag_none)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(diag_none), "", sprintf("%.2f", diag_none))), size = 3) +
+    scale_fill_distiller(palette = "Reds", direction = 1, na.value = "grey92", limits = c(0.5, 1)) +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "None → None retention P[none,none] by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_diag_catholic.png",
+  ggplot(gf, aes(per, coh, fill = diag_catholic)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(diag_catholic), "", sprintf("%.2f", diag_catholic))), size = 3) +
+    scale_fill_distiller(palette = "Blues", direction = 1, na.value = "grey92", limits = c(0.5, 1)) +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "Catholic → Catholic retention P[catholic,catholic] by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_diag_evangelical.png",
+  ggplot(gf, aes(per, coh, fill = diag_evangelical)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(diag_evangelical), "", sprintf("%.2f", diag_evangelical))), size = 3) +
+    scale_fill_distiller(palette = "Oranges", direction = 1, na.value = "grey92", limits = c(0.5, 1)) +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "Evangelical → Evangelical retention P[evangelical,evangelical] by cohort × period") + healy_theme,
+  width = 8, height = 5, dpi = 200)
+ggsave("output/figures/explore/apc/grid_outflow_to_none.png",
+  ggplot(gf, aes(per, coh, fill = outflow_to_none)) + geom_tile(color = "white") +
+    geom_text(aes(label = ifelse(is.na(outflow_to_none), "", sprintf("%.2f", outflow_to_none))), size = 3) +
+    scale_fill_distiller(palette = "Purples", direction = 1, na.value = "grey92") +
+    labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
+         title = "π₀-weighted outflow to 'None' (from affiliated origins) by cohort × period") + healy_theme,
   width = 8, height = 5, dpi = 200)
 
 # ── PART B · TWO-WAY ADDITIVE DECOMPOSITION (identified given age set aside) ──

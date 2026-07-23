@@ -166,3 +166,40 @@ p_mte_1 = ggplot(mte_df_1, aes(x = cohort, y = mte, color = origin, group = orig
   healy_theme
 
 ggsave("output/figures/mte_1yr.png", p_mte_1, width = 8, height = 5, dpi = 200)
+
+# ── SHANNON ENTROPY BY COHORT (10-year bins) ─────────────────────────────────
+# E(π₀): entropy of the childhood religion distribution (origin)
+# E(π₁): entropy of the adult religion distribution (current); π₁ = π₀ P
+
+entropy_df = do.call(rbind, lapply(names(P_list_10), function(key) {
+  pi0 = pi0_list_10[[key]]
+  pi1 = as.numeric(pi0 %*% P_list_10[[key]])
+  names(pi1) = names(pi0)
+  data.frame(cohort = as.numeric(key),
+             e_pi0  = shannon_entropy(pi0),
+             e_pi1  = shannon_entropy(pi1))
+}))
+
+entropy_long = rbind(
+  data.frame(cohort = entropy_df$cohort, distribution = "Origin (π₀)", entropy = entropy_df$e_pi0),
+  data.frame(cohort = entropy_df$cohort, distribution = "Current (π₁)", entropy = entropy_df$e_pi1)
+)
+entropy_long$distribution = factor(entropy_long$distribution,
+                                   levels = c("Origin (π₀)", "Current (π₁)"))
+
+p_entropy = ggplot(entropy_long, aes(x = cohort, y = entropy,
+                                     color = distribution, shape = distribution,
+                                     group = distribution)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("Origin (π₀)" = "#5C4A8F", "Current (π₁)" = "#2D6A4F"),
+                     name = NULL) +
+  scale_shape_manual(values = c("Origin (π₀)" = 16, "Current (π₁)" = 15),
+                     name = NULL) +
+  scale_x_continuous(breaks = seq(1930, 1990, by = 10)) +
+  labs(x = "Birth cohort (10-year bin midpoint)",
+       y = expression(paste("Shannon entropy  ", E(mu) == -Sigma, mu[i], ln(mu[i]))),
+       title = "Shannon Entropy of Origin and Current Religious Distributions by Cohort") +
+  healy_theme
+
+ggsave("output/figures/shannon_entropy_10yr.png", p_entropy, width = 8, height = 5, dpi = 200)
