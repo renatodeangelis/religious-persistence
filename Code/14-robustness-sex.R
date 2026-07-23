@@ -3,7 +3,8 @@
 # Five cohort windows: 1940–1949 through 1980–1989.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/sex/*.png
+# Output: data/derived/matrices_sex.rds
+#         output/figures/sex/*.png
 
 source("code/utils.R")
 
@@ -25,7 +26,7 @@ reltrad_labels_tc = c(
 )
 
 # 10-year bin midpoints (edges 1940–1980)
-mids_sex   = c(1945, 1955, 1965, 1975, 1985)
+mids_sex   = c(1940, 1950, 1960, 1970, 1980)
 sex_labels = c("1" = "male", "2" = "female")
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
@@ -101,4 +102,9 @@ p_diag = ggplot(diag_sex, aes(x = cohort, y = persist, color = origin, group = o
 ggsave("output/figures/sex/diagonal_persistence_sex.png",
        p_diag, width = 10, height = 5, dpi = 200)
 
+saveRDS(
+  list(P = P_sex, pi0 = pi0_sex, pistar = pistar_sex, n = n_sex),
+  "data/derived/matrices_sex.rds"
+)
 cat("Wrote output/figures/sex/\n")
+cat("Wrote data/derived/matrices_sex.rds\n")

@@ -3,7 +3,8 @@
 # each in narrow and broad coding. Five cohort windows: 1940–1989.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/political/*.png
+# Output: data/derived/matrices_political.rds
+#         output/figures/political/*.png
 
 source("code/utils.R")
 
@@ -32,7 +33,7 @@ pol_vars = list(
 )
 
 # 10-year bin midpoints (edges 1940–1980)
-mids_pol = c(1945, 1955, 1965, 1975, 1985)
+mids_pol = c(1940, 1950, 1960, 1970, 1980)
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
 
@@ -115,4 +116,9 @@ for (vname in names(pol_vars)) {
          p_diag, width = 12, height = 5, dpi = 200)
 }
 
+saveRDS(
+  list(P = P_pol, pi0 = pi0_pol, pistar = pistar_pol, n = n_pol),
+  "data/derived/matrices_political.rds"
+)
 cat("Wrote output/figures/political/\n")
+cat("Wrote data/derived/matrices_political.rds\n")

@@ -5,7 +5,8 @@
 # diagonal persistence. Uses the reltrad_bp/reltrad16_bp columns built in 01.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/bp/*.png
+# Output: data/derived/matrices_bp.rds
+#         output/figures/bp/*.png
 
 library(dplyr)
 library(ggplot2)
@@ -105,7 +106,7 @@ dir.create("output/figures/bp", recursive = TRUE, showWarnings = FALSE)
 
 # ── 10-YEAR COHORTS (edges 1940–1980) ────────────────────────────────────────
 
-mids_10 = c(1945, 1955, 1965, 1975, 1985)   # edges 1940–1980
+mids_10 = c(1940, 1950, 1960, 1970, 1980)   # edges 1935–1975
 cell_diag("cohort_10", mids_10, 5, "Cell-count diagnostic (6-state, 10-year cohorts, 1940–1989)")
 bp10 = build_bp("cohort_10", mids_10, 5)
 
@@ -157,4 +158,9 @@ p_diag10 = ggplot(diag_df10, aes(x = cohort, y = persistence, color = origin, gr
 ggsave("output/figures/bp/diagonal_persistence_10yr_6state.png",
        p_diag10, width = 8, height = 5, dpi = 200)
 
+saveRDS(
+  list(P = bp10$P, pi0 = bp10$pi0, pistar = bp10$pistar, n = bp10$n),
+  "data/derived/matrices_bp.rds"
+)
 cat("\nDone. 6-state robustness figures in output/figures/bp/.\n")
+cat("Wrote data/derived/matrices_bp.rds\n")

@@ -3,7 +3,8 @@
 # respondents. Three cohort windows: 1950–1959, 1960–1969, 1970–1979.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/nativity/*.png
+# Output: data/derived/matrices_nativity.rds
+#         output/figures/nativity/*.png
 
 source("code/utils.R")
 
@@ -25,7 +26,7 @@ reltrad_labels_tc = c(
 )
 
 # 10-year bin midpoints (edges 1950/1960/1970)
-mids_nat        = c(1955, 1965, 1975)
+mids_nat        = c(1950, 1960, 1970)
 nativity_groups = c("Born in US", "Born abroad")
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
@@ -101,4 +102,9 @@ p_diag = ggplot(diag_nat, aes(x = cohort, y = persist, color = origin, group = o
 ggsave("output/figures/nativity/diagonal_persistence_nativity.png",
        p_diag, width = 10, height = 5, dpi = 200)
 
+saveRDS(
+  list(P = P_nat, pi0 = pi0_nat, pistar = pistar_nat, n = n_nat),
+  "data/derived/matrices_nativity.rds"
+)
 cat("Wrote output/figures/nativity/\n")
+cat("Wrote data/derived/matrices_nativity.rds\n")

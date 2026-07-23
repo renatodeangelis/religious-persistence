@@ -5,7 +5,8 @@
 # 1987, 2022, 2024) are excluded upstream in 01 along with 1972 and 2021.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/gss-decade/*.png
+# Output: data/derived/matrices_gss_decade.rds
+#         output/figures/gss-decade/*.png
 
 library(dplyr)
 library(ggplot2)
@@ -241,4 +242,9 @@ p_pistar_gd = ggplot(pistar_df_gd, aes(x = gss_decade, y = pistar, color = origi
 ggsave("output/figures/gss-decade/pistar_gss_decade.png",
        p_pistar_gd, width = 8, height = 5, dpi = 200)
 
+saveRDS(
+  list(P = P_list_gd, pi0 = pi0_list_gd, pistar = pistar_list_gd, n = n_list_gd),
+  "data/derived/matrices_gss_decade.rds"
+)
 cat("\nDone. GSS-period robustness figures in output/figures/gss-decade/.\n")
+cat("Wrote data/derived/matrices_gss_decade.rds\n")

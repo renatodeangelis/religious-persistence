@@ -5,7 +5,8 @@
 # frame, so the only thing that varies is the race restriction.
 #
 # Input:  data/derived/gss_clean.rds
-# Output: output/figures/nonblack/*.png
+# Output: data/derived/matrices_nonblack.rds
+#         output/figures/nonblack/*.png
 
 library(dplyr)
 library(ggplot2)
@@ -31,7 +32,7 @@ reltrad_labels_tc = c(
 
 # 10-year cohort midpoints (edges 1940–1980). cohort_10 in the pipeline is the
 # bin midpoint (edge + 5); the edge is used for titles and filenames.
-mids_10 = c(1945, 1955, 1965, 1975, 1985)
+mids_10 = c(1940, 1950, 1960, 1970, 1980)
 
 data_nb = data[as.numeric(data$race) != 2, ]
 
@@ -227,4 +228,12 @@ p_diff_facet = ggplot(diff_all, aes(x = current, y = origin, fill = diff)) +
 ggsave("output/figures/nonblack/diff_all_cohorts_10yr.png",
        p_diff_facet, width = 22, height = 5, dpi = 200)
 
+saveRDS(
+  list(
+    nonblack = list(P = nb$P,  pi0 = nb$pi0,  pistar = nb$pistar,  n = nb$n),
+    full      = list(P = all$P, pi0 = all$pi0, pistar = all$pistar, n = all$n)
+  ),
+  "data/derived/matrices_nonblack.rds"
+)
 cat("\nDone. Non-Black robustness figures in output/figures/nonblack/.\n")
+cat("Wrote data/derived/matrices_nonblack.rds\n")

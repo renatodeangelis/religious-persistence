@@ -10,15 +10,20 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 
 ---
 
-## Seven Critical Weaknesses (and Status)
+## Methodological Concerns (Revised Status)
 
-1. **Markov assumption violated**: Bengtson's LSOG data show grandparental religiosity has a direct independent effect on grandchildren net of parents — first-order Markov violation. Memory curves will understate true persistence.
-2. **Nominal state space**: Religious affiliation has no natural ordering; "movement" between categories is treated symmetrically by the model. The scalar memory summary is not self-evidently interpretable.
-3. **Non-stationarity**: The rise of the nones (5% → 25%+) is not noise; it is the phenomenon. A pooled P and its ergodic distribution have no empirical referent.
-4. **RELIG16 endogenous recall bias**: Retrospective recall of childhood religion is contaminated by current adult identity. This bias is correlated with the transitions being modeled — not classical random error. Errors compound across P^k.
-5. **Ergodic concept is sociologically incoherent** for contemporary U.S. religion.
-6. **Ill-conditioned matrix for minority groups**: Jews, Muslims, Buddhists, Hindus will have very small N in any cohort slice.
-7. **Conceptual equivalence not established**: "Religious mobility" risks being a category error — treating voluntary identity change as analogous to escaping structural disadvantage.
+### Resolved by design
+- **Non-stationarity** (was #3): Not an issue. The paper never pools across cohorts or computes a single P. Each cohort-specific P_t is a self-contained object; memory curves are conditional on that cohort's regime. The rise of the nones is what the cohort comparison *measures*, not a confound.
+- **Ill-conditioned minority-group matrices** (was #6): Not an issue. Minority categories (Jewish, Muslim, Buddhist, Hindu) are residualized into "other" in the 5-state scheme. Thin-cell instability is not a problem for the main estimation sample.
+
+### Framing issues (not methodological flaws)
+- **Nominal state space** (was #2): The math requires no ordinality — TV distance, Altham index, and λ₂ are all well-defined on nominal spaces. The real concern is that λ₂ is a scalar that collapses heterogeneous transition types (Catholic→None vs. Catholic→Evangelical). *Paper response*: lead with origin-state-specific memory curves and diagonal persistence; treat λ₂ as a secondary summary. Brief acknowledgment that the scalar aggregates transitions with different sociological content.
+- **Ergodic concept** (was #5): π\* is a property of the matrix, not a prediction about the social world. *Paper response*: frame π\* explicitly as "the implied long-run destination under cohort t's regime, if that regime were to persist" — not an equilibrium prediction. Present it as a conditional summary alongside the memory curves, not a headline result. If it's redundant with the curves, cut it.
+- **Conceptual equivalence** (was #7): The Markovian framework embeds no ordinal assumptions and requires no "structural mobility" correction. The US religious context has no analogue to the agricultural-to-service transition or postwar Japan. *Paper response*: this is a strength, not a weakness — state briefly that the model may be more appropriate for religious affiliation than for occupational mobility precisely because no structural adjustment is needed. The source of persistence (socialization and identity formation) differs from occupational gatekeeping, but the formal structure (discrete-state transition) is valid in both cases.
+
+### Genuine concerns requiring explicit handling
+- **First-order Markov assumption** (was #1): Bengtson's LSOG data show grandparental religiosity affects grandchildren net of parents. Each cohort-specific P_t captures only the single parent-to-child transmission step; the memory curves are therefore a *lower bound* on true multi-generational religious persistence. The grandparent channel is not captured. The trend comparison across cohorts is valid conditional on the grandparent effect being approximately stable across cohorts — a testable claim using LSOG. *Paper response*: explicitly state that memory curves are lower bounds on true persistence; note that the trend is valid under stable grandparent effects; use LSOG to assess whether this assumption holds.
+- **RELIG16 endogenous recall bias** (was #4): The most serious surviving concern. Bias is not random — people who have left religion are more likely to recall a secular upbringing, inflating every diagonal. Critically, the bias may *trend with the cohort variable*: younger cohorts have left religion at higher rates and thus have more leavers revising their childhood recall downward. The paper's core finding (declining persistence across cohorts) could be partly a trend in bias rather than a genuine trend in transmission. *Paper response*: (a) present Add Health W1/W3 validation result prominently — it establishes magnitude; (b) discuss explicitly whether the bias trends with cohort; (c) run sensitivity analysis under estimated misclassification rates (Kuha & Skinner 1997). Diagonal persistence is more robust to this bias than λ₂ and should be treated as the primary fallback.
 
 ---
 
@@ -31,7 +36,6 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 
 | Dataset | Purpose | Birth cohort covered |
 |---------|---------|----------------------|
-| **LSOG** (ICPSR 22100) | Direct validation — G2 parents observed at Wave 1 (1971); G3 adults recall childhood religion in later waves. The unique dataset for recall bias estimation. | Multi-generational |
 | **Add Health** | Prospective transition matrix for birth cohort ~1976–1983; compare cell-by-cell to GSS RELIG16 matrix for same cohort | ~1976–1983 |
 | **NSYR** | Wave 1 parent + youth separately → Waves 3–4 young adult religion | ~1984–1990 |
 | **GSS panel (2006–2010)** | Test-retest stability of RELIG16; instability correlated with religious switching = evidence of identity contamination | — |
