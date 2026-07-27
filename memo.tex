@@ -1,0 +1,323 @@
+%% ─────────────────────────────────────────────────────────────────────────────
+%% Religious Persistence — Preliminary Results Memo
+%% Upload figures/ subfolder to Overleaf mirroring output/figures/
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\documentclass[12pt, letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}        % [H] placement
+\usepackage{booktabs}
+\usepackage{parskip}      % space between paragraphs, no indent
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\graphicspath{
+  {figures/}
+  {figures/explore/}
+  {figures/explore/apc/}
+  {figures/explore/matrices/}
+  {figures/sex/}
+  {figures/political/}
+  {figures/nonblack/}
+  {figures/bp/}
+  {figures/gss-decade/}
+  {figures/nativity/}
+  {figures/homogeneity/}
+}
+
+\captionsetup{font=small, labelfont=bf, skip=4pt}
+\onehalfspacing
+
+%% ── convenience macro for a TODO note ────────────────────────────────────────
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\title{\textbf{Religious Persistence in the United States}\\
+       \large Preliminary Results — Internal Memo}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{National Trend}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Transition matrices by birth cohort}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{P_grid_national_10yr}
+  \caption{RELIG16 $\to$ RELIG transition matrices by 10-year birth cohort,
+           1925--1984. Rows = origin religion (RELIG16); columns = current
+           religion (RELIG). Cell values are row-conditional probabilities.}
+\end{figure}
+
+\subsection{Individual memory curves}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{im_memory_10yr}
+  \caption{Individual memory (log TV distance from $\pi^*$) by origin state
+           and generation step $t = 0$--$6$, for each 10-year birth cohort.
+           Dashed lines mark TV distance thresholds of 0.05 and 0.01.}
+\end{figure}
+
+\subsection{Overall mobility}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{overall_mobility}
+  \caption{$\pi_0$-weighted mean probability of leaving origin religion,
+           by single-year birth cohort (LOESS smooth).}
+\end{figure}
+
+\subsection{Mean time to exit}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{mte_5yr}
+  \caption{Mean time to exit origin state $i$ ($\text{MTE}_i = 1/(1-P_{ii})$)
+           by religious origin, 5-year birth cohort bins.}
+\end{figure}
+
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Interpreting the Trend}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Age standardization}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{age_std_lambda2_wide}
+  \caption{$\lambda_2$ by birth cohort: unstandardized (U), band-restricted (R),
+           and age-standardized (S) estimates. Common age band 39--49.
+           Convergence of the three lines indicates the cohort trend is not
+           an age-composition artifact.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{age_std_meandiag_wide}
+  \caption{$\pi_0$-weighted mean diagonal (overall retention) by birth cohort,
+           same three estimation strategies. Common age band 39--49.}
+\end{figure}
+
+\subsection{Origin and implied stationary distributions}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{pi_dist_lines_10yr}
+  \caption{Share of each religious group in the origin distribution ($\pi_0$,
+           top) and the implied stationary distribution ($\pi^*$, bottom),
+           by 10-year birth cohort. $\pi^*$ is a conditional projection:
+           the long-run distribution if cohort $t$'s regime were to persist.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{pi_dist_grid_10yr}
+  \caption{Same as Figure~\ref{fig:pi_lines} in grid form: one column per cohort,
+           two rows ($\pi_0$ and $\pi^*$).}
+  \label{fig:pi_lines}
+\end{figure}
+
+\subsection{GSS survey-period re-cut}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{diagonal_persistence_gss_decade}
+  \caption{Diagonal persistence $P_{ii}$ by religious origin across GSS
+           survey-period windows (1973--2020). Checks whether the cohort trend
+           in Section~1 replicates when respondents are grouped by when they
+           were surveyed rather than when they were born.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{im_memory_gss_decade}
+  \caption{Individual memory curves by GSS survey-period window.}
+\end{figure}
+
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Heterogeneity by Origin State}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Catholic}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{grid_diag_catholic}
+  \caption{Catholic diagonal persistence $P_{\text{cath},\text{cath}}$ by
+           birth cohort $\times$ survey period (APC grid).}
+\end{figure}
+
+\todo{Add origin-specific memory curves across cohorts for Catholic
+      (faceted-by-origin version of Figure~2 for the full sample ---
+      analogous to \texttt{im\_memory\_byorigin\_nb.png} but main sample).}
+
+\subsection{Evangelical}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{grid_diag_evangelical}
+  \caption{Evangelical diagonal persistence by cohort $\times$ period.}
+\end{figure}
+
+\subsection{None}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{grid_diag_none}
+  \caption{None diagonal persistence by cohort $\times$ period.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{grid_outflow_to_none}
+  \caption{$\pi_0$-weighted outflow to ``None'' from all affiliated origins,
+           by cohort $\times$ period.}
+\end{figure}
+
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Demographic Heterogeneity}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Sex}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{diagonal_persistence_sex}
+  \caption{Diagonal persistence by religious origin and sex across 10-year
+           birth cohorts (1935--1984).}
+\end{figure}
+
+\subsection{Political stratification}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{diagonal_persistence_partyid_narrow}
+    \caption{Party ID (narrow: strong partisans only)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{diagonal_persistence_partyid_broad}
+    \caption{Party ID (broad: leaners included)}
+  \end{subfigure}
+  \caption{Diagonal persistence by party identification and birth cohort.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{diagonal_persistence_polviews_narrow}
+    \caption{Political views (narrow)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{diagonal_persistence_polviews_broad}
+    \caption{Political views (broad)}
+  \end{subfigure}
+  \caption{Diagonal persistence by political views and birth cohort.}
+\end{figure}
+
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\section{Robustness}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\subsection{Non-Black sample}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{diff_all_cohorts_10yr}
+  \caption{Cell-by-cell difference matrices: $P_{\text{full}} - P_{\text{non-Black}}$
+           across 10-year birth cohorts. Positive values (red) indicate cells
+           where Black respondents raise the transition probability.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{im_memory_10yr_nb}
+  \caption{Individual memory curves for the non-Black subsample, by birth
+           cohort.}
+\end{figure}
+
+\subsection{Black Protestant (6-state scheme)}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{diagonal_persistence_10yr_6state}
+  \caption{Diagonal persistence in the 6-state scheme (Black Protestant
+           retained as a separate category) across 10-year birth cohorts.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{im_memory_10yr_6state}
+  \caption{Individual memory curves, 6-state scheme.}
+\end{figure}
+
+\subsection{GSS survey-period stratification}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{pistar_gss_decade}
+  \caption{Implied stationary distribution ($\pi^*$) by religious group
+           across GSS survey-period windows.}
+\end{figure}
+
+\clearpage
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\appendix
+\section{Age/Period/Cohort Decomposition (Exploratory)}
+%% ═══════════════════════════════════════════════════════════════════════════
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{grid_retention}
+  \caption{Overall retention by cohort $\times$ survey period.
+           Blank cells are structurally impossible (age = period $-$ cohort).}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{grid_lambda2}
+  \caption{Second eigenvalue $\lambda_2$ by cohort $\times$ survey period.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{twoway_effects}
+  \caption{Two-way additive decomposition: cohort vs.\ period effects on
+           overall retention and $\lambda_2$ (age set aside). Variance shares
+           reported in console output from \texttt{09-period-cohort-decomp-explore.R}.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{curvature_contrasts}
+  \caption{Identified second-difference (curvature) contrasts for ``leaving
+           religion'' and ``return from None'' logit models. These contrasts
+           are estimable regardless of the APC linear-slope indeterminacy.}
+\end{figure}
+
+\end{document}

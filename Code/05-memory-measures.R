@@ -203,3 +203,123 @@ p_entropy = ggplot(entropy_long, aes(x = cohort, y = entropy,
   healy_theme
 
 ggsave("output/figures/shannon_entropy_10yr.png", p_entropy, width = 8, height = 5, dpi = 200)
+
+# ── TRANSITION MATRIX GRID (10-year cohorts, 1935–1984) ──────────────────────
+# Five panels in one figure: one column per birth cohort. Rows = origin (RELIG16),
+# columns = current (RELIG). Same layout as P_grid_U_vs_S from 08 but a single
+# row — gives the reader a cross-cohort view of the full matrix at a glance.
+
+mids_grid = c(1930, 1940, 1950, 1960, 1970, 1980)   # cohort_10 midpoints → edges 1925–1984
+
+n_per_mid = sapply(mids_grid, function(m)
+  format(sum(matrices$nat10$N[[as.character(m)]]), big.mark = ","))
+
+grid_df = do.call(rbind, lapply(seq_along(mids_grid), function(i) {
+  mid = mids_grid[i]
+  key = as.character(mid)
+  P   = matrices$nat10$P[[key]]
+  if (is.null(P)) return(NULL)
+  df  = as.data.frame(as.table(P))
+  names(df) = c("origin", "current", "p")
+  df$cohort = paste0(mid - 5, "–", mid + 4, "\n(N = ", n_per_mid[i], ")")
+  df
+}))
+
+grid_df$origin  = factor(grid_df$origin,  levels = rev(rel_level_order))
+grid_df$current = factor(grid_df$current, levels = rel_level_order)
+grid_df$cohort  = factor(grid_df$cohort,
+  levels = paste0(mids_grid - 5, "–", mids_grid + 4, "\n(N = ", n_per_mid, ")"))
+
+p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
+  facet_wrap(~ cohort, nrow = 2) +
+  scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1), name = "P[i→j]") +
+  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
+       title = "Intergenerational transition matrices by birth cohort (10-year bins, 1925–1984)") +
+  theme_bw(base_size = 10) +
+  theme(
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y      = element_text(size = 8),
+    panel.grid       = element_blank(),
+    legend.position  = "bottom",
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(size = 9),
+    plot.caption     = element_text(size = 8, color = "grey50")
+  )
+
+ggsave("output/figures/P_grid_national_10yr.png", p_grid_national,
+       width = 12, height = 9, dpi = 200)
+
+# ── π₀ AND π* DISTRIBUTION GRID (10-year cohorts, 1935–1994) ─────────────────
+# Two companions to the matrix grid above. The grid figure (facet_grid) shows
+# the bar-chart layout cohort-by-cohort; the line figure shows the trend across
+# cohorts for each religion — more useful for reading the narrative.
+
+dist_df = do.call(rbind, lapply(mids_grid, function(mid) {
+  key    = as.character(mid)
+  pi0    = matrices$nat10$pi0[[key]]
+  pistar = matrices$nat10$pistar[[key]]
+  if (is.null(pi0)) return(NULL)
+  cohort_lbl = paste0(mid - 5, "–", mid + 4)
+  rbind(
+    data.frame(mid = mid, cohort = cohort_lbl, measure = "π₀  (origin)",
+               religion = names(pi0),    value = as.numeric(pi0)),
+    data.frame(mid = mid, cohort = cohort_lbl, measure = "π* (stationary)",
+               religion = names(pistar), value = as.numeric(pistar))
+  )
+}))
+
+dist_df$religion = factor(dist_df$religion, levels = rel_level_order)
+dist_df$cohort   = factor(dist_df$cohort,
+                           levels = paste0(mids_grid - 5, "–", mids_grid + 4))
+dist_df$measure  = factor(dist_df$measure,
+                           levels = c("π₀  (origin)", "π* (stationary)"))
+
+# Grid version: facet_grid(measure × cohort), one bar chart per cell.
+# coord_flip() keeps religion labels horizontal and readable at small size.
+p_dist_grid = ggplot(dist_df, aes(y = religion, x = value, fill = religion)) +
+  geom_col(width = 0.65) +
+  facet_grid(measure ~ cohort) +
+  scale_fill_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
+  scale_x_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
+                     labels = c("0", ".25", ".5")) +
+  scale_y_discrete(labels = reltrad_labels_tc) +
+  labs(x = "Share", y = NULL,
+       title = "Origin (π₀) and stationary (π*) distributions by birth cohort",
+) +
+  theme_bw(base_size = 10) +
+  theme(
+    panel.grid.minor  = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position   = "none",
+    strip.background  = element_rect(fill = "grey92", color = NA),
+    strip.text        = element_text(size = 8),
+    axis.text.y       = element_text(size = 8),
+    axis.text.x       = element_text(size = 7),
+    plot.caption      = element_text(size = 8, color = "grey50")
+  )
+
+ggsave("output/figures/pi_dist_grid_10yr.png", p_dist_grid,
+       width = 14, height = 5, dpi = 200)
+
+# Line version: cohort midpoint on x-axis, one line per religion, two panels.
+# Better for reading trends; include alongside the grid in the memo.
+p_dist_lines = ggplot(dist_df, aes(x = mid, y = value,
+                                    color = religion, group = religion)) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2.2) +
+  facet_wrap(~ measure, nrow = 2) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
+  scale_x_continuous(breaks = mids_grid,
+                     labels = paste0(mids_grid - 5, "–", mids_grid + 4)) +
+  scale_y_continuous(limits = c(0, 0.65), breaks = seq(0, 0.6, 0.1)) +
+  labs(x = "Birth cohort", y = "Share",
+       title = "Origin (π₀) and stationary (π*) distributions across cohorts",
+) +
+  healy_theme +
+  theme(axis.text.x  = element_text(angle = 30, hjust = 1, size = 8),
+        plot.caption = element_text(size = 8, color = "grey50"))
+
+ggsave("output/figures/pi_dist_lines_10yr.png", p_dist_lines,
+       width = 10, height = 7, dpi = 200)
