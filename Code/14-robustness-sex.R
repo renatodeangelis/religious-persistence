@@ -93,10 +93,10 @@ p_diag = ggplot(diag_sex, aes(x = cohort, y = persist, color = origin, group = o
   facet_wrap(~ sex) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  labs(x = "Cohort (left edge of 10-year bin)",
-       y = "Diagonal persistence P[i → i]",
+  labs(x = "Birth cohort",
+       y = "Probability to Stay",
        color = NULL,
-       title = "Diagonal Persistence by Sex and Birth Cohort") +
+       title = "Retention by Sex and Birth Cohort") +
   healy_theme
 
 ggsave("output/figures/sex/diagonal_persistence_sex.png",

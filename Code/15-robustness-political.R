@@ -105,10 +105,10 @@ for (vname in names(pol_vars)) {
     facet_wrap(~ group) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-    labs(x = "Cohort (left edge of 10-year bin)",
-         y = "Diagonal persistence P[i → i]",
+    labs(x = "Birth cohort",
+         y = "Probability to Stay",
          color = NULL,
-         title = paste0("Diagonal Persistence: ",
+         title = paste0("Retention: ",
                         gsub("_", " ", tools::toTitleCase(vname)))) +
     healy_theme
 

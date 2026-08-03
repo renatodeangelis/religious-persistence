@@ -92,7 +92,7 @@ reltrad_labels_tc = c(
 
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
-p_im = ggplot(im_df_10, aes(x = t, y = im, color = origin, group = origin)) +
+p_im = ggplot(im_df_10[im_df_10$cohort != 1990, ], aes(x = t, y = im, color = origin, group = origin)) +
   geom_hline(yintercept = log(0.05), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_hline(yintercept = log(0.01), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_line(linewidth = 0.8) +

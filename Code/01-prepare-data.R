@@ -21,7 +21,7 @@ reltrad_labels = c(
 data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
-         race, polviews, partyid) |>
+         race, polviews, partyid, sibs_7222, childs) |>
   filter(!(year %in% c(1972, 1982, 1987, 2021, 2022, 2024))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
@@ -84,6 +84,30 @@ data = data |>
       as.numeric(polviews) %in% 1:2 ~ "liberal",
       as.numeric(polviews) %in% 3:5 ~ "moderate",
       as.numeric(polviews) %in% 6:7 ~ "conservative"
+    )
+  )
+
+# ── DEMOGRAPHIC RECODES ───────────────────────────────────────────────────────
+# sibs_7222: unbounded sibling count (vs sibs, which top-codes at 6).
+#   0-1 = only child or one sibling; 2-4 = mid-size family; 5+ = large family.
+# childs: respondent's own children count.
+#   0 = none; 1-2 = small; 3+ = large.
+#   NOTE: childs is partly endogenous to current religion; treat that stratification
+#   as descriptive rather than causal.
+
+data = data |>
+  mutate(
+    sibs_group = case_when(
+      as.numeric(sibs_7222) %in% 0:1  ~ "few",
+      as.numeric(sibs_7222) %in% 2:4  ~ "mid",
+      as.numeric(sibs_7222) >= 5       ~ "many",
+      TRUE                             ~ NA_character_
+    ),
+    childs_group = case_when(
+      as.numeric(childs) == 0         ~ "none",
+      as.numeric(childs) %in% 1:2     ~ "small",
+      as.numeric(childs) >= 3         ~ "large",
+      TRUE                            ~ NA_character_
     )
   )
 
