@@ -143,6 +143,128 @@ for (vname in names(demo_vars)) {
          p_diag, width = 12, height = 5, dpi = 200)
 }
 
+# ── ORIGIN RELIGION BY SIBLINGS × COHORT ─────────────────────────────────────
+
+origin_sibs = data[
+  !is.na(data$cohort_10) & data$cohort_10 %in% mids_demo &
+  !is.na(data$sibs_group) & !is.na(data$reltrad16_alt), ,
+  drop = FALSE
+]
+
+origin_sibs$sibs_label = factor(
+  origin_sibs$sibs_group,
+  levels = c("few", "mid", "many"),
+  labels = c("0–1 siblings", "2–4 siblings", "5+ siblings")
+)
+
+origin_counts = as.data.frame(table(
+  cohort_10     = origin_sibs$cohort_10,
+  sibs_label    = origin_sibs$sibs_label,
+  reltrad16_alt = origin_sibs$reltrad16_alt
+))
+names(origin_counts)[names(origin_counts) == "Freq"] = "n"
+origin_counts = origin_counts[origin_counts$n > 0, ]
+origin_counts$cohort_10 = as.integer(as.character(origin_counts$cohort_10))
+
+origin_tots = aggregate(n ~ cohort_10 + sibs_label, data = origin_counts, FUN = sum)
+names(origin_tots)[3] = "total"
+origin_counts = merge(origin_counts, origin_tots, by = c("cohort_10", "sibs_label"))
+origin_counts$prop = origin_counts$n / origin_counts$total
+
+origin_counts$origin = factor(origin_counts$reltrad16_alt, levels = rel_level_order)
+
+p_origin_sibs = ggplot(
+  origin_counts,
+  aes(x = cohort_10, y = prop, color = origin, group = origin)
+) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  facet_wrap(~ sibs_label, nrow = 1) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_x_continuous(breaks = mids_demo,
+                     labels = paste0(mids_demo, "–", mids_demo + 9)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     limits = c(0, NA)) +
+  labs(
+    x     = "Birth cohort",
+    y     = "Share of origin-religion sample",
+    color = NULL,
+    title = "Origin Religion by Siblings of Origin and Birth Cohort"
+  ) +
+  healy_theme +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+
+ggsave("output/figures/demographics/origin_religion_by_sibs_cohort.png",
+       p_origin_sibs, width = 13, height = 5, dpi = 200)
+
+# ── CHILDREN BY BIRTH YEAR × ORIGIN RELIGION ─────────────────────────────────
+
+childs_yr = data[
+  !is.na(data$cohort) & data$cohort >= 1925 & data$cohort <= 1984 &
+  !is.na(data$childs) & !is.na(data$reltrad_alt), ,
+  drop = FALSE
+]
+childs_yr$childs  = as.numeric(childs_yr$childs)
+childs_yr$origin  = factor(childs_yr$reltrad_alt, levels = rel_level_order)
+
+p_childs = ggplot(childs_yr, aes(x = cohort, y = childs, color = origin)) +
+  stat_summary(geom = "point", fun = mean, size = 1.2, alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE, linewidth = 0.9, span = 0.4) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
+  scale_x_continuous(breaks = seq(1925, 1985, 10)) +
+  labs(
+    x     = "Birth year",
+    y     = "Number of children",
+    color = NULL,
+    title = "Number of Children by Birth Year and Origin Religion"
+  ) +
+  healy_theme
+
+ggsave("output/figures/demographics/childs_by_birthyear_religion.png",
+       p_childs, width = 10, height = 6, dpi = 200)
+
+# ── CHILDREN BY BIRTH YEAR — WOMEN WHO SWITCHED TO EVANGELICAL OR NONE ───────
+
+sw_colors   = c(evangelical = reltrad_colors[["evangelical"]],
+                none        = reltrad_colors[["none"]])
+sw_linetypes = c(switcher = "solid", stayer = "dashed")
+
+switchers = data |>
+  filter(
+    as.numeric(sex) == 2,
+    between(cohort, 1925, 1984),
+    !is.na(childs), !is.na(reltrad_alt), !is.na(reltrad16_alt),
+    reltrad_alt %in% c("evangelical", "none")
+  ) |>
+  mutate(
+    rel_dest   = reltrad_alt,
+    trajectory = if_else(reltrad_alt == reltrad16_alt, "stayer", "switcher")
+  )
+
+p_switchers = ggplot(switchers,
+                     aes(x = cohort, y = childs,
+                         color = rel_dest, linetype = trajectory,
+                         group = interaction(rel_dest, trajectory))) +
+  stat_summary(geom = "point", fun = mean, size = 1.2, alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE, linewidth = 0.9, span = 0.4) +
+  scale_color_manual(values    = sw_colors,
+                     labels    = c(evangelical = "Evangelical", none = "None")) +
+  scale_linetype_manual(values = sw_linetypes,
+                        labels = c(switcher = "Switcher", stayer = "Stayer")) +
+  scale_x_continuous(breaks = seq(1925, 1985, 10)) +
+  scale_y_continuous(limits = c(0, 4)) +
+  labs(
+    x        = "Birth year",
+    y        = "Number of children",
+    color    = "Destination",
+    linetype = NULL,
+    title    = "Number of Children by Birth Year — Women Switching or Staying"
+  ) +
+  healy_theme
+
+ggsave("output/figures/demographics/childs_by_birthyear_switchers.png",
+       p_switchers, width = 10, height = 6, dpi = 200)
+
 saveRDS(
   list(P = P_demo, pi0 = pi0_demo, pistar = pistar_demo, n = n_demo),
   "data/derived/matrices_demographics.rds"
