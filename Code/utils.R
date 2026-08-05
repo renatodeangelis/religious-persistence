@@ -1,5 +1,6 @@
 library(ggplot2)
 library(patchwork)
+library(dplyr)
 
 # ── SHARED CONSTANTS ──────────────────────────────────────────────────────────
 # Config used across the split pipeline (01–12). Data-derived constants such as

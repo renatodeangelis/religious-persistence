@@ -28,7 +28,7 @@ im_rows_10 = vector("list", length(P_list_10))
 names(im_rows_10) = names(P_list_10)
 
 for (key in names(P_list_10)) {
-  rows = lapply(0:6, function(t) {
+  rows = lapply(0:4, function(t) {
     vals = im_from_P(P_list_10[[key]], t = t)
     data.frame(cohort = as.numeric(key), t = t, origin = names(vals), im = vals,
                row.names = NULL)
@@ -40,7 +40,7 @@ im_df_10 = do.call(rbind, im_rows_10)
 
 # ── NATIONAL MOBILITY ────────────────────────────────────────────────────────
 
-mob_rows = lapply(1920:1980, function(coh) {
+mob_rows = lapply(1925:1984, function(coh) {
   sub = data[!is.na(data$cohort) & data$cohort == coh &
                !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
   if (nrow(sub) < 30) return(NULL)
@@ -92,27 +92,34 @@ reltrad_labels_tc = c(
 
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
-p_im = ggplot(im_df_10[im_df_10$cohort != 1990, ], aes(x = t, y = im, color = origin, group = origin)) +
+mids_im = c(1930, 1940, 1950, 1960, 1970, 1980)
+im_df_10$cohort_label = factor(
+  paste0(im_df_10$cohort - 5, "–", im_df_10$cohort + 4),
+  levels = paste0(mids_im - 5, "–", mids_im + 4)
+)
+
+p_im = ggplot(im_df_10 |> filter(cohort %in% mids_im), aes(x = t, y = im, color = origin, group = origin)) +
   geom_hline(yintercept = log(0.05), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_hline(yintercept = log(0.01), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.2) +
-  facet_wrap(~ cohort, nrow = 2) +
+  facet_wrap(~ cohort_label, nrow = 2) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = 0:6) +
+  scale_x_continuous(breaks = 0:4) +
   labs(x = "Step (t)", y = "log(TV distance from π*)",
-       color = NULL, title = "Individual Memory by Cohort (10-year bins, t = 0–4)") +
+       color = NULL, title = "Individual Memory by Birth Cohort (t = 0–4)") +
   healy_theme
 
 ggsave("output/figures/im_memory_10yr.png", p_im, width = 8, height = 6, dpi = 200)
 
-p_mob = ggplot(mob_df[mob_df$cohort >= 1930 & mob_df$cohort <= 1985, ], aes(x = cohort, y = mobility)) +
+p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
   geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
   geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2,
               color = "#0072B2", fill = "#0072B2") +
-  scale_y_continuous(limits = c(0.15, 0.45)) +
-  labs(x = "Birth cohort", y = "Probability to Move",
-       title = "Overall Mobility by Birth Cohort") +
+  scale_x_continuous(breaks = seq(1925, 1985, by = 10)) +
+  scale_y_continuous(limits = c(0.1, 0.45)) +
+  labs(x = "Birth year", y = "Probability to Move",
+       title = "Overall Mobility by Birth Year") +
   healy_theme
 
 ggsave("output/figures/overall_mobility.png", p_mob, width = 8, height = 5, dpi = 200)
@@ -140,32 +147,6 @@ p_mte = ggplot(mte_df_5, aes(x = cohort, y = mte, color = origin, group = origin
   healy_theme
 
 ggsave("output/figures/mte_5yr.png", p_mte, width = 8, height = 5, dpi = 200)
-
-# ── MTE TIME SERIES (1-year cohorts, 1930–1980) ───────────────────────────────
-
-mte_rows_1 = lapply(1930:1980, function(coh) {
-  sub = data[!is.na(data$cohort) & data$cohort == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-  if (nrow(sub) < 30) return(NULL)
-  P    = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  vals = mte(P)
-  data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
-})
-mte_df_1 = do.call(rbind, Filter(Negate(is.null), mte_rows_1))
-mte_df_1$origin = factor(mte_df_1$origin, levels = rel_level_order)
-
-p_mte_1 = ggplot(mte_df_1, aes(x = cohort, y = mte, color = origin, group = origin)) +
-  geom_point(size = 1.5, alpha = 0.5) +
-  geom_smooth(method = "loess", se = FALSE, span = 0.4) +
-  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = seq(1930, 1980, by = 10)) +
-  scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort", y = "Mean time to exit (steps)",
-       color = NULL,
-       title = "Mean Time to Exit by Religious Origin (1-year cohorts, 1930–1980)") +
-  healy_theme
-
-ggsave("output/figures/mte_1yr.png", p_mte_1, width = 8, height = 5, dpi = 200)
 
 # ── SHANNON ENTROPY BY COHORT (10-year bins) ─────────────────────────────────
 # E(π₀): entropy of the childhood religion distribution (origin)
@@ -236,7 +217,7 @@ p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
   facet_wrap(~ cohort, nrow = 2) +
   scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1), name = "P[i→j]") +
   labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
-       title = "Intergenerational transition matrices by birth cohort (10-year bins, 1925–1984)") +
+       title = "Intergenerational transition matrices by birth cohort") +
   theme_bw(base_size = 10) +
   theme(
     axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
