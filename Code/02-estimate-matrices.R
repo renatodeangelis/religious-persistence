@@ -4,7 +4,7 @@
 # nested list. Consumers (04–07) load this instead of recomputing.
 #
 # Raw count matrices (N) are the source of truth — P is just row-normalized N.
-# They are saved ONLY where a consumer needs them: the national 5- and 10-year
+# They are saved ONLY where a consumer needs them: the national 10-year
 # counts feed the Anderson-Goodman homogeneity tests in 04. Add N to other strata
 # only if you later want homogeneity tests within them.
 #
@@ -19,28 +19,8 @@ states_alt = clean$states_alt
 
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
-# ── 5-year cohort loop ───────────────────────────────────────────────────────
-cohorts_5 = sort(unique(data$cohort_5[!is.na(data$cohort_5) & data$cohort_5 >= 1927.5 & data$cohort_5 <= 1992.5]))
-
-P_list_5      = list()
-pi0_list_5    = list()
-pistar_list_5 = list()
-N_list_5      = list()   # raw counts feeding the rolling-window sensitivity (04)
-
-for (coh in cohorts_5) {
-  sub = data[!is.na(data$cohort_5) & data$cohort_5 == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-  if (nrow(sub) < 30) next
-  key = as.character(coh)
-
-  P_list_5[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  pi0_list_5[[key]]    = pi_0(sub, "reltrad16_alt")
-  pistar_list_5[[key]] = pi_star(P_list_5[[key]])
-  N_list_5[[key]]      = count_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-}
-
 # ── 10-year cohort loop ──────────────────────────────────────────────────────
-cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1930 & data$cohort_10 <= 1990]))
+cohorts_10 = sort(unique(data$cohort_10[!is.na(data$cohort_10) & data$cohort_10 >= 1930 & data$cohort_10 <= 1980]))
 
 P_list_10      = list()
 pi0_list_10    = list()
@@ -59,9 +39,9 @@ for (coh in cohorts_10) {
   N_list_10[[key]]      = count_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
 }
 
-# ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1950, 1960, 1970) ──────────────
+# ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1930–1980) ─────────────────────
 
-cohorts_nat    = c(1950, 1960, 1970)   # 10-year bin midpoints (edges 1945/1955/1965)
+cohorts_nat    = c(1930, 1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1925–1975)
 nativity_groups = c("Born in US", "Born abroad")
 
 P_list_nat      = list()
@@ -85,9 +65,9 @@ for (nat in nativity_groups) {
   }
 }
 
-# ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1940–1980) ─────────────
+# ── SEX-STRATIFIED DECADAL MATRICES (10-year cohorts, 1925–1984) ─────────────
 
-cohorts_sex = c(1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1935–1975)
+cohorts_sex = c(1930, 1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1925–1975)
 sex_labels  = c("1" = "male", "2" = "female")
 
 P_list_sex      = list()
@@ -111,7 +91,7 @@ for (sx in c(1, 2)) {
   }
 }
 
-# ── POLITICAL STRATIFICATION DECADAL MATRICES (10-year cohorts, 1940–1989) ───
+# ── POLITICAL STRATIFICATION DECADAL MATRICES (10-year cohorts, 1925–1984) ───
 
 pol_vars = list(
   partyid_narrow  = c("dem", "rep", "other"),
@@ -120,7 +100,7 @@ pol_vars = list(
   polviews_broad  = c("liberal", "moderate", "conservative")
 )
 
-cohorts_pol = c(1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1935–1975)
+cohorts_pol = c(1930, 1940, 1950, 1960, 1970, 1980)   # 10-year bin midpoints (edges 1925–1975)
 
 P_list_pol      = list()
 pi0_list_pol    = list()
@@ -147,7 +127,6 @@ for (vname in names(pol_vars)) {
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 
 matrices = list(
-  nat5  = list(P = P_list_5,  pi0 = pi0_list_5,  pistar = pistar_list_5,  N = N_list_5),
   nat10 = list(P = P_list_10, pi0 = pi0_list_10, pistar = pistar_list_10, N = N_list_10),
   nativity  = list(P = P_list_nat, pi0 = pi0_list_nat, pistar = pistar_list_nat,
                    n = n_list_nat),

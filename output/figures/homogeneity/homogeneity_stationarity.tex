@@ -1,0 +1,38 @@
+\begin{table}[htbp]
+\centering
+\caption{Chi-Square Tests of Homogeneity: Row-Specific and Joint Statistics}
+\label{tab:stationarity}
+\begin{tabular}{lrrr}
+\toprule
+Origin State & $\chi^2$ & df & $p$-value \\
+\midrule
+\multicolumn{4}{l}{\textit{Panel A: All cohorts (1925--1984)}} \\
+\midrule
+Catholic & 355.32 & 20 & 0.000$^{***}$ \\
+Evangelical & 313.62 & 20 & 0.000$^{***}$ \\
+Mainline & 192.91 & 20 & 0.000$^{***}$ \\
+Other & 123.08 & 20 & 0.000$^{***}$ \\
+None & 163.81 & 20 & 0.000$^{***}$ \\
+\textbf{Joint} & \textbf{1148.73} & \textbf{100} & \textbf{0.000}$^{***}$ \\
+\midrule
+\multicolumn{4}{l}{\textit{Panel B: Central cohorts (1935--1964)}} \\
+\midrule
+Catholic & 77.39 & 8 & 0.000$^{***}$ \\
+Evangelical & 68.45 & 8 & 0.000$^{***}$ \\
+Mainline & 38.10 & 8 & 0.000$^{***}$ \\
+Other & 21.73 & 8 & 0.005$^{**}$ \\
+None & 42.86 & 8 & 0.000$^{***}$ \\
+\textbf{Joint} & \textbf{248.52} & \textbf{40} & \textbf{0.000}$^{***}$ \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{\linewidth}
+\vspace{0.5em}\footnotesize
+\textit{Notes:} Each row reports the Anderson-Goodman (1957) chi-square statistic
+testing whether the RELIG16 $\to$ RELIG transition probabilities out of origin
+state $i$ are constant across the indicated birth-cohort windows. Panel A includes
+all six 10-year cohort bins (1925--1984, $T=6$); Panel B restricts to the three
+central bins (1935--1964, $T=3$). df $= (s-1)(T-1)$, reduced where a pooled
+destination cell is empty. The Joint row sums $\chi^2$ and df across all origin
+states. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$.
+\end{minipage}
+\end{table}

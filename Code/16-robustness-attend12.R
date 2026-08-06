@@ -21,6 +21,8 @@
 # Output: console (cell counts, λ₂, diagonal persistence)
 #         output/figures/attend12/*.png
 
+if (FALSE) {
+
 library(dplyr)
 library(ggplot2)
 library(patchwork)
@@ -229,3 +231,5 @@ ggsave("output/figures/attend12/lambda2_attend12.png",
        p_lambda, width = 7, height = 5, dpi = 200)
 
 cat("\nWrote output/figures/attend12/\n")
+
+} # end if (FALSE)

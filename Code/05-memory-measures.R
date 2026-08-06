@@ -14,9 +14,6 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-P_list_5      = matrices$nat5$P
-pi0_list_5    = matrices$nat5$pi0
-pistar_list_5 = matrices$nat5$pistar
 P_list_10      = matrices$nat10$P
 pi0_list_10    = matrices$nat10$pi0
 pistar_list_10 = matrices$nat10$pistar
@@ -38,39 +35,17 @@ for (key in names(P_list_10)) {
 
 im_df_10 = do.call(rbind, im_rows_10)
 
-# ── NATIONAL MOBILITY ────────────────────────────────────────────────────────
-
-mob_rows = lapply(1925:1984, function(coh) {
-  sub = data[!is.na(data$cohort) & data$cohort == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
-  if (nrow(sub) < 30) return(NULL)
-  P   = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  pi0 = pi_0(sub, "reltrad16_alt")
-  data.frame(cohort = coh, mobility = overall_mobility(P, pi0))
-})
-mob_df = do.call(rbind, Filter(Negate(is.null), mob_rows))
 
 # ── NATIONAL FIGURES ──────────────────────────────────────────────────────────
 
 dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
 
-# Keys are bin midpoints (edge + halfwidth); recover the integer left edge for
-# titles/filenames so each figure still labels its actual cohort range.
-for (key in names(P_list_5)) {
-  edge = as.numeric(key) - 2.5
-  p = make_combined(P_list_5[[key]], pi0_list_5[[key]], pistar_list_5[[key]],
-                    levels = rel_level_order,
-                    title_str = paste0("Cohort ", edge, "–", edge + 4))
-  ggsave(paste0("output/figures/trans_", edge, "_5yr.png"), p,
-         width = 10, height = 7, dpi = 200)
-}
-
 for (key in names(P_list_10)) {
   edge = as.numeric(key) - 5
   p = make_combined(P_list_10[[key]], pi0_list_10[[key]], pistar_list_10[[key]],
                     levels = rel_level_order,
-                    title_str = paste0("Cohort ", edge, "–", edge + 9))
-  ggsave(paste0("output/figures/trans_", edge, "_10yr.png"), p,
+                    title_str = paste0("Cohort ", edge, "–", sprintf("%02d", (edge + 9) %% 100)))
+  ggsave(paste0("output/figures/trans_", key, "_10yr.png"), p,
          width = 10, height = 7, dpi = 200)
 }
 
@@ -94,8 +69,8 @@ im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
 mids_im = c(1930, 1940, 1950, 1960, 1970, 1980)
 im_df_10$cohort_label = factor(
-  paste0(im_df_10$cohort - 5, "–", im_df_10$cohort + 4),
-  levels = paste0(mids_im - 5, "–", mids_im + 4)
+  paste0(im_df_10$cohort - 5, "–", sprintf("%02d", (im_df_10$cohort + 4) %% 100)),
+  levels = paste0(mids_im - 5, "–", sprintf("%02d", (mids_im + 4) %% 100))
 )
 
 p_im = ggplot(im_df_10 |> filter(cohort %in% mids_im), aes(x = t, y = im, color = origin, group = origin)) +
@@ -112,41 +87,29 @@ p_im = ggplot(im_df_10 |> filter(cohort %in% mids_im), aes(x = t, y = im, color 
 
 ggsave("output/figures/im_memory_10yr.png", p_im, width = 8, height = 6, dpi = 200)
 
-p_mob = ggplot(mob_df, aes(x = cohort, y = mobility)) +
-  geom_point(size = 1.5, alpha = 0.6, color = "#0072B2") +
-  geom_smooth(method = "loess", se = TRUE, span = 0.4, alpha = 0.2,
-              color = "#0072B2", fill = "#0072B2") +
-  scale_x_continuous(breaks = seq(1925, 1985, by = 10)) +
-  scale_y_continuous(limits = c(0.1, 0.45)) +
-  labs(x = "Birth year", y = "Probability to Move",
-       title = "Overall Mobility by Birth Year") +
-  healy_theme
 
-ggsave("output/figures/overall_mobility.png", p_mob, width = 8, height = 5, dpi = 200)
+# ── MTE TIME SERIES (10-year cohorts, 1925–1984) ─────────────────────────────
 
-# ── MTE TIME SERIES (5-year cohorts, 1930–1980) ───────────────────────────────
-
-mte_rows_5 = lapply(names(P_list_5), function(key) {
-  coh = as.numeric(key)                          # 5-yr bin midpoint (e.g. 1932.5)
-  if (coh < 1927.5 | coh > 1992.5) return(NULL)  # edges 1925–1990
-  vals = mte(P_list_5[[key]])
-  data.frame(cohort = coh, origin = names(vals), mte = vals, row.names = NULL)
+mte_rows_10 = lapply(names(P_list_10), function(key) {
+  vals = mte(P_list_10[[key]])
+  data.frame(cohort = as.numeric(key), origin = names(vals), mte = vals, row.names = NULL)
 })
-mte_df_5 = do.call(rbind, Filter(Negate(is.null), mte_rows_5))
-mte_df_5$origin = factor(mte_df_5$origin, levels = rel_level_order)
+mte_df_10 = do.call(rbind, Filter(Negate(is.null), mte_rows_10))
+mte_df_10$origin = factor(mte_df_10$origin, levels = rel_level_order)
 
-p_mte = ggplot(mte_df_5, aes(x = cohort, y = mte, color = origin, group = origin)) +
+p_mte = ggplot(mte_df_10, aes(x = cohort, y = mte, color = origin, group = origin)) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 2) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = seq(1930, 1980, by = 10)) +
+  scale_x_continuous(breaks = mids_im,
+                     labels = paste0(mids_im - 5, "–", sprintf("%02d", (mids_im + 4) %% 100))) +
   scale_y_continuous(limits = c(0, NA)) +
-  labs(x = "Birth cohort (5-year bins)", y = "Mean time to exit (steps)",
+  labs(x = "Birth cohort (10-year bins)", y = "Mean time to exit (steps)",
        color = NULL,
-       title = "Mean Time to Exit by Religious Origin (5-year cohorts, 1930–1980)") +
+       title = "Mean Time to Exit by Religious Origin (10-year cohorts, 1925–1984)") +
   healy_theme
 
-ggsave("output/figures/mte_5yr.png", p_mte, width = 8, height = 5, dpi = 200)
+ggsave("output/figures/mte_10yr.png", p_mte, width = 8, height = 5, dpi = 200)
 
 # ── SHANNON ENTROPY BY COHORT (10-year bins) ─────────────────────────────────
 # E(π₀): entropy of the childhood religion distribution (origin)
@@ -202,14 +165,14 @@ grid_df = do.call(rbind, lapply(seq_along(mids_grid), function(i) {
   if (is.null(P)) return(NULL)
   df  = as.data.frame(as.table(P))
   names(df) = c("origin", "current", "p")
-  df$cohort = paste0(mid - 5, "–", mid + 4, "\n(N = ", n_per_mid[i], ")")
+  df$cohort = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100), "\n(N = ", n_per_mid[i], ")")
   df
 }))
 
-grid_df$origin  = factor(grid_df$origin,  levels = rev(rel_level_order))
-grid_df$current = factor(grid_df$current, levels = rel_level_order)
+grid_df$origin  = factor(grid_df$origin,  levels = rel_level_order)
+grid_df$current = factor(grid_df$current, levels = rev(rel_level_order))
 grid_df$cohort  = factor(grid_df$cohort,
-  levels = paste0(mids_grid - 5, "–", mids_grid + 4, "\n(N = ", n_per_mid, ")"))
+  levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100), "\n(N = ", n_per_mid, ")"))
 
 p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
   geom_tile(color = "white", linewidth = 0.4) +
@@ -242,7 +205,7 @@ dist_df = do.call(rbind, lapply(mids_grid, function(mid) {
   pi0    = matrices$nat10$pi0[[key]]
   pistar = matrices$nat10$pistar[[key]]
   if (is.null(pi0)) return(NULL)
-  cohort_lbl = paste0(mid - 5, "–", mid + 4)
+  cohort_lbl = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100))
   rbind(
     data.frame(mid = mid, cohort = cohort_lbl, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
@@ -253,7 +216,7 @@ dist_df = do.call(rbind, lapply(mids_grid, function(mid) {
 
 dist_df$religion = factor(dist_df$religion, levels = rel_level_order)
 dist_df$cohort   = factor(dist_df$cohort,
-                           levels = paste0(mids_grid - 5, "–", mids_grid + 4))
+                           levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100)))
 dist_df$measure  = factor(dist_df$measure,
                            levels = c("π₀  (origin)", "π* (stationary)"))
 
@@ -283,24 +246,3 @@ p_dist_grid = ggplot(dist_df, aes(y = religion, x = value, fill = religion)) +
 
 ggsave("output/figures/pi_dist_grid_10yr.png", p_dist_grid,
        width = 14, height = 5, dpi = 200)
-
-# Line version: cohort midpoint on x-axis, one line per religion, two panels.
-# Better for reading trends; include alongside the grid in the memo.
-p_dist_lines = ggplot(dist_df, aes(x = mid, y = value,
-                                    color = religion, group = religion)) +
-  geom_line(linewidth = 0.9) +
-  geom_point(size = 2.2) +
-  facet_wrap(~ measure, nrow = 2) +
-  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
-  scale_x_continuous(breaks = mids_grid,
-                     labels = paste0(mids_grid - 5, "–", mids_grid + 4)) +
-  scale_y_continuous(limits = c(0, 0.65), breaks = seq(0, 0.6, 0.1)) +
-  labs(x = "Birth cohort", y = "Share",
-       title = "Origin (π₀) and stationary (π*) distributions across cohorts",
-) +
-  healy_theme +
-  theme(axis.text.x  = element_text(angle = 30, hjust = 1, size = 8),
-        plot.caption = element_text(size = 8, color = "grey50"))
-
-ggsave("output/figures/pi_dist_lines_10yr.png", p_dist_lines,
-       width = 10, height = 7, dpi = 200)

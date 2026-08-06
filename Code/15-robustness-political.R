@@ -1,6 +1,6 @@
 # ── 15 · ROBUSTNESS: POLITICAL STRATIFICATION MATRICES ────────────────────────
 # Decadal transition matrices stratified by party ID and political views,
-# each in narrow and broad coding. Five cohort windows: 1940–1989.
+# each in narrow and broad coding. Six cohort windows: 1925–1984.
 #
 # Input:  data/derived/gss_clean.rds
 # Output: data/derived/matrices_political.rds
@@ -32,8 +32,8 @@ pol_vars = list(
   polviews_broad  = c("liberal", "moderate", "conservative")
 )
 
-# 10-year bin midpoints (edges 1940–1980)
-mids_pol = c(1940, 1950, 1960, 1970, 1980)
+# 10-year bin midpoints (edges 1925–1975)
+mids_pol = c(1930, 1940, 1950, 1960, 1970, 1980)
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
 
@@ -76,8 +76,8 @@ for (key in names(P_pol)) {
   p = make_combined(
     P_pol[[key]], pi0_pol[[key]], pistar_pol[[key]],
     levels    = rel_level_order,
-    title_str = paste0(lbl, " – Cohort ", edge, "–", edge + 9,
-                       "  (N = ", n_pol[[key]], ")")
+    title_str = paste0(lbl, " – Cohort ", edge, "–",
+                       sprintf("%02d", (edge + 9) %% 100), "  (N = ", n_pol[[key]], ")")
   )
   ggsave(paste0("output/figures/political/trans_", key, "_10yr.png"),
          p, width = 10, height = 7, dpi = 200)
@@ -103,14 +103,17 @@ for (vname in names(pol_vars)) {
     geom_line(linewidth = 0.8) +
     geom_point(size = 2) +
     facet_wrap(~ group) +
+    scale_x_continuous(breaks = c(1925, 1935, 1945, 1955, 1965, 1975),
+                       labels = c("1925–34", "1935–44", "1945–54", "1955–64", "1965–74", "1975–84")) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-    labs(x = "Birth cohort",
+    labs(x = "Birth cohort (10-year bin)",
          y = "Probability to Stay",
          color = NULL,
          title = paste0("Retention: ",
-                        gsub("_", " ", tools::toTitleCase(vname)))) +
-    healy_theme
+                        gsub("_", " ", tools::toTitleCase(vname)), " (1925–1984)")) +
+    healy_theme +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
   ggsave(paste0("output/figures/political/diagonal_persistence_", vname, ".png"),
          p_diag, width = 12, height = 5, dpi = 200)

@@ -80,7 +80,7 @@ cell_diag = function(bin_col, mids, offset, label) {
 
 im_data = function(lst) {
   df = do.call(rbind, lapply(names(lst$P), function(key) {
-    do.call(rbind, lapply(0:6, function(t) {
+    do.call(rbind, lapply(0:4, function(t) {
       vals = im_from_P(lst$P[[key]], t = t)
       data.frame(cohort = as.integer(key), t = t, origin = names(vals), im = vals,
                  row.names = NULL)
@@ -104,10 +104,10 @@ diag_data = function(lst) {
 
 dir.create("output/figures/bp", recursive = TRUE, showWarnings = FALSE)
 
-# ── 10-YEAR COHORTS (edges 1940–1980) ────────────────────────────────────────
+# ── 10-YEAR COHORTS (edges 1925–1975) ────────────────────────────────────────
 
-mids_10 = c(1940, 1950, 1960, 1970, 1980)   # edges 1935–1975
-cell_diag("cohort_10", mids_10, 5, "Cell-count diagnostic (6-state, 10-year cohorts, 1940–1989)")
+mids_10 = c(1930, 1940, 1950, 1960, 1970, 1980)   # edges 1925–1975
+cell_diag("cohort_10", mids_10, 5, "Cell-count diagnostic (6-state, 10-year cohorts, 1925–1984)")
 bp10 = build_bp("cohort_10", mids_10, 5)
 
 for (key in names(bp10$P)) {
@@ -119,7 +119,8 @@ for (key in names(bp10$P)) {
   p = make_combined(
     bp10$P[[key]], bp10$pi0[[key]], bp10$pistar[[key]],
     levels    = rel_level_order_6,
-    title_str = paste0("6-State — Cohort ", key, "–", as.integer(key) + 9,
+    title_str = paste0("6-State — Cohort ", key, "–",
+                       sprintf("%02d", (as.integer(key) + 9) %% 100),
                        "  (N = ", bp10$n[[key]], ")")
   )
   ggsave(paste0("output/figures/bp/trans_", key, "_10yr_6state.png"),
@@ -133,15 +134,15 @@ p_im_bp10 = ggplot(im_df_bp10, aes(x = t, y = im, color = origin, group = origin
   geom_hline(yintercept = log(0.01), linetype = "dashed", color = "gray70", linewidth = 0.5) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.5) +
-  facet_wrap(~ cohort, nrow = 1,
-             labeller = labeller(cohort = function(x) paste0(x, "–", as.integer(x) + 9))) +
+  facet_wrap(~ cohort, nrow = 2,
+             labeller = labeller(cohort = function(x) paste0(x, "–", sprintf("%02d", (as.integer(x) + 9) %% 100)))) +
   scale_color_manual(values = reltrad_colors_6, labels = reltrad_labels_6) +
-  scale_x_continuous(breaks = 0:6) +
+  scale_x_continuous(breaks = 0:4) +
   labs(x = "Step (t)", y = "log(TV distance from π*)", color = NULL,
-       title = "Individual Memory by Cohort — 6-State Space (10-year bins, 1940–1989)") +
+       title = "Individual Memory by Cohort — 6-State Space (10-year bins, 1925–1984)") +
   healy_theme
 
-ggsave("output/figures/bp/im_memory_10yr_6state.png", p_im_bp10, width = 14, height = 5, dpi = 200)
+ggsave("output/figures/bp/im_memory_10yr_6state.png", p_im_bp10, width = 10, height = 8, dpi = 200)
 
 diag_df10 = diag_data(bp10)
 
@@ -149,14 +150,104 @@ p_diag10 = ggplot(diag_df10, aes(x = cohort, y = persistence, color = origin, gr
   geom_line(linewidth = 0.8) +
   geom_point(size = 2.5) +
   scale_color_manual(values = reltrad_colors_6, labels = reltrad_labels_6) +
-  scale_x_continuous(breaks = c(1940, 1950, 1960, 1970, 1980)) +
+  scale_x_continuous(breaks = c(1925, 1935, 1945, 1955, 1965, 1975),
+                     labels = c("1925–34", "1935–44", "1945–54", "1955–64", "1965–74", "1975–84")) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
   labs(x = "Birth cohort (10-year bins)", y = "Diagonal persistence P[i → i]", color = NULL,
-       title = "Diagonal Persistence by Origin — 6-State Space (10-year cohorts, 1940–1989)") +
+       title = "Diagonal Persistence by Origin — 6-State Space (10-year cohorts, 1925–1984)") +
   healy_theme
 
 ggsave("output/figures/bp/diagonal_persistence_10yr_6state.png",
        p_diag10, width = 8, height = 5, dpi = 200)
+
+# ── TRANSITION MATRIX GRID (6-state, 10-year cohorts, 1925–1984) ──────────────
+
+edges_bp   = names(bp10$P)   # edge labels: "1925", "1935", ..., "1975"
+n_per_edge = sapply(edges_bp, function(k) format(bp10$n[[k]], big.mark = ","))
+
+grid_df_bp = do.call(rbind, lapply(seq_along(edges_bp), function(i) {
+  key = edges_bp[i]
+  P   = bp10$P[[key]]
+  if (is.null(P)) return(NULL)
+  df  = as.data.frame(as.table(P))
+  names(df) = c("origin", "current", "p")
+  df$cohort = paste0(key, "–", sprintf("%02d", (as.integer(key) + 9) %% 100),
+                     "\n(N = ", n_per_edge[i], ")")
+  df
+}))
+
+# Match plot_pmat_heatmap orientation: origin = levels (catholic at bottom), current = rev(levels)
+grid_df_bp$origin  = factor(grid_df_bp$origin,  levels = rel_level_order_6)
+grid_df_bp$current = factor(grid_df_bp$current, levels = rev(rel_level_order_6))
+grid_df_bp$cohort  = factor(grid_df_bp$cohort,
+  levels = paste0(edges_bp, "–", sprintf("%02d", (as.integer(edges_bp) + 9) %% 100),
+                  "\n(N = ", n_per_edge, ")"))
+
+p_grid_bp = ggplot(grid_df_bp, aes(current, origin, fill = p)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = sprintf("%.2f", p)), size = 2.5) +
+  facet_wrap(~ cohort, nrow = 2) +
+  scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1), name = "P[i→j]") +
+  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
+       title = "Intergenerational transition matrices by birth cohort — 6-State Space") +
+  theme_bw(base_size = 10) +
+  theme(
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y      = element_text(size = 8),
+    panel.grid       = element_blank(),
+    legend.position  = "bottom",
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(size = 9),
+    plot.caption     = element_text(size = 8, color = "grey50")
+  )
+
+ggsave("output/figures/bp/P_grid_bp_10yr.png", p_grid_bp,
+       width = 14, height = 10, dpi = 200)
+
+# ── π₀ AND π* DISTRIBUTION GRID (6-state, 10-year cohorts, 1925–1984) ─────────
+
+dist_df_bp = do.call(rbind, lapply(edges_bp, function(key) {
+  pi0    = bp10$pi0[[key]]
+  pistar = bp10$pistar[[key]]
+  if (is.null(pi0)) return(NULL)
+  cohort_lbl = paste0(key, "–", sprintf("%02d", (as.integer(key) + 9) %% 100))
+  rbind(
+    data.frame(cohort = cohort_lbl, measure = "π₀  (origin)",
+               religion = names(pi0),    value = as.numeric(pi0)),
+    data.frame(cohort = cohort_lbl, measure = "π* (stationary)",
+               religion = names(pistar), value = as.numeric(pistar))
+  )
+}))
+
+dist_df_bp$religion = factor(dist_df_bp$religion, levels = rel_level_order_6)
+dist_df_bp$cohort   = factor(dist_df_bp$cohort,
+  levels = paste0(edges_bp, "–", sprintf("%02d", (as.integer(edges_bp) + 9) %% 100)))
+dist_df_bp$measure  = factor(dist_df_bp$measure,
+  levels = c("π₀  (origin)", "π* (stationary)"))
+
+p_dist_grid_bp = ggplot(dist_df_bp, aes(y = religion, x = value, fill = religion)) +
+  geom_col(width = 0.65) +
+  facet_grid(measure ~ cohort) +
+  scale_fill_manual(values = reltrad_colors_6, labels = reltrad_labels_6, name = NULL) +
+  scale_x_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
+                     labels = c("0", ".25", ".5")) +
+  scale_y_discrete(labels = reltrad_labels_6) +
+  labs(x = "Share", y = NULL,
+       title = "Origin (π₀) and stationary (π*) distributions by birth cohort — 6-State Space") +
+  theme_bw(base_size = 10) +
+  theme(
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position    = "none",
+    strip.background   = element_rect(fill = "grey92", color = NA),
+    strip.text         = element_text(size = 8),
+    axis.text.y        = element_text(size = 8),
+    axis.text.x        = element_text(size = 7),
+    plot.caption       = element_text(size = 8, color = "grey50")
+  )
+
+ggsave("output/figures/bp/pi_dist_grid_bp_10yr.png", p_dist_grid_bp,
+       width = 14, height = 6, dpi = 200)
 
 saveRDS(
   list(P = bp10$P, pi0 = bp10$pi0, pistar = bp10$pistar, n = bp10$n),

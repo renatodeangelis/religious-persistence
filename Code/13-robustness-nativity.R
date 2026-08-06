@@ -1,6 +1,7 @@
 # ── 13 · ROBUSTNESS: NATIVITY-STRATIFIED MATRICES ─────────────────────────────
 # Decadal transition matrices estimated separately for US-born and foreign-born
-# respondents. Three cohort windows: 1950–1959, 1960–1969, 1970–1979.
+# respondents. Up to six cohort windows: 1925–1984. Early windows (esp. 1925–34,
+# 1935–44) may be skipped for Born abroad due to thin cells (n < 30 guard).
 #
 # Input:  data/derived/gss_clean.rds
 # Output: data/derived/matrices_nativity.rds
@@ -25,8 +26,8 @@ reltrad_labels_tc = c(
   other = "Other", none = "None"
 )
 
-# 10-year bin midpoints (edges 1950/1960/1970)
-mids_nat        = c(1950, 1960, 1970)
+# 10-year bin midpoints (edges 1925–1975); early windows may be skipped for Born abroad
+mids_nat        = c(1930, 1940, 1950, 1960, 1970, 1980)
 nativity_groups = c("Born in US", "Born abroad")
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
@@ -68,8 +69,8 @@ for (key in names(P_nat)) {
   p = make_combined(
     P_nat[[key]], pi0_nat[[key]], pistar_nat[[key]],
     levels    = rel_level_order,
-    title_str = paste0(nat_lbl, " – Cohort ", edge, "–", edge + 9,
-                       "  (N = ", n_nat[[key]], ")")
+    title_str = paste0(nat_lbl, " – Cohort ", edge, "–",
+                       sprintf("%02d", (edge + 9) %% 100), "  (N = ", n_nat[[key]], ")")
   )
   ggsave(paste0("output/figures/nativity/trans_", key, "_10yr.png"),
          p, width = 10, height = 7, dpi = 200)
@@ -91,13 +92,16 @@ p_diag = ggplot(diag_nat, aes(x = cohort, y = persist, color = origin, group = o
   geom_line(linewidth = 0.8) +
   geom_point(size = 2) +
   facet_wrap(~ nativity) +
+  scale_x_continuous(breaks = c(1925, 1935, 1945, 1955, 1965, 1975),
+                     labels = c("1925–34", "1935–44", "1945–54", "1955–64", "1965–74", "1975–84")) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  labs(x = "Cohort (left edge of 10-year bin)",
+  labs(x = "Birth cohort (10-year bin)",
        y = "Diagonal persistence P[i → i]",
        color = NULL,
-       title = "Diagonal Persistence by Nativity and Birth Cohort") +
-  healy_theme
+       title = "Diagonal Persistence by Nativity and Birth Cohort (1925–1984)") +
+  healy_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 ggsave("output/figures/nativity/diagonal_persistence_nativity.png",
        p_diag, width = 10, height = 5, dpi = 200)

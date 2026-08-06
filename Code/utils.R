@@ -182,10 +182,12 @@ plot_pi_column = function(vec, title_str, levels = NULL, text_size = 5) {
 }
 
 make_combined = function(P, pi0, pistar, levels = NULL, title_str = "P", text_size = 5) {
-  g      = plot_pmat_heatmap(P,      levels = levels, title_str = title_str, text_size = text_size)
-  g0     = plot_pi_column(pi0,    title_str = "π₀", levels = levels, text_size = text_size)
+  g      = plot_pmat_heatmap(P,   levels = levels, title_str = title_str, text_size = text_size) +
+             theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+  g0     = plot_pi_column(pi0,    title_str = "π₀", levels = levels, text_size = text_size) +
+             theme(axis.text.y = element_text(size = 11))
   g_star = plot_pi_column(pistar, title_str = "π*", levels = levels, text_size = text_size)
-  patchwork::wrap_plots(g, g0, g_star, widths = c(6, 1, 1))
+  patchwork::wrap_plots(g0, g, g_star, widths = c(1, 6, 1))
 }
 
 count_matrix = function(data, origin, current, levels = NULL) {

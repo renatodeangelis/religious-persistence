@@ -1,6 +1,6 @@
 # ── 14 · ROBUSTNESS: SEX-STRATIFIED MATRICES ──────────────────────────────────
 # Decadal transition matrices estimated separately for men and women.
-# Five cohort windows: 1940–1949 through 1980–1989.
+# Six cohort windows: 1925–1984.
 #
 # Input:  data/derived/gss_clean.rds
 # Output: data/derived/matrices_sex.rds
@@ -25,8 +25,8 @@ reltrad_labels_tc = c(
   other = "Other", none = "None"
 )
 
-# 10-year bin midpoints (edges 1940–1980)
-mids_sex   = c(1940, 1950, 1960, 1970, 1980)
+# 10-year bin midpoints (edges 1925–1975)
+mids_sex   = c(1930, 1940, 1950, 1960, 1970, 1980)
 sex_labels = c("1" = "male", "2" = "female")
 
 # ── BUILD MATRICES ────────────────────────────────────────────────────────────
@@ -68,8 +68,8 @@ for (key in names(P_sex)) {
   p = make_combined(
     P_sex[[key]], pi0_sex[[key]], pistar_sex[[key]],
     levels    = rel_level_order,
-    title_str = paste0(sex_lbl, " – Cohort ", edge, "–", edge + 9,
-                       "  (N = ", n_sex[[key]], ")")
+    title_str = paste0(sex_lbl, " – Cohort ", edge, "–",
+                       sprintf("%02d", (edge + 9) %% 100), "  (N = ", n_sex[[key]], ")")
   )
   ggsave(paste0("output/figures/sex/trans_", key, "_10yr.png"),
          p, width = 10, height = 7, dpi = 200)
@@ -91,13 +91,16 @@ p_diag = ggplot(diag_sex, aes(x = cohort, y = persist, color = origin, group = o
   geom_line(linewidth = 0.8) +
   geom_point(size = 2) +
   facet_wrap(~ sex) +
+  scale_x_continuous(breaks = c(1925, 1935, 1945, 1955, 1965, 1975),
+                     labels = c("1925–34", "1935–44", "1945–54", "1955–64", "1965–74", "1975–84")) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  labs(x = "Birth cohort",
+  labs(x = "Birth cohort (10-year bin)",
        y = "Probability to Stay",
        color = NULL,
-       title = "Retention by Sex and Birth Cohort") +
-  healy_theme
+       title = "Retention by Sex and Birth Cohort (1925–1984)") +
+  healy_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 ggsave("output/figures/sex/diagonal_persistence_sex.png",
        p_diag, width = 10, height = 5, dpi = 200)

@@ -1,9 +1,9 @@
 # ── 04 · HOMOGENEITY TESTS ─────────────────────────────────────────────────────
 # Anderson-Goodman (1957) chi-square tests of whether the RELIG16 -> RELIG
-# transition matrix is common across birth cohorts: omnibus, row-wise, pairwise-
-# adjacent, and a rolling-window sensitivity. Emits two figures and one LaTeX
-# table. Operates on RAW COUNTS (cell frequencies), so it consumes the N slots
-# persisted in 02 — nat10$N for the decadal tests, nat5$N for the rolling window.
+# transition matrix is common across birth cohorts: omnibus, row-wise,
+# pairwise-adjacent, and a rolling-window sensitivity. Emits three figures and
+# one LaTeX table. Operates on RAW COUNTS (cell frequencies), consuming
+# nat10$N for all tests (six 10-year cohort windows: 1925–1984).
 #
 # Input:  data/derived/matrices.rds
 # Output: output/figures/homogeneity/*.png, output/tables/homogeneity_tests.tex
@@ -12,7 +12,6 @@ source("code/utils.R")
 
 matrices  = readRDS("data/derived/matrices.rds")
 N_list_10 = matrices$nat10$N
-N_list_5  = matrices$nat5$N
 
 # ── HOMOGENEITY TEST ACROSS COHORT DECADES (Anderson-Goodman 1957) ───────────
 # H0: the RELIG16 -> RELIG transition matrix is common across the 10-year birth
@@ -56,80 +55,35 @@ print(pairwise_10, row.names = FALSE)
 
 dir.create("output/figures/homogeneity", recursive = TRUE, showWarnings = FALSE)
 
-# Row-wise: chi-square magnitude per origin. The p-value axis is uninformative
-# here — every origin rejects at 10-year resolution, so all bars would pin to
-# zero — so plot the chi2 statistic, which shows how FAR each origin's transitions
-# moved. Dashed line = chi2 critical value at p = .05.
-homog_row_10$origin = factor(homog_row_10$state, levels = rel_level_order)
-crit_05 = qchisq(0.95, df = max(homog_row_10$df))
+# ── ROLLING-WINDOW SENSITIVITY (10-year cohort bins) ─────────────────────────
+# Slide a window of k consecutive 10-year cohort matrices across N_list_10 and
+# run the joint homogeneity test inside each window. With six 10-year bins,
+# k = 2, 3, 4 are the useful widths (k = 5 or 6 collapses toward the omnibus).
+# A dip below p = 0.05 marks a neighborhood where the transition matrix is
+# changing fast; comparing widths shows whether that localization is robust.
 
-p_homog_row = ggplot(homog_row_10, aes(x = origin, y = chi2, fill = significant)) +
-  geom_col(width = 0.65) +
-  geom_hline(yintercept = crit_05, linetype = "dashed", color = "grey30", linewidth = 0.5) +
-  scale_fill_manual(
-    values = c(`TRUE` = "#D55E00", `FALSE` = "#999999"),
-    labels = c(`TRUE` = "Reject H0 (p < .05)", `FALSE` = "Fail to reject"),
-    name   = NULL) +
-  scale_x_discrete(labels = tools::toTitleCase) +
-  labs(x = "Origin religion (RELIG16)", y = expression(chi^2 ~ "statistic"),
-       subtitle = paste0("Dashed line: χ² critical value at p = .05 (df = ",
-                         max(homog_row_10$df), ")"),
-       title = "Which Origins Change Most Across Cohorts? Row-wise Homogeneity (10-year cohorts)") +
-  healy_theme
-
-ggsave("output/figures/homogeneity/rowwise_10yr.png", p_homog_row,
-       width = 8, height = 5, dpi = 200)
-
-# Pairwise-adjacent: p-value across cohort transitions localizes the break
-pairwise_10$midpoint = (pairwise_10$from_cohort + pairwise_10$to_cohort) / 2
-
-p_homog_pairwise = ggplot(pairwise_10, aes(x = midpoint, y = p_value)) +
-  geom_hline(yintercept = 0.05, linetype = "dashed", color = "grey30", linewidth = 0.5) +
-  geom_line(linewidth = 0.7, color = "#0072B2") +
-  geom_point(size = 3, color = "#0072B2") +
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
-  labs(x = "Cohort transition (midpoint of adjacent 10-year bins)",
-       y = "Joint homogeneity test p-value",
-       title = "Where Does the Transition Matrix Change? Adjacent-Cohort Tests",
-       caption = paste("Each point tests H0 that two consecutive 10-year cohort",
-                       "matrices are equal (Anderson-Goodman 1957). Dashed line: p = 0.05.")) +
-  healy_theme
-
-ggsave("output/figures/homogeneity/pairwise_adjacent_10yr.png", p_homog_pairwise,
-       width = 8, height = 5, dpi = 200)
-
-# ── ROLLING-WINDOW SENSITIVITY (adapted from chi-square-test.R) ───────────────
-# For several window widths, slide across birth-cohort time and run the joint
-# homogeneity test on the 5-year-cohort matrices inside each window. A dip below
-# p = 0.05 marks a neighborhood of cohort-time where the transition matrix is
-# changing fast; comparing widths shows whether that localization is robust to
-# the choice of window size. 5-year bins (not 1-year) keep each matrix well
-# populated enough for the chi-square approximation to hold.
-
-# Quiet joint statistic (chi2_joint without the console print)
 joint_stat = function(mats) {
   rw = chi2_row(mats)
   jc = sum(rw$chi2); jd = sum(rw$df)
   c(chi2 = jc, df = jd, p = pchisq(jc, jd, lower.tail = FALSE))
 }
 
-roll_years = as.numeric(names(N_list_5))   # ordered 5-year cohort midpoints (non-integer, e.g. 1922.5)
-bin_widths = c(2, 3, 4, 5)                 # window width in number of 5-year bins
+roll_years = as.numeric(names(N_list_10))   # ordered midpoints: 1930, 1940, ..., 1980
+bin_widths = c(2, 3, 4)
 
 roll_results = do.call(rbind, lapply(bin_widths, function(k) {
-  half = floor(k / 2)
-  # indices where a full window of k consecutive bins is available
+  half      = floor((k - 1) / 2)
   valid_idx = (half + 1):(length(roll_years) - (k - half - 1))
   do.call(rbind, lapply(valid_idx, function(i) {
     window_idx = (i - half):(i - half + k - 1)
-    mats = N_list_5[window_idx]
+    mats = N_list_10[window_idx]
     if (length(mats) < 2) return(NULL)
     jt = joint_stat(mats)
     data.frame(
       k          = k,
       center     = roll_years[i],
-      year_min   = min(roll_years[window_idx]),
-      year_max   = max(roll_years[window_idx]),
+      year_min   = roll_years[min(window_idx)],
+      year_max   = roll_years[max(window_idx)],
       n_matrices = length(mats),
       chi2       = jt[["chi2"]],
       p_value    = jt[["p"]],
@@ -141,29 +95,103 @@ roll_results = do.call(rbind, lapply(bin_widths, function(k) {
 roll_results$k_label = factor(paste0("k = ", roll_results$k, " bins"),
                               levels = paste0("k = ", bin_widths, " bins"))
 
+# x-axis: center midpoint labeled as its bin range ("1935–44" for mid = 1940)
+roll_x_breaks = c(1930, 1940, 1950, 1960, 1970, 1980)
+roll_x_labels = paste0(roll_x_breaks - 5, "–",
+                       sprintf("%02d", (roll_x_breaks + 4) %% 100))
+
 p_roll = ggplot(roll_results, aes(x = center, y = p_value,
                                   color = k_label, shape = k_label, group = k_label)) +
   geom_hline(yintercept = 0.05, linetype = "dashed", color = "grey30", linewidth = 0.5) +
   geom_line(linewidth = 0.65, alpha = 0.85) +
   geom_point(size = 3, alpha = 0.9) +
   scale_color_manual(
-    values = c("indianred4", "goldenrod2", "darkgreen", "royalblue4"),
-    name   = "Adjacent 5-yr\ncohort matrices") +
-  scale_shape_manual(values = c(15, 16, 17, 18), name = "Adjacent 5-yr\ncohort matrices") +
-  scale_x_continuous(breaks = seq(1925, 1995, by = 5), guide = guide_axis(angle = 45)) +
+    values = c("indianred4", "goldenrod2", "royalblue4"),
+    name   = "Window width\n(10-yr bins)") +
+  scale_shape_manual(values = c(15, 16, 17),
+                     name   = "Window width\n(10-yr bins)") +
+  scale_x_continuous(breaks = roll_x_breaks, labels = roll_x_labels) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
   labs(
-    x       = "Center birth cohort",
-    y       = "Joint homogeneity test p-value",
-    caption = paste("Each point is a joint homogeneity test (Anderson-Goodman 1957) on the k",
-                    "adjacent 5-year cohort matrices centered on that cohort (k = number of",
-                    "matrices, not\ncalendar span). Dashed line: p = 0.05.")) +
+    x = "Center cohort bin",
+    y = "Joint homogeneity test p-value") +
+  healy_theme +
+  theme(legend.key.width = unit(1.2, "cm"))
+
+# ── ROLLING-WINDOW SENSITIVITY (5-year cohort bins) ───────────────────────────
+# Builds N_list_5 inline from gss_clean.rds (not saved in matrices.rds) and
+# reruns the same rolling-window test at k = 2, 3, 4. Provides finer resolution
+# at the cost of smaller N per bin; compare with the 10-year figure above.
+
+clean_5yr  = readRDS("data/derived/gss_clean.rds")
+data_5yr   = clean_5yr$data
+states_5yr = clean_5yr$states_alt
+
+data_5yr$cohort_5 = (floor((data_5yr$cohort - 1925) / 5) * 5 + 1925) + 2
+mids_5 = sort(unique(data_5yr$cohort_5[!is.na(data_5yr$cohort_5)]))
+
+N_list_5 = list()
+for (mid in mids_5) {
+  sub = data_5yr[!is.na(data_5yr$cohort_5)    & data_5yr$cohort_5      == mid &
+                   !is.na(data_5yr$reltrad16_alt) & !is.na(data_5yr$reltrad_alt), ]
+  if (nrow(sub) < 30) next
+  N_list_5[[as.character(mid)]] = count_matrix(sub, "reltrad16_alt", "reltrad_alt",
+                                               levels = states_5yr)
+}
+
+roll_years_5 = as.numeric(names(N_list_5))
+
+roll_results_5 = do.call(rbind, lapply(bin_widths, function(k) {
+  half      = floor((k - 1) / 2)
+  valid_idx = (half + 1):(length(roll_years_5) - (k - half - 1))
+  do.call(rbind, lapply(valid_idx, function(i) {
+    window_idx = (i - half):(i - half + k - 1)
+    mats = N_list_5[window_idx]
+    if (length(mats) < 2) return(NULL)
+    jt = joint_stat(mats)
+    data.frame(k       = k,
+               center  = roll_years_5[i],
+               chi2    = jt[["chi2"]],
+               p_value = jt[["p"]],
+               row.names = NULL)
+  }))
+}))
+
+roll_results_5$k_label = factor(paste0("k = ", roll_results_5$k, " bins"),
+                                levels = paste0("k = ", bin_widths, " bins"))
+
+roll_x_breaks_5 = as.numeric(names(N_list_5))
+roll_x_labels_5 = paste0(roll_x_breaks_5 - 2, "–",
+                          sprintf("%02d", (roll_x_breaks_5 + 2) %% 100))
+
+p_roll_5 = ggplot(roll_results_5, aes(x = center, y = p_value,
+                                       color = k_label, shape = k_label, group = k_label)) +
+  geom_hline(yintercept = 0.05, linetype = "dashed", color = "grey30", linewidth = 0.5) +
+  geom_line(linewidth = 0.65, alpha = 0.85) +
+  geom_point(size = 3, alpha = 0.9) +
+  scale_color_manual(values = c("indianred4", "goldenrod2", "royalblue4"),
+                     name   = "Window width\n(5-yr bins)") +
+  scale_shape_manual(values = c(15, 16, 17),
+                     name   = "Window width\n(5-yr bins)") +
+  scale_x_continuous(breaks = roll_x_breaks_5, labels = roll_x_labels_5) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
+  labs(x = "Center cohort bin",
+       y = "Joint homogeneity test p-value") +
   healy_theme +
   theme(legend.key.width = unit(1.2, "cm"),
-        plot.caption     = element_text(size = 8, color = "grey40", hjust = 0))
+        axis.text.x      = element_text(angle = 45, hjust = 1, size = 9))
 
-ggsave("output/figures/homogeneity/rolling_window_sensitivity.png", p_roll,
-       width = 12, height = 7, dpi = 300)
+p_roll_combined = patchwork::wrap_plots(p_roll, p_roll_5, ncol = 1) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    caption    = paste("Joint homogeneity tests (Anderson-Goodman 1957) on k consecutive cohort",
+                       "matrices. Panel A: 10-year bins (1925–1984); Panel B: 5-year bins (1925–1984).",
+                       "k = window width in number of matrices. Dashed line: p = 0.05."),
+    theme = theme(plot.caption = element_text(size = 9, color = "grey40", hjust = 0))
+  )
+
+ggsave("output/figures/homogeneity/rolling_window_sensitivity.png", p_roll_combined,
+       width = 14, height = 12, dpi = 300)
 
 # ── HOMOGENEITY LATEX TABLE (grid: origins x cohort transitions) ─────────────
 # Cells show chi2 with significance stars; the All column is the omnibus across
@@ -243,6 +271,122 @@ homog_tex = c(
   "\\end{table}"
 )
 
-dir.create("output/tables", recursive = TRUE, showWarnings = FALSE)
-writeLines(homog_tex, "output/tables/homogeneity_tests.tex")
-cat("\nWrote output/tables/homogeneity_tests.tex\n")
+
+# ── STATIONARITY TABLE: ROW-SPECIFIC AND JOINT, TWO PANELS ───────────────────
+# Panel A: all six decadal cohorts (N_list_10, midpoints 1930–1980).
+# Panel B: central three cohorts only (midpoints 1940, 1950, 1960 = bins 1935–64).
+# Columns: Origin State | chi2 | df | p-value (stars on p-value column only).
+# Reuses star_only() and chi2_row() already defined above; avoids chi2_joint()
+# to suppress its console output.
+
+make_panel_rows = function(N_sub) {
+  rw = chi2_row(N_sub)
+  rw = rw[match(rel_level_order, rw$state), ]
+  jc = sum(rw$chi2); jd = sum(rw$df)
+  jp = pchisq(jc, jd, lower.tail = FALSE)
+
+  origin_rows = vapply(seq_len(nrow(rw)), function(i) {
+    sprintf("%s & %.2f & %d & %.3f%s \\\\",
+            tools::toTitleCase(rw$state[i]),
+            rw$chi2[i], rw$df[i],
+            rw$p_value[i], star_only(rw$p_value[i]))
+  }, character(1))
+
+  joint_row = sprintf(
+    "\\textbf{Joint} & \\textbf{%.2f} & \\textbf{%d} & \\textbf{%.3f}%s \\\\",
+    jc, jd, jp, star_only(jp))
+
+  c(origin_rows, joint_row)
+}
+
+panel_A = make_panel_rows(N_list_10)
+panel_B = make_panel_rows(N_list_10[c("1940", "1950", "1960")])
+
+stat_tex = c(
+  "\\begin{table}[htbp]",
+  "\\centering",
+  "\\caption{Chi-Square Tests of Homogeneity: Row-Specific and Joint Statistics}",
+  "\\label{tab:stationarity}",
+  "\\begin{tabular}{lrrr}",
+  "\\toprule",
+  "Origin State & $\\chi^2$ & df & $p$-value \\\\",
+  "\\midrule",
+  "\\multicolumn{4}{l}{\\textit{Panel A: All cohorts (1925--1984)}} \\\\",
+  "\\midrule",
+  panel_A,
+  "\\midrule",
+  "\\multicolumn{4}{l}{\\textit{Panel B: Central cohorts (1935--1964)}} \\\\",
+  "\\midrule",
+  panel_B,
+  "\\bottomrule",
+  "\\end{tabular}",
+  "\\begin{minipage}{\\linewidth}",
+  "\\vspace{0.5em}\\footnotesize",
+  "\\textit{Notes:} Each row reports the Anderson-Goodman (1957) chi-square statistic",
+  "testing whether the RELIG16 $\\to$ RELIG transition probabilities out of origin",
+  "state $i$ are constant across the indicated birth-cohort windows. Panel A includes",
+  "all six 10-year cohort bins (1925--1984, $T=6$); Panel B restricts to the three",
+  "central bins (1935--1964, $T=3$). df $= (s-1)(T-1)$, reduced where a pooled",
+  "destination cell is empty. The Joint row sums $\\chi^2$ and df across all origin",
+  "states. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$.",
+  "\\end{minipage}",
+  "\\end{table}"
+)
+
+writeLines(stat_tex, "output/figures/homogeneity/homogeneity_stationarity.tex")
+cat("\nWrote output/figures/homogeneity/homogeneity_stationarity.tex\n")
+
+# ── PAIRWISE COMPARISON TABLE ─────────────────────────────────────────────────
+# Same grid format as the old homogeneity_tests.tex (chi2 + stars, no separate
+# df/p columns) but with the five adjacent-decade pairs first, all-cohorts last.
+# Reuses col_stats / pair_lbls already computed above.
+
+pw_col_stats = col_stats[c(2, 3, 4, 5, 6, 1)]   # pairwise first, all-cohorts last
+pw_col_lbls  = c(pair_lbls, "All")
+
+pw_col_spec  = paste0("l", strrep("r", length(pw_col_lbls)))
+pw_hdr       = paste0("Origin & ", paste(pw_col_lbls, collapse = " & "), " \\\\")
+
+pw_origin_rows = vapply(rel_level_order, function(st) {
+  cells = vapply(pw_col_stats, function(cs)
+    sprintf("%.1f%s", cs$chi2[[st]], star_only(cs$p[[st]])), character(1))
+  paste0(tools::toTitleCase(st), " & ", paste(cells, collapse = " & "), " \\\\")
+}, character(1))
+
+pw_joint_cells = vapply(pw_col_stats, function(cs)
+  sprintf("\\textbf{%.1f%s}", cs$joint_chi2, star_only(cs$joint_p)), character(1))
+pw_joint_row = paste0("\\textbf{Joint} & ", paste(pw_joint_cells, collapse = " & "), " \\\\")
+
+pw_df_pair = (length(rel_level_order) - 1) * (2 - 1)
+pw_df_all  = (length(rel_level_order) - 1) * (length(N_list_10) - 1)
+
+pw_tex = c(
+  "\\begin{table}[htbp]",
+  "\\centering",
+  "\\caption{Chi-Square Tests of Homogeneity: Adjacent-Cohort Comparisons}",
+  "\\label{tab:pairwise}",
+  paste0("\\begin{tabular}{", pw_col_spec, "}"),
+  "\\toprule",
+  pw_hdr,
+  "\\midrule",
+  pw_origin_rows,
+  "\\midrule",
+  pw_joint_row,
+  "\\bottomrule",
+  "\\end{tabular}",
+  "\\begin{minipage}{\\linewidth}",
+  "\\vspace{0.5em}\\footnotesize",
+  "\\textit{Notes:} Cells report $\\chi^2$ statistics (Anderson-Goodman 1957).",
+  paste0("Each pairwise column tests two consecutive 10-year cohort matrices;",
+         " df $= (s-1)(T-1) = ", pw_df_pair, "$ per origin (Joint df $= ",
+         pw_df_pair * length(rel_level_order), "$)."),
+  paste0("The \\textit{All} column pools all six cohorts; df $= ", pw_df_all,
+         "$ per origin (Joint df $= ", pw_df_all * length(rel_level_order), "$)."),
+  "Both are reduced where a pooled destination cell is empty.",
+  "$^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$.",
+  "\\end{minipage}",
+  "\\end{table}"
+)
+
+writeLines(pw_tex, "output/figures/homogeneity/homogeneity_pairwise.tex")
+cat("\nWrote output/figures/homogeneity/homogeneity_pairwise.tex\n")

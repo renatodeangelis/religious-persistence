@@ -30,9 +30,9 @@ reltrad_labels_tc = c(
   other = "Other", none = "None"
 )
 
-# 10-year cohort midpoints (edges 1940–1980). cohort_10 in the pipeline is the
+# 10-year cohort midpoints (edges 1925–1975). cohort_10 in the pipeline is the
 # bin midpoint (edge + 5); the edge is used for titles and filenames.
-mids_10 = c(1940, 1950, 1960, 1970, 1980)
+mids_10 = c(1930, 1940, 1950, 1960, 1970, 1980)
 
 data_nb = data[as.numeric(data$race) != 2, ]
 
@@ -85,7 +85,7 @@ for (key in names(nb$P)) {
     nb$P[[key]], nb$pi0[[key]], nb$pistar[[key]],
     levels    = rel_level_order,
     title_str = paste0("Non-Black Sample — Cohort ", key, "–",
-                       as.integer(key) + 9, "  (N = ", nb$n[[key]], ")")
+                       sprintf("%02d", (as.integer(key) + 9) %% 100), "  (N = ", nb$n[[key]], ")")
   )
   ggsave(paste0("output/figures/nonblack/trans_", key, "_10yr_nb.png"),
          p, width = 10, height = 7, dpi = 200)
@@ -116,7 +116,7 @@ p_im_nb_byorigin = ggplot(im_df_nb, aes(x = t, y = im, color = factor(cohort), g
   scale_color_brewer(palette = "Dark2", name = "Birth cohort") +
   scale_x_continuous(breaks = 0:6) +
   labs(x = "Step (t)", y = "log(TV distance from π*)",
-       title = "Individual Memory by Origin — Non-Black Sample (cohorts 1940–1980)") +
+       title = "Individual Memory by Origin — Non-Black Sample (cohorts 1925–1984)") +
   healy_theme
 
 ggsave("output/figures/nonblack/im_memory_byorigin_nb.png",
@@ -179,7 +179,8 @@ for (key in names(nb$P)) {
   lim = max(abs(c(as.numeric(D), delta_pi0, delta_pistar)), na.rm = TRUE)
 
   g_mat  = plot_diff_heatmap(D,
-    title_str = paste0("P overall − P non-Black\nCohort ", key, "–", as.integer(key) + 9,
+    title_str = paste0("P overall − P non-Black\nCohort ", key, "–",
+                       sprintf("%02d", (as.integer(key) + 9) %% 100),
                        "  (N all = ", all$n[[key]], "; N nb = ", nb$n[[key]], ")"),
     lim = lim)
   g_pi0  = plot_diff_col(delta_pi0,    title_str = "Δπ₀", lim = lim)
@@ -206,12 +207,12 @@ p_diff_facet = ggplot(diff_all, aes(x = current, y = origin, fill = diff)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = sprintf("%+.3f", diff)), size = 3) +
   facet_wrap(~ cohort, nrow = 1,
-             labeller = labeller(cohort = function(x) paste0(x, "–", as.integer(x) + 9))) +
+             labeller = labeller(cohort = function(x) paste0(x, "–", sprintf("%02d", (as.integer(x) + 9) %% 100)))) +
   scale_fill_gradient2(low = "#4393C3", mid = "white", high = "#D6604D",
                        midpoint = 0, limits = c(-lim_global, lim_global),
                        name = "Δ prob. (overall − non-Black)") +
   labs(x = "Current religion", y = "Origin religion",
-       title = "Difference Matrices: P overall − P non-Black (10-year cohorts, 1940–1980)") +
+       title = "Difference Matrices: P overall − P non-Black (10-year cohorts, 1925–1984)") +
   theme_bw(base_size = 11) +
   theme(
     axis.text.x     = element_text(angle = 45, hjust = 1, size = 9),

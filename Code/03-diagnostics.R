@@ -12,7 +12,7 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-# ── COHORT SAMPLE SIZES (5/10-year windows) ──────────────────────────────────
+# ── COHORT SAMPLE SIZES (10-year windows) ────────────────────────────────────
 # N per cohort window feeding the main RELIG16 -> RELIG transition matrices in
 # 02 (same non-missing filter as the P_list_* loops). The n < 30 threshold
 # matches the exclusion rule used in those loops.
@@ -36,7 +36,6 @@ cohort_n_table = function(cohort_var, label) {
 
 cohort_n_df = do.call(rbind, list(
   cohort_n_table("cohort",    "1-year"),
-  cohort_n_table("cohort_5",  "5-year"),
   cohort_n_table("cohort_10", "10-year")
 ))
 

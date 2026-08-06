@@ -42,9 +42,8 @@ data = gss_all |>
   # numeric so downstream median()/binning behave (median.haven_labelled errors)
   mutate(cohort = as.numeric(cohort)) |>
   mutate(age = year - cohort) |>
-  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1994) |>
+  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984) |>
   mutate(
-    cohort_5   = (floor((cohort - 1900) / 5)  * 5  + 1900) + 2.5,
     cohort_10  = (floor((cohort - 1925) / 10) * 10 + 1925) + 5,
     region_broad = case_when(
       as.numeric(region) == 1 ~ "Northeast",
