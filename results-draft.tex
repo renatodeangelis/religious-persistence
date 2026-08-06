@@ -37,6 +37,7 @@
 
 \title{Religious Persistence in the United States\\
   \large Results Draft}
+\author{Renato de Angelis}
 \date{\today}
 
 %% ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{P_grid_national_10yr}
+  \includegraphics[width=\textwidth]{matrices/P_grid_national_10yr.png}
   \caption{RELIG16 $\to$ RELIG transition matrices by 10-year birth cohort,
            1925--1984. Rows = origin religion (RELIG16); columns = current
            religion (RELIG). Cell values are row-conditional probabilities.}
@@ -65,17 +66,13 @@
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{pi_dist_grid_10yr}
+  \includegraphics[width=\textwidth]{matrices/pi_dist_grid_10yr.png}
   \caption{Share of each religious group in the origin distribution ($\pi_0$,
            top row) and the implied stationary distribution ($\pi^*$, bottom
            row), by 10-year birth cohort. $\pi^*$ is the long-run distribution
            implied by cohort $t$'s regime if that regime were to persist.}
   \label{fig:pi_dist}
 \end{figure}
-
-\placeholder{Fertility-adjusted $\pi^*$: Fig.~\ref{fig:pi_dist} will be updated
-once fertility dynamics are incorporated into the $\pi^*$ calculation.
-Current version uses the standard matrix-power stationary distribution.}
 
 \clearpage
 
@@ -87,7 +84,7 @@ Current version uses the standard matrix-power stationary distribution.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\textwidth]{im_memory_10yr}
+  \includegraphics[width=0.95\textwidth]{memory/im_memory_10yr.png}
   \caption{Individual memory (log TV distance from $\pi^*$) by origin state
            and generation step $t = 0$--$4$, for each 10-year birth cohort.
            Dashed lines mark TV distance thresholds of 0.05 and 0.01.}
@@ -98,7 +95,7 @@ Current version uses the standard matrix-power stationary distribution.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{mte_10yr}
+  \includegraphics[width=0.85\textwidth]{memory/mte_10yr.png}
   \caption{Mean time to exit (MTE) by origin state across 10-year birth
            cohorts. MTE is the expected number of transmission steps until
            a lineage's religion first differs from its starting state.}
@@ -107,14 +104,15 @@ Current version uses the standard matrix-power stationary distribution.}
 
 \subsection{$\lambda_2$ trend}
 
-\placeholder{$\lambda_2$ trend figure (point estimates + bootstrapped CIs across
-six cohort windows) pending. If CIs overlap substantially, shift emphasis to
-Altham indices $d(P_t, I)$ as the primary scalar trend.}
-
-\subsection{Conversion vs.\ persistence decomposition}
-
-\placeholder{Perturbation decomposition of $\lambda_2$ change into
-conversion-rate vs.\ retention-rate components pending.}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{memory/lambda2_trend_10yr.png}
+  \caption{$\lambda_2$ (modulus of second-largest eigenvalue of $P_t$) by
+           10-year birth cohort, with 95\% bootstrap confidence intervals
+           (250 replicates, seed 42). A declining $\lambda_2$ indicates that
+           intergenerational religious persistence weakens across cohorts.}
+  \label{fig:lambda2_trend}
+\end{figure}
 
 \clearpage
 
@@ -134,26 +132,37 @@ conversion-rate vs.\ retention-rate components pending.}
   \label{fig:age_std}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{P_grid_U_vs_S}
+  \caption{RELIG16 $\to$ RELIG transition matrices by birth cohort:
+           unstandardized (top row) vs.\ age-standardized, band 39--49
+           (bottom row). Each column is one cohort window; only cohorts
+           whose age support covers the full band are shown.}
+  \label{fig:P_grid_U_vs_S}
+\end{figure}
+
 \clearpage
 
 %% ═══════════════════════════════════════════════════════════════════════════
 \section{Homogeneity Tests}
 %% ═══════════════════════════════════════════════════════════════════════════
 
+\subsection{Anderson--Goodman test results}
+
+\input{homogeneity_pairwise}
+
 \subsection{Rolling-window sensitivity}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\textwidth]{rolling_window_sensitivity}
-  \caption{Sensitivity of homogeneity test results to cohort window width.}
+  \caption{Sensitivity of the Anderson--Goodman homogeneity test statistic
+           to cohort window width. Each point is the chi-square statistic for
+           a given window specification; stability across window widths
+           confirms the result is not an artifact of binning.}
   \label{fig:rolling}
 \end{figure}
-
-\subsection{Anderson--Goodman test results}
-
-\input{homogeneity_pairwise}
-
-\input{homogeneity_stationarity}
 
 \clearpage
 
@@ -165,30 +174,42 @@ conversion-rate vs.\ retention-rate components pending.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diagonal_persistence_sex}
-  \caption{Diagonal persistence by religious origin and sex, across 10-year
-           birth cohorts (1935--1984).}
-  \label{fig:sex}
+  \includegraphics[width=\textwidth]{sex/diff_grid_sex.png}
+  \caption{Cell-by-cell difference in transition probabilities (female $-$ male)
+           by birth cohort, 1925--1984. Positive values (blue) indicate higher
+           conditional probability among female respondents; negative values
+           (red) indicate higher probability among male respondents.}
+  \label{fig:sex_diff}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sex/pi_comparison_sex.png}
+  \caption{Origin distribution ($\pi_0$) and implied stationary distribution
+           ($\pi^*$) by sex and birth cohort, 1925--1984. Bars show
+           compositional shares for each religious group within stratum.}
+  \label{fig:sex_pi}
 \end{figure}
 
 \subsection{Political views}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diagonal_persistence_polviews_broad}
-  \caption{Diagonal persistence by political views (broad categorization)
-           and birth cohort.}
-  \label{fig:polviews}
+  \includegraphics[width=\textwidth]{politics/diff_grid_polviews_broad.png}
+  \caption{Cell-by-cell difference in transition probabilities across political
+           views (broad categorization: liberal, moderate, conservative), by
+           birth cohort. Each panel shows deviations from the pooled national
+           matrix for that cohort.}
+  \label{fig:pol_diff}
 \end{figure}
-
-\subsection{Nativity}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{diagonal_persistence_nativity}
-  \caption{Diagonal persistence by nativity (US-born vs.\ foreign-born)
-           across cohort windows 1950--1979.}
-  \label{fig:nativity}
+  \includegraphics[width=\textwidth]{politics/pi_comparison_partyid_broad.png}
+  \caption{Origin distribution ($\pi_0$) and implied stationary distribution
+           ($\pi^*$) by party identification (broad: Democrat, Republican,
+           Other) and birth cohort.}
+  \label{fig:pol_pi}
 \end{figure}
 
 \clearpage
@@ -201,9 +222,19 @@ conversion-rate vs.\ retention-rate components pending.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{im_memory_10yr_nb}
-  \caption{Individual memory curves for the non-Black sample (1925--1984).
-           Compare to Fig.~\ref{fig:im_memory} for the full sample.}
+  \includegraphics[width=\textwidth]{nonblack/diff_grid_nonblack.png}
+  \caption{Cell-by-cell difference in transition probabilities (non-Black $-$
+           full sample) by birth cohort. Values near zero indicate that
+           Black respondents do not materially shift the national estimates.}
+  \label{fig:nb_diff}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{nonblack/im_memory_10yr_nb.png}
+  \caption{Individual memory curves (log TV distance from $\pi^*$) for the
+           non-Black sample, by origin state and birth cohort.
+           Compare to Fig.~\ref{fig:im_memory} for the full-sample baseline.}
   \label{fig:nb_memory}
 \end{figure}
 
@@ -211,11 +242,21 @@ conversion-rate vs.\ retention-rate components pending.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{diagonal_persistence_10yr_6state}
-  \caption{Diagonal persistence across cohorts under the 6-state scheme
-           (Black Protestant separated from Other Protestant). Comparison
-           to the 5-state baseline assesses whether aggregation drives results.}
-  \label{fig:bp_diag}
+  \includegraphics[width=\textwidth]{bp/P_grid_bp_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices under the 6-state scheme
+           (Black Protestant separated from Other Protestant), by 10-year
+           birth cohort. Compare to Fig.~\ref{fig:P_grid} for the 5-state
+           baseline.}
+  \label{fig:bp_grid}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{bp/im_memory_10yr_6state.png}
+  \caption{Individual memory curves under the 6-state scheme, by origin state
+           and birth cohort. Separation of Black Protestant from Other
+           Protestant does not materially alter the national memory trend.}
+  \label{fig:bp_memory}
 \end{figure}
 
 \clearpage
@@ -230,31 +271,33 @@ conversion-rate vs.\ retention-rate components pending.}
 \begin{figure}[H]
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1930_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1930_10yr.png}
     \caption{Cohort 1925--34}
   \end{subfigure}\hfill
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1940_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1940_10yr.png}
     \caption{Cohort 1935--44}
   \end{subfigure}
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1950_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1950_10yr.png}
     \caption{Cohort 1945--54}
   \end{subfigure}\hfill
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1960_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1960_10yr.png}
     \caption{Cohort 1955--64}
   \end{subfigure}
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1970_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1970_10yr.png}
     \caption{Cohort 1965--74}
   \end{subfigure}\hfill
   \begin{subfigure}[b]{0.48\textwidth}
-    \includegraphics[width=\textwidth]{trans_1980_10yr}
+    \includegraphics[width=\textwidth]{matrices/trans_1980_10yr.png}
     \caption{Cohort 1975--84}
   \end{subfigure}
   \caption{Individual RELIG16 $\to$ RELIG transition matrices by 10-year
-           birth cohort, with $\pi_0$ and $\pi^*$ bars.}
+           birth cohort, each panel showing the full $5\times5$ matrix with
+           $\pi_0$ and $\pi^*$ bars.}
+  \label{fig:app_national_panels}
 \end{figure}
 
 \clearpage
@@ -264,117 +307,195 @@ conversion-rate vs.\ retention-rate components pending.}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{grid_diag_catholic}
-  \caption{Catholic diagonal persistence by cohort $\times$ survey period.}
+  \caption{Catholic diagonal persistence ($P_{\text{cath},\text{cath}}$) by
+           birth cohort $\times$ GSS survey period.}
+  \label{fig:apc_catholic}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{grid_diag_evangelical}
-  \caption{Evangelical diagonal persistence by cohort $\times$ period.}
+  \caption{Evangelical diagonal persistence by birth cohort $\times$ survey
+           period.}
+  \label{fig:apc_evangelical}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{grid_diag_none}
-  \caption{Steady-state share of ``None'' by cohort $\times$ period.}
+  \caption{Steady-state share of ``None'' ($\pi^*_{\text{none}}$) by birth
+           cohort $\times$ survey period.}
+  \label{fig:apc_none}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{grid_outflow_to_none}
-  \caption{$\pi_0$-weighted outflow to ``None'' from all affiliated origins,
-           by cohort $\times$ period.}
+  \caption{$\pi_0$-weighted outflow to ``None'' from all affiliated origin
+           states, by birth cohort $\times$ survey period.}
+  \label{fig:apc_outflow}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{grid_lambda2}
-  \caption{$\lambda_2$ by cohort $\times$ survey period.}
+  \caption{$\lambda_2$ (second eigenvalue of $P_t$) by birth cohort $\times$
+           survey period.}
+  \label{fig:apc_lambda2}
 \end{figure}
 
 \clearpage
 
-\subsection{Six-state scheme: cohort grid}
+\subsection{Sex-stratified transition matrix grids}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{P_grid_bp_10yr}
-  \caption{RELIG16 $\to$ RELIG transition matrices under the 6-state scheme
-           (Black Protestant separated), by 10-year birth cohort.}
+  \includegraphics[width=\textwidth]{sex/P_grid_male_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for male respondents, by
+           10-year birth cohort, 1925--1984.}
+  \label{fig:app_grid_male}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{im_memory_10yr_6state}
-  \caption{Individual memory curves under the 6-state scheme.}
+  \includegraphics[width=\textwidth]{sex/P_grid_female_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for female respondents,
+           by 10-year birth cohort, 1925--1984.}
+  \label{fig:app_grid_female}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sex/diff_grid_sex.png}
+  \caption{Cell-by-cell difference in transition probabilities (female $-$
+           male) by birth cohort. Each panel is the element-wise subtraction
+           of the male $P_t$ from the female $P_t$.}
+  \label{fig:app_sex_diff}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sex/pi_comparison_sex.png}
+  \caption{Origin distribution ($\pi_0$) and implied stationary distribution
+           ($\pi^*$) by sex and birth cohort.}
+  \label{fig:app_sex_pi}
 \end{figure}
 
 \clearpage
 
-\subsection{Sex-stratified matrices}
+\subsection{Political-stratified transition matrix grids}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diff_grid_sex}
-  \caption{Difference in transition probabilities (female $-$ male) by birth
-           cohort.}
+  \includegraphics[width=\textwidth]{politics/P_grid_polviews_broad_liberal_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for liberal respondents
+           (polviews broad), by 10-year birth cohort, 1925--1984.}
+  \label{fig:app_grid_liberal}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{pi_comparison_sex}
-  \caption{$\pi_0$ and $\pi^*$ by sex and birth cohort.}
+  \includegraphics[width=\textwidth]{politics/P_grid_polviews_broad_moderate_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for moderate respondents
+           (polviews broad), by 10-year birth cohort, 1925--1984.}
+  \label{fig:app_grid_moderate}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{politics/P_grid_polviews_broad_conservative_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for conservative respondents
+           (polviews broad), by 10-year birth cohort, 1925--1984.}
+  \label{fig:app_grid_conservative}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{politics/diff_grid_polviews_broad.png}
+  \caption{Cell-by-cell difference in transition probabilities across political
+           views (broad), by birth cohort. Each panel shows deviation from the
+           pooled national matrix for that cohort.}
+  \label{fig:app_pol_diff}
 \end{figure}
 
 \clearpage
 
-\subsection{Political-stratified matrices}
+\subsection{Non-Black sample}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diagonal_persistence_partyid_broad}
-  \caption{Diagonal persistence by party identification (broad) and birth
-           cohort.}
+  \includegraphics[width=\textwidth]{nonblack/P_grid_nonblack_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices for the non-Black sample,
+           by 10-year birth cohort, 1925--1984. Compare to
+           Fig.~\ref{fig:P_grid} for the full-sample baseline.}
+  \label{fig:app_grid_nb}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diagonal_persistence_polviews_narrow}
-  \caption{Diagonal persistence by political views (narrow) and birth cohort.}
+  \includegraphics[width=\textwidth]{nonblack/diff_grid_nonblack.png}
+  \caption{Cell-by-cell difference in transition probabilities (non-Black $-$
+           full sample) by birth cohort.}
+  \label{fig:app_nb_diff}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diff_grid_polviews_broad}
-  \caption{Transition probability differences by political views (broad) and
+  \includegraphics[width=\textwidth]{nonblack/pi_comparison_nonblack.png}
+  \caption{Origin distribution ($\pi_0$) and implied stationary distribution
+           ($\pi^*$) for the non-Black subsample vs.\ the full sample, by
            birth cohort.}
+  \label{fig:app_nb_pi}
 \end{figure}
 
 \clearpage
 
-\subsection{Non-Black sample: matrix differences}
+\subsection{Six-state scheme: full cohort grids}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{diff_grid_nonblack}
-  \caption{Difference in transition probabilities (non-Black $-$ full sample)
-           by birth cohort.}
+  \includegraphics[width=\textwidth]{bp/P_grid_bp_10yr.png}
+  \caption{RELIG16 $\to$ RELIG transition matrices under the 6-state scheme
+           (Black Protestant as a separate category), by 10-year birth cohort.}
+  \label{fig:app_bp_grid}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{bp/pi_dist_grid_bp_10yr.png}
+  \caption{Origin distribution ($\pi_0$) and implied stationary distribution
+           ($\pi^*$) under the 6-state scheme, by birth cohort.}
+  \label{fig:app_bp_pi}
 \end{figure}
 
 \subsection{GSS-period stratification}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\textwidth]{diagonal_persistence_gss_decade}
-  \caption{Diagonal persistence stratified by GSS survey decade rather than
-           birth cohort. Comparison to cohort-stratified results assesses
-           whether the trend is period- vs.\ cohort-driven.}
+  \includegraphics[width=\textwidth]{P_grid_gss_decade}
+  \caption{RELIG16 $\to$ RELIG transition matrices by GSS survey period
+           (3+2 layout: 1973--1981, 1983--1992, 1993--2002 top row;
+           2003--2012, 2013--2020 bottom row). Stratification is by survey
+           year of observation rather than birth cohort.}
+  \label{fig:app_gss_grid}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{pi_dist_gss_decade}
+  \caption{Origin distribution ($\pi_0$, top row) and implied stationary
+           distribution ($\pi^*$, bottom row) by GSS survey period. Each bar
+           shows the share of respondents in that religious group within the
+           given period.}
+  \label{fig:app_gss_pi}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\textwidth]{im_memory_gss_decade}
-  \caption{Individual memory curves stratified by GSS survey decade.}
+  \caption{Individual memory curves stratified by GSS survey decade (in place
+           of birth cohort).}
+  \label{fig:app_gss_memory}
 \end{figure}
 
 \end{document}

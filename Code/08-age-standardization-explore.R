@@ -53,7 +53,7 @@ d = gss_all |>
     ~ case_when(. == "jewish" ~ "other", . == "black protestant" ~ "evangelical", TRUE ~ .),
     .names = "{.col}_alt")) |>
   mutate(cohort = as.numeric(cohort), age = year - cohort) |>
-  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1994)
+  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984)
 d = as.data.frame(d)
 d$bin = floor((d$cohort - 1905) / 10) * 10 + 1905          # 5-basis 10-yr bins
 d$mid = d$bin + 5                                          # midpoint label (x-axis)

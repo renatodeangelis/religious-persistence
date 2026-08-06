@@ -89,7 +89,7 @@ for (dw in names(P_list_gd)) {
 # ── IM MEMORY CURVES (t = 0:6) ───────────────────────────────────────────────
 
 im_rows_gd = lapply(names(P_list_gd), function(dw) {
-  do.call(rbind, lapply(0:6, function(t) {
+  do.call(rbind, lapply(0:4, function(t) {
     vals = im_from_P(P_list_gd[[dw]], t = t)
     data.frame(gss_decade = dw, t = t, origin = names(vals), im = vals, row.names = NULL)
   }))
@@ -122,9 +122,9 @@ p_im_gd = ggplot(im_df_gd, aes(x = t, y = im, color = origin, group = origin)) +
   geom_point(size = 1.5) +
   facet_wrap(~ gss_decade, nrow = 1) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
-  scale_x_continuous(breaks = 0:6) +
+  scale_x_continuous(breaks = 0:4) +
   labs(x = "Step (t)", y = "log(TV distance from π*)", color = NULL,
-       title = "Individual Memory by GSS Survey Period (5-state, t = 0–6)") +
+       title = "Individual Memory by GSS Survey Period (5-state, t = 0–4)") +
   healy_theme
 
 ggsave("output/figures/gss-decade/im_memory_gss_decade.png",
@@ -241,6 +241,84 @@ p_pistar_gd = ggplot(pistar_df_gd, aes(x = gss_decade, y = pistar, color = origi
 
 ggsave("output/figures/gss-decade/pistar_gss_decade.png",
        p_pistar_gd, width = 8, height = 5, dpi = 200)
+
+# ── TRANSITION MATRIX GRID (5 GSS survey-period windows, 3+2 layout) ─────────
+
+grid_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
+  P  = P_list_gd[[dw]]
+  df = as.data.frame(as.table(P))
+  names(df) = c("origin", "current", "p")
+  df$period = paste0(dw, "\n(N = ", format(n_list_gd[[dw]], big.mark = ","), ")")
+  df
+}))
+
+grid_df_gd$origin  = factor(grid_df_gd$origin,  levels = rel_level_order)
+grid_df_gd$current = factor(grid_df_gd$current, levels = rev(rel_level_order))
+period_lvls = sapply(names(P_list_gd), function(dw)
+  paste0(dw, "\n(N = ", format(n_list_gd[[dw]], big.mark = ","), ")"))
+grid_df_gd$period = factor(grid_df_gd$period, levels = period_lvls)
+
+p_grid_gd = ggplot(grid_df_gd, aes(current, origin, fill = p)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
+  facet_wrap(~ period, nrow = 2) +
+  scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1),
+                       name = "P[i→j]") +
+  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
+       title = "Intergenerational transition matrices by GSS survey period") +
+  theme_bw(base_size = 10) +
+  theme(
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y      = element_text(size = 8),
+    panel.grid       = element_blank(),
+    legend.position  = "bottom",
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(size = 9)
+  )
+
+ggsave("output/figures/gss-decade/P_grid_gss_decade.png", p_grid_gd,
+       width = 12, height = 8, dpi = 200)
+
+# ── π₀ AND π* DISTRIBUTION GRID (5 GSS survey-period windows) ────────────────
+
+dist_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
+  pi0    = pi0_list_gd[[dw]]
+  pistar = pistar_list_gd[[dw]]
+  rbind(
+    data.frame(period = dw, measure = "π₀  (origin)",
+               religion = names(pi0),    value = as.numeric(pi0)),
+    data.frame(period = dw, measure = "π* (stationary)",
+               religion = names(pistar), value = as.numeric(pistar))
+  )
+}))
+
+dist_df_gd$religion = factor(dist_df_gd$religion, levels = rel_level_order)
+dist_df_gd$period   = factor(dist_df_gd$period,   levels = decade_windows)
+dist_df_gd$measure  = factor(dist_df_gd$measure,
+                              levels = c("π₀  (origin)", "π* (stationary)"))
+
+p_dist_gd = ggplot(dist_df_gd, aes(y = religion, x = value, fill = religion)) +
+  geom_col(width = 0.65) +
+  facet_grid(measure ~ period) +
+  scale_fill_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
+  scale_x_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
+                     labels = c("0", ".25", ".5")) +
+  scale_y_discrete(labels = reltrad_labels_tc) +
+  labs(x = "Share", y = NULL,
+       title = "Origin (π₀) and stationary (π*) distributions by GSS survey period") +
+  theme_bw(base_size = 10) +
+  theme(
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position    = "none",
+    strip.background   = element_rect(fill = "grey92", color = NA),
+    strip.text         = element_text(size = 8),
+    axis.text.y        = element_text(size = 8),
+    axis.text.x        = element_text(size = 7)
+  )
+
+ggsave("output/figures/gss-decade/pi_dist_gss_decade.png", p_dist_gd,
+       width = 12, height = 5, dpi = 200)
 
 saveRDS(
   list(P = P_list_gd, pi0 = pi0_list_gd, pistar = pistar_list_gd, n = n_list_gd),
