@@ -47,6 +47,27 @@
 \tableofcontents
 \clearpage
 
+Two headline patterns characterize the intergenerational transmission of religious
+affiliation across birth cohorts from 1925 to 1984. First, aggregate persistence
+has declined: the second-largest eigenvalue (in modulus) of the cohort-specific
+transition matrix ($\lambda_2$) falls approximately linearly from 0.80 in the
+earliest cohort window to 0.60 in the latest---a result robust to age
+standardization and to the choice of cohort binning. Second, this decline reflects
+a structural reorientation of American religious life toward two poles. The
+religiously unaffiliated (``None'') and Evangelical Protestants are simultaneously
+the most stable destinations for exiters from other traditions and, increasingly,
+stable identities in their own right. Catholic and Mainline Protestant traditions,
+by contrast, are losing retention without gaining converts: both receive negligible
+inflow in every cohort examined, and their implied long-run shares contract
+accordingly.
+
+The demographic heterogeneity results indicate that exit into nonaffiliation is
+more pronounced among men and political liberals, and that recent cohorts show a
+degree of religious-political sorting across all strata. These differences are
+substantively interesting but do not alter the structural conclusion: across
+subgroups, the basic reorientation toward a None--Evangelical bipolarity is
+consistent.
+
 %% ═══════════════════════════════════════════════════════════════════════════
 \section{National Trend}
 %% ═══════════════════════════════════════════════════════════════════════════
@@ -73,6 +94,29 @@
            implied by cohort $t$'s regime if that regime were to persist.}
   \label{fig:pi_dist}
 \end{figure}
+
+The cohort-specific transition matrices (Figure~\ref{fig:P_grid}) display the
+cell-level shifts that produce the aggregate trend. Reading across cohorts, the
+dominant change is the growth of the ``None'' column: outflows from all affiliated
+origin states into nonaffiliation rise substantially in each successive 10-year
+window, with the ordering Other $>$ Mainline $>$ Catholic $>$ Evangelical
+preserved throughout. Mid-single-digit outflows in the 1925 cohort expand to
+rates in the twenties and thirties by the 1975 cohort. Against this common trend,
+origin states diverge sharply in their diagonals. Catholic persistence falls from
+approximately 0.85 to 0.62 across the full range; Evangelical persistence is
+notably stable (0.74--0.80). Conversion into Catholic is negligible in all
+cohorts; by the post-1950 cohorts, Evangelical is effectively the only non-None
+destination receiving meaningful inflow from other traditions. Outflow from None
+into Evangelical remains relatively steady even as None's own diagonal persistence
+rises dramatically---a pattern suggesting that a stable subpopulation continues to
+move between these two poles while both categories simultaneously strengthen.
+Figure~\ref{fig:pi_dist} traces the implied stationary distributions ($\pi^*$):
+moving from the 1925 to the 1975 cohort, $\pi^*$ shifts substantially toward None
+and away from Catholic and Mainline, while Evangelical holds relatively stable.
+These are conditional summaries---what each cohort's regime implies for the long
+run if that regime were to persist---not forecasts. The widening gap between
+$\pi_0$ and $\pi^*$ in later cohorts indicates that each successive regime implies
+a more dramatic departure from its own starting composition.
 
 \clearpage
 
@@ -102,6 +146,27 @@
   \label{fig:mte}
 \end{figure}
 
+The individual memory curves (Figure~\ref{fig:im_memory}) translate matrix-level
+shifts into a generational time scale. The ``None'' origin state exhibits low
+memory in all cohort windows: its TV distance from $\pi^*$ decays rapidly even in
+the earliest cohort, reflecting that None-origin lineages begin close to the
+implied stationary distribution. The interpretation requires care---low memory for
+None-origin lineages indicates proximity to $\pi^*$, which itself assigns
+increasing weight to None; it does not necessarily mean frequent exit. For
+affiliated states, the curves shift systematically across cohorts toward faster
+decay. In the earliest cohorts, Catholic and ``Other'' Protestant origins show the
+highest memory; Evangelical and Mainline are roughly paired at intermediate
+levels. By the most recent cohort windows, all four affiliated states have
+converged toward substantially faster decay, with Catholic declining most sharply.
+Mean time to exit (Figure~\ref{fig:mte}) provides a complementary picture.
+Catholic MTE falls substantially across cohorts, consistent with the declining
+diagonal; Evangelical MTE is comparatively stable, so that the gap between the
+two has narrowed considerably by the most recent cohorts. MTE for None-origin
+lineages rises across cohorts---an increase commensurate with the rise in None
+diagonal persistence from 0.27 to 0.67---a trend that the memory-curve framing
+can obscure by conflating persistence with proximity to the stationary
+distribution.
+
 \subsection{$\lambda_2$ trend}
 
 \begin{figure}[H]
@@ -113,6 +178,14 @@
            intergenerational religious persistence weakens across cohorts.}
   \label{fig:lambda2_trend}
 \end{figure}
+
+Figure~\ref{fig:lambda2_trend} presents the headline scalar. $\lambda_2$ declines
+approximately linearly from 0.80 in the 1925--34 cohort to 0.60 in the 1975--84
+cohort, with 95\% bootstrap confidence intervals. This monotonic decline is the
+paper's central empirical finding: intergenerational religious
+persistence---measured as the rate at which origin-state information is transmitted
+across synthetic generations---has weakened continuously across every successive
+cohort window over the six decades covered by the GSS.
 
 \clearpage
 
@@ -142,6 +215,18 @@
   \label{fig:P_grid_U_vs_S}
 \end{figure}
 
+A standard concern in cohort analysis is that age-composition differences across
+cohort windows could artifactually produce or amplify a trend.
+Figures~\ref{fig:age_std} and~\ref{fig:P_grid_U_vs_S} address this directly.
+Figure~\ref{fig:age_std} overlays unstandardized (U), band-restricted (R), and
+age-standardized (S) $\lambda_2$ series on a common axis, constraining the
+comparison to respondents aged 39--49; all three series track closely across
+cohorts, and the monotonic decline is preserved in each.
+Figure~\ref{fig:P_grid_U_vs_S} presents the underlying transition matrices for
+the unstandardized and age-standardized specifications side by side: cell-level
+differences are small and do not alter the qualitative pattern. The cohort trend
+in $\lambda_2$ is not an age-composition artifact.
+
 \clearpage
 
 %% ═══════════════════════════════════════════════════════════════════════════
@@ -163,6 +248,14 @@
            confirms the result is not an artifact of binning.}
   \label{fig:rolling}
 \end{figure}
+
+The Anderson--Goodman pairwise homogeneity tests (Table~1) formally assess whether
+adjacent cohort-specific transition matrices are statistically distinguishable from
+one another. \todo{Fill in direction and significance pattern from table before
+finalizing.} Figure~\ref{fig:rolling} confirms that these results are not sensitive
+to the choice of cohort window width: the chi-square statistics are stable across a
+range of binning specifications, ruling out the possibility that heterogeneity is
+an artifact of the particular 10-year window used in the main analysis.
 
 \clearpage
 
@@ -191,6 +284,20 @@
   \label{fig:sex_pi}
 \end{figure}
 
+The sex-stratified difference grids (Figure~\ref{fig:sex_diff}) reveal pronounced
+heterogeneity by gender. The most salient feature is the strongly male-skewed
+inflow into None: in all cohort windows, men exit affiliated traditions into
+nonaffiliation at substantially higher rates than women, though this gap attenuates
+in the most recent cohorts. In the latest cohort window, the Evangelical column
+shows female-skewed inflow---a pattern that may reflect gender-selective processes
+of evangelical retention or recruitment in the youngest cohorts. Diagonal
+persistence differences between men and women are small and not the primary
+interpretive signal. The origin and stationary distribution comparison
+(Figure~\ref{fig:sex_pi}) confirms that the male-None and female-Evangelical skews
+are reflected in each subgroup's implied long-run distribution: None's $\pi^*$
+share is substantially higher for men and Evangelical's $\pi^*$ share higher for
+women in recent cohorts.
+
 \subsection{Political views}
 
 \begin{figure}[H]
@@ -211,6 +318,19 @@
            Other) and birth cohort.}
   \label{fig:pol_pi}
 \end{figure}
+
+The political heterogeneity results (Figure~\ref{fig:pol_diff}) are consistent
+with the broader literature on religious-political sorting: the None column is
+disproportionately liberal and the Evangelical column disproportionately
+conservative in all cohorts, and both associations sharpen in the most recent
+cohort windows. Conservative respondents show somewhat higher diagonal persistence
+in the most recent window; this result is worth noting but should not be
+overread, given the strong overlap between political conservatism and religious
+conservatism in the underlying sample. The party identification comparison
+(Figure~\ref{fig:pol_pi}) produces a directionally consistent picture:
+Democrat-identified respondents show higher implied None shares in $\pi^*$ and
+Republican-identified respondents show higher Evangelical shares, with the gap
+widening across cohorts.
 
 \clearpage
 
@@ -238,6 +358,20 @@
   \label{fig:nb_memory}
 \end{figure}
 
+The non-Black sample comparison (Figure~\ref{fig:nb_diff}) reveals one substantive
+deviation from the full-sample estimates: in the non-Black sample,
+Evangelical-to-Mainline outflow is approximately three percentage points higher and
+Evangelical diagonal persistence approximately three percentage points lower
+throughout the cohort series. This pattern is consistent with the composition of
+Black Protestant respondents in the full-sample ``Evangelical'' category and their
+distinct transition patterns---a difference partially addressed by the six-state
+scheme in the following section. Importantly, the deviation attenuates in later
+cohorts, becoming less material by the most recent windows. The memory curves for
+the non-Black sample (Figure~\ref{fig:nb_memory}) replicate the national trend
+without meaningful deviation: the ordered convergence of affiliated states toward
+faster memory decay, and None's persistently low memory throughout, are both
+preserved.
+
 \subsection{Six-state scheme (Black Protestant separate)}
 
 \begin{figure}[H]
@@ -258,6 +392,15 @@
            Protestant does not materially alter the national memory trend.}
   \label{fig:bp_memory}
 \end{figure}
+
+The six-state scheme, which separates Black Protestant from Other Protestant
+(Figure~\ref{fig:bp_grid}), confirms at the cell level the patterns identified in
+the non-Black robustness check: Black Protestant and other Evangelical respondents
+differ in their outflow profiles, particularly in the Mainline destination. Memory
+curves under the six-state scheme (Figure~\ref{fig:bp_memory}) replicate the
+national trend in direction and ordering without material change. The headline
+result---monotonic decline in intergenerational religious persistence across birth
+cohorts---is robust to this state-space extension.
 
 \clearpage
 
