@@ -17,13 +17,13 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 - **Ill-conditioned minority-group matrices** (was #6): Not an issue. Minority categories (Jewish, Muslim, Buddhist, Hindu) are residualized into "other" in the 5-state scheme. Thin-cell instability is not a problem for the main estimation sample.
 
 ### Framing issues (not methodological flaws)
-- **Nominal state space** (was #2): The math requires no ordinality — TV distance, Altham index, and λ₂ are all well-defined on nominal spaces. The real concern is that λ₂ is a scalar that collapses heterogeneous transition types (Catholic→None vs. Catholic→Evangelical). *Paper response*: lead with origin-state-specific memory curves and diagonal persistence; treat λ₂ as a secondary summary. Brief acknowledgment that the scalar aggregates transitions with different sociological content.
+- **Nominal state space** (was #2): The math requires no ordinality — TV distance, Altham index, and λ₂ are all well-defined on nominal spaces. The real concern is that λ₂ is a scalar that collapses heterogeneous transition types (Catholic→None vs. Catholic→Evangelical). *Paper response*: lead with λ₂ and origin-state-specific memory curves as the primary scalars. Brief acknowledgment that the scalar aggregates transitions with different sociological content.
 - **Ergodic concept** (was #5): π\* is a property of the matrix, not a prediction about the social world. *Paper response*: frame π\* explicitly as "the implied long-run destination under cohort t's regime, if that regime were to persist" — not an equilibrium prediction. Present it as a conditional summary alongside the memory curves, not a headline result. If it's redundant with the curves, cut it.
 - **Conceptual equivalence** (was #7): The Markovian framework embeds no ordinal assumptions and requires no "structural mobility" correction. The US religious context has no analogue to the agricultural-to-service transition or postwar Japan. *Paper response*: this is a strength, not a weakness — state briefly that the model may be more appropriate for religious affiliation than for occupational mobility precisely because no structural adjustment is needed. The source of persistence (socialization and identity formation) differs from occupational gatekeeping, but the formal structure (discrete-state transition) is valid in both cases.
 
 ### Genuine concerns requiring explicit handling
 - **First-order Markov assumption** (was #1): Bengtson's LSOG data show grandparental religiosity affects grandchildren net of parents. Each cohort-specific P_t captures only the single parent-to-child transmission step; the memory curves are therefore a *lower bound* on true multi-generational religious persistence. The grandparent channel is not captured. The trend comparison across cohorts is valid conditional on the grandparent effect being approximately stable across cohorts — a testable claim using LSOG. *Paper response*: explicitly state that memory curves are lower bounds on true persistence; note that the trend is valid under stable grandparent effects; use LSOG to assess whether this assumption holds.
-- **RELIG16 endogenous recall bias** (was #4): The most serious surviving concern. Bias is not random — people who have left religion are more likely to recall a secular upbringing, inflating every diagonal. Critically, the bias may *trend with the cohort variable*: younger cohorts have left religion at higher rates and thus have more leavers revising their childhood recall downward. The paper's core finding (declining persistence across cohorts) could be partly a trend in bias rather than a genuine trend in transmission. *Paper response*: (a) present Add Health W1/W3 validation result prominently — it establishes magnitude; (b) discuss explicitly whether the bias trends with cohort; (c) run sensitivity analysis under estimated misclassification rates (Kuha & Skinner 1997). Diagonal persistence is more robust to this bias than λ₂ and should be treated as the primary fallback.
+- **RELIG16 endogenous recall bias** (was #4): The most serious surviving concern. Bias is not random — people who have left religion are more likely to recall a secular upbringing, inflating every diagonal. Critically, the bias may *trend with the cohort variable*: younger cohorts have left religion at higher rates and thus have more leavers revising their childhood recall downward. The paper's core finding (declining persistence across cohorts) could be partly a trend in bias rather than a genuine trend in transmission. *Paper response*: (a) present Add Health W1/W3 validation result prominently — it establishes magnitude; (b) discuss explicitly whether the bias trends with cohort; (c) run sensitivity analysis under estimated misclassification rates (Kuha & Skinner 1997).
 
 ---
 
@@ -47,7 +47,6 @@ This project adapts **Markov-chain memory measures** from the class mobility lit
 
 ## Measures to Report
 
-- Diagonal persistence rates by origin category across cohort windows (most robust)
 - λ₂ across cohort windows with bootstrapped CIs (headline memory summary)
 - Altham index d(P_t, I) and d(P_t, P_{t+1}) (does not require ordinality)
 - Memory curves (P_t)^k · e_i for k = 1…10 for each origin state
@@ -150,7 +149,7 @@ Hout (2017): ~20% of Americans are "liminal" (cycling between affiliation and no
 1. **Add Health W3 recall item confirmed**: Wave 3 includes `H3RE26` (retrospective childhood religion recall), used in `matrix-validation.R`. Wave 4 does not include an equivalent item.
 2. **Pew ATP**: Has the childhood religion item been asked at multiple ATP waves separated by enough time to test recall drift? Worth contacting Pew directly.
 3. **State-space construction**: Requires cell-count analysis. 3–4 category scheme is leading candidate; binary affiliated/unaffiliated is the fallback.
-4. **λ₂ CI width**: If CIs are too wide to detect cohort trends, emphasis shifts from eigenvalue trends to diagonal persistence and Altham indices, with memory curves becoming illustrative.
+4. **λ₂ CI width**: If CIs are too wide to detect cohort trends, shift emphasis to Altham indices d(P_t, I) across cohorts, with memory curves as the primary illustration.
 5. **Ysseldyk et al. citation error**: The Overleaf file currently has the Myers (1996) title on the Ysseldyk et al. (2010) entry — needs correction.
 
 ---

@@ -229,6 +229,51 @@ p_diff_facet = ggplot(diff_all, aes(x = current, y = origin, fill = diff)) +
 ggsave("output/figures/nonblack/diff_all_cohorts_10yr.png",
        p_diff_facet, width = 22, height = 5, dpi = 200)
 
+# ── TRANSITION MATRIX GRID (non-Black sample, 10-year cohorts) ───────────────
+
+edges_nb = as.integer(sort(names(nb$P)))   # 1925, 1935, ..., 1975
+
+grid_df_nb = do.call(rbind, lapply(edges_nb, function(edge) {
+  key = as.character(edge)
+  P   = nb$P[[key]]
+  if (is.null(P)) return(NULL)
+  df  = as.data.frame(as.table(P))
+  names(df) = c("origin", "current", "p")
+  df$cohort = paste0(edge, "–", sprintf("%02d", (edge + 9) %% 100),
+                     "\n(N = ", format(nb$n[[key]], big.mark = ","), ")")
+  df
+}))
+
+grid_df_nb$origin  = factor(grid_df_nb$origin,  levels = rel_level_order)
+grid_df_nb$current = factor(grid_df_nb$current, levels = rev(rel_level_order))
+cohort_lvls_nb = sapply(edges_nb, function(edge) {
+  key = as.character(edge)
+  paste0(edge, "–", sprintf("%02d", (edge + 9) %% 100),
+         "\n(N = ", format(nb$n[[key]], big.mark = ","), ")")
+})
+grid_df_nb$cohort = factor(grid_df_nb$cohort, levels = cohort_lvls_nb)
+
+p_grid_nb = ggplot(grid_df_nb, aes(current, origin, fill = p)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
+  facet_wrap(~ cohort, nrow = 2) +
+  scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1),
+                       name = "P[i→j]") +
+  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
+       title = "Transition matrices by birth cohort — non-Black sample") +
+  theme_bw(base_size = 10) +
+  theme(
+    axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y      = element_text(size = 8),
+    panel.grid       = element_blank(),
+    legend.position  = "bottom",
+    strip.background = element_rect(fill = "grey92", color = NA),
+    strip.text       = element_text(size = 9)
+  )
+
+ggsave("output/figures/nonblack/P_grid_nonblack_10yr.png", p_grid_nb,
+       width = 12, height = 9, dpi = 200)
+
 saveRDS(
   list(
     nonblack = list(P = nb$P,  pi0 = nb$pi0,  pistar = nb$pistar,  n = nb$n),

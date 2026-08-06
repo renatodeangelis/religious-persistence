@@ -119,6 +119,56 @@ for (vname in names(pol_vars)) {
          p_diag, width = 12, height = 5, dpi = 200)
 }
 
+# ── TRANSITION MATRIX GRIDS (polviews_broad, 10-year cohorts) ────────────────
+# One 6-panel grid per stratum (liberal / moderate / conservative).
+# Flag: add matching loop for partyid_broad if wanted — swap "polviews_broad"
+#       and pol_vars[["partyid_broad"]] below and update the output filename.
+
+for (grp in pol_vars[["polviews_broad"]]) {
+  grid_df_pol = do.call(rbind, lapply(mids_pol, function(mid) {
+    key = paste("polviews_broad", grp, mid, sep = "_")
+    P   = P_pol[[key]]
+    if (is.null(P)) return(NULL)
+    df  = as.data.frame(as.table(P))
+    names(df) = c("origin", "current", "p")
+    df$cohort = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100),
+                       "\n(N = ", format(n_pol[[key]], big.mark = ","), ")")
+    df
+  }))
+
+  grid_df_pol$origin  = factor(grid_df_pol$origin,  levels = rel_level_order)
+  grid_df_pol$current = factor(grid_df_pol$current, levels = rev(rel_level_order))
+  cohort_lvls_pol = sapply(mids_pol, function(mid) {
+    key = paste("polviews_broad", grp, mid, sep = "_")
+    if (is.null(P_pol[[key]])) return(NULL)
+    paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100),
+           "\n(N = ", format(n_pol[[key]], big.mark = ","), ")")
+  })
+  grid_df_pol$cohort = factor(grid_df_pol$cohort, levels = cohort_lvls_pol)
+
+  p_grid_pol = ggplot(grid_df_pol, aes(current, origin, fill = p)) +
+    geom_tile(color = "white", linewidth = 0.4) +
+    geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
+    facet_wrap(~ cohort, nrow = 2) +
+    scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1),
+                         name = "P[i→j]") +
+    labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
+         title = paste0("Transition matrices by birth cohort — ",
+                        tools::toTitleCase(grp), " (polviews broad)")) +
+    theme_bw(base_size = 10) +
+    theme(
+      axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y      = element_text(size = 8),
+      panel.grid       = element_blank(),
+      legend.position  = "bottom",
+      strip.background = element_rect(fill = "grey92", color = NA),
+      strip.text       = element_text(size = 9)
+    )
+
+  ggsave(paste0("output/figures/political/P_grid_polviews_broad_", grp, "_10yr.png"),
+         p_grid_pol, width = 12, height = 9, dpi = 200)
+}
+
 saveRDS(
   list(P = P_pol, pi0 = pi0_pol, pistar = pistar_pol, n = n_pol),
   "data/derived/matrices_political.rds"
