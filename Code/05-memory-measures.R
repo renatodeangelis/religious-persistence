@@ -246,3 +246,54 @@ p_dist_grid = ggplot(dist_df, aes(y = religion, x = value, fill = religion)) +
 
 ggsave("output/figures/pi_dist_grid_10yr.png", p_dist_grid,
        width = 14, height = 5, dpi = 200)
+
+# ── FERTILITY-ADJUSTED π* ─────────────────────────────────────────────────────
+
+f_list           = matrices$fertility
+pistar_fert_list = Filter(Negate(is.null), setNames(
+  lapply(names(P_list_10), function(key) {
+    if (is.null(f_list[[key]])) return(NULL)
+    fertility_adjusted_pi_star(P_list_10[[key]], f_list[[key]])
+  }),
+  names(P_list_10)
+))
+
+pistar_diff_df = do.call(rbind, lapply(mids_grid, function(mid) {
+  key         = as.character(mid)
+  pistar      = pistar_list_10[[key]]
+  pistar_fert = pistar_fert_list[[key]]
+  if (is.null(pistar) || is.null(pistar_fert)) return(NULL)
+  cohort_lbl  = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100))
+  data.frame(
+    mid      = mid,
+    cohort   = cohort_lbl,
+    religion = names(pistar),
+    diff     = as.numeric(pistar_fert) - as.numeric(pistar)
+  )
+}))
+
+pistar_diff_df$religion = factor(pistar_diff_df$religion, levels = rel_level_order)
+pistar_diff_df$cohort   = factor(pistar_diff_df$cohort,
+  levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100)))
+
+diff_limit = max(abs(pistar_diff_df$diff))
+
+p_pistar_diff = ggplot(pistar_diff_df, aes(x = cohort, y = religion, fill = diff)) +
+  geom_tile(color = "white", linewidth = 0.5, width = 0.7) +
+  geom_text(aes(label = sprintf("%+.3f", diff)), size = 3.5) +
+  scale_fill_distiller(palette = "RdBu", direction = -1,
+                       limits = c(-diff_limit, diff_limit),
+                       name = "π*_f − π*") +
+  scale_y_discrete(labels = reltrad_labels_tc) +
+  labs(x = NULL, y = NULL,
+       title = "Fertility adjustment: π*_f − π* by birth cohort") +
+  theme_bw(base_size = 11) +
+  theme(axis.text.x    = element_text(angle = 45, hjust = 1, size = 10),
+        axis.text.y    = element_text(size = 10),
+        axis.ticks     = element_blank(),
+        panel.grid     = element_blank(),
+        panel.border   = element_blank(),
+        legend.position = "bottom")
+
+ggsave("output/figures/pistar_fertility_diff_10yr.png", p_pistar_diff,
+       width = 7, height = 5, dpi = 200)

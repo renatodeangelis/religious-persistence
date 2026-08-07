@@ -124,6 +124,39 @@ for (vname in names(pol_vars)) {
   }
 }
 
+# ── RELIGION-SPECIFIC FERTILITY WEIGHTS ──────────────────────────────────────
+# f_list: named list keyed by cohort_10 midpoint (e.g. 1950, 1960).
+# Each element is a named numeric vector of length 5 (mean childs by religion),
+# ordered to match rel_level_order.
+# Restriction: women (sex == 2), age >= 40 (near-completed fertility).
+# childs top-coded at 8 in gssr — minor truncation, noted but not corrected.
+
+fertility_raw = data |>
+  filter(sex == 2, age >= 40) |>
+  filter(!is.na(childs), !is.na(reltrad_alt)) |>
+  mutate(childs = as.numeric(childs)) |>
+  group_by(cohort_10, reltrad_alt) |>
+  summarise(mean_childs = mean(childs, na.rm = TRUE),
+            n           = n(),
+            .groups     = "drop")
+
+# Check for thin cells before proceeding
+thin = filter(fertility_raw, n < 30)
+if (nrow(thin) > 0) {
+  message("Thin fertility cells (n < 30): check before using")
+  print(thin)
+}
+
+f_list = fertility_raw |>
+  split(~cohort_10) |>
+  lapply(function(df) {
+    v = setNames(df$mean_childs, df$reltrad_alt)
+    v[rel_level_order]   # reorders to match rel_level_order; NA if a cell is missing
+  })
+
+message("f_list[['1970']]: fertility likely understated — partial censoring")
+message("f_list[['1980']]: unreliable — consider substituting f_list[['1970']]")
+
 # ── SAVE ──────────────────────────────────────────────────────────────────────
 
 matrices = list(
@@ -133,7 +166,8 @@ matrices = list(
   sex       = list(P = P_list_sex, pi0 = pi0_list_sex, pistar = pistar_list_sex,
                    n = n_list_sex),
   political = list(P = P_list_pol, pi0 = pi0_list_pol, pistar = pistar_list_pol,
-                   n = n_list_pol)
+                   n = n_list_pol),
+  fertility = f_list
 )
 
 dir.create("data/derived", recursive = TRUE, showWarnings = FALSE)

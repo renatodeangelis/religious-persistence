@@ -56,6 +56,45 @@ pi_star = function(P) {
   setNames(v / sum(v), rownames(P))
 }
 
+# Fertility-adjusted stationary distribution.
+# Fixed point of π_{k+1} = normalize((π_k ∘ f) · P): parent fertility scales
+# the origin distribution before transmission. f_i = mean children for parents
+# in religion i, regardless of where those children end up.
+#
+# Arguments:
+#   P        — named 5×5 row-stochastic transition matrix
+#   f        — named numeric vector, length 5, all > 0; need not sum to 1
+#   pi0      — starting distribution; defaults to uniform
+#   tol      — convergence threshold (max absolute change per element)
+#   max_iter — iteration cap; warns if hit without converging
+#
+# Returns a named numeric vector summing to 1.
+fertility_adjusted_pi_star = function(P, f, pi0 = NULL, tol = 1e-10, max_iter = 10000) {
+  P_mat  = as.matrix(P)
+  states = rownames(P_mat)
+  f_vec  = as.numeric(f[states])
+
+  stopifnot(
+    is.numeric(f_vec), length(f_vec) == nrow(P_mat), all(f_vec > 0)
+  )
+
+  if (is.null(pi0)) {
+    pi_cur = setNames(rep(1 / nrow(P_mat), nrow(P_mat)), states)
+  } else {
+    pi_cur = as.numeric(pi0)
+  }
+
+  for (iter in seq_len(max_iter)) {
+    pi_next = as.numeric((pi_cur * f_vec) %*% P_mat)   # scale parents, then transmit
+    pi_next = pi_next / sum(pi_next)
+    if (max(abs(pi_next - pi_cur)) < tol) return(setNames(pi_next, states))
+    pi_cur  = pi_next
+  }
+
+  warning("fertility_adjusted_pi_star: did not converge in ", max_iter, " iterations")
+  setNames(pi_next, states)
+}
+
 # Unweighted row-stochastic transition matrix.
 # levels: optional character vector to fix state ordering across cohort subsets.
 p_matrix = function(data, origin, current, levels = NULL) {

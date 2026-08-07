@@ -122,38 +122,6 @@ Three frameworks map onto specific predictions about memory-curve shapes:
 
 Hout (2017): ~20% of Americans are "liminal" (cycling between affiliation and nonaffiliation) — complicates the absorbing-state assumption across all three frameworks.
 
----
-
-## Three-Week Action Plan
-
-| Week | Days | Tasks |
-|------|------|-------|
-| 1 | 1–2 | Foundational reading |
-| 1 | 3 | State-space decision with cell-count analysis |
-| 1 | 4 | Cohort-specific transition matrices with bootstrapped CIs |
-| 1 | 5 | Eigenvalue decomposition and preliminary memory curves |
-| 2 | 6–7 | Acquire/process Add Health; construct P_AddHealth; compare to P_GSS |
-| 2 | 8–9 | NSYR comparison; GSS internal consistency check |
-| 2 | 10 | Synthesize measurement findings in 3–5 page memo |
-| 3 | 11 | Sensitivity analysis on memory curves under alternative misclassification scenarios |
-| 3 | 12 | Goodman RC model exploration |
-| 3 | 13 | Formal results assembly — all figures and tables |
-| 3 | 14–15 | Paper skeleton; draft introduction + measurement section |
-
-**Current status** (as of June 2026): Weeks 1–2 complete. GSS transition matrices built, λ₂ and memory curves computed for national cohort windows (5/10-year bins). Hout (2016) replicated and extended (Figs 1–6). Add Health W1/W3 recall bias analysis complete (`matrix-validation.R`); Add Health W1/W4 religiosity-split matrices complete (`robustness-add-health.R`). Pipeline reorganized: main analysis is stages 01–06, robustness re-cuts (non-Black, GSS-period, 6-state Black-Protestant) folded in as stages 10–12 consuming `gss_clean.rds`. The 20-year cohort bins, the regional stratification, and the attitude-stratified analysis were removed. NSYR comparison, sensitivity analysis, and LSOG validation remain pending (Week 3).
-
----
-
-## Key Unresolved Issues
-
-1. **Add Health W3 recall item confirmed**: Wave 3 includes `H3RE26` (retrospective childhood religion recall), used in `matrix-validation.R`. Wave 4 does not include an equivalent item.
-2. **Pew ATP**: Has the childhood religion item been asked at multiple ATP waves separated by enough time to test recall drift? Worth contacting Pew directly.
-3. **State-space construction**: Requires cell-count analysis. 3–4 category scheme is leading candidate; binary affiliated/unaffiliated is the fallback.
-4. **λ₂ CI width**: If CIs are too wide to detect cohort trends, shift emphasis to Altham indices d(P_t, I) across cohorts, with memory curves as the primary illustration.
-5. **Ysseldyk et al. citation error**: The Overleaf file currently has the Myers (1996) title on the Ysseldyk et al. (2010) entry — needs correction.
-
----
-
 ## Literature
 
 ### Methods (key papers)
@@ -198,7 +166,7 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | `code/12-robustness-bp.R` | **Robustness**: 6-state scheme (Black Protestant separate) via `reltrad_bp`; 10-year memory curves + diagonal persistence → `output/figures/bp/`. Consumes `gss_clean.rds` |
 | `code/13-robustness-nativity.R` | **Robustness**: nativity-stratified 10-year matrices (US-born vs. foreign-born, 3 cohort windows 1950–1979) + diagonal persistence figure → `output/figures/nativity/`. Consumes `gss_clean.rds` |
 | `code/14-robustness-sex.R` | **Robustness**: sex-stratified 10-year matrices (male/female, 5 cohort windows 1940–1989) + diagonal persistence figure → `output/figures/sex/`. Consumes `gss_clean.rds` |
-| `code/15-robustness-political.R` | **Robustness**: political-stratified 10-year matrices (partyid narrow/broad, polviews narrow/broad; 5 cohort windows 1940–1989) + per-variable diagonal persistence figures → `output/figures/political/`. Consumes `gss_clean.rds` |
+| `code/15-robustness-political.R` | **Robustness**: political-stratified 10-year matrices (partyid narrow/broad, polviews narrow/broad; 5 cohort windows 1940–1989) + per-variable diagonal persis`tence figures → `output/figures/political/`. Consumes `gss_clean.rds` |
 | `code/robustness-add-health.R` | **Robustness** (run manually — needs restricted `add-health/` files): Add Health W1→W4 religiosity-split transition matrices, console-only |
 | `code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
 | `code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
