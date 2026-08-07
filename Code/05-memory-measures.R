@@ -297,3 +297,39 @@ p_pistar_diff = ggplot(pistar_diff_df, aes(x = cohort, y = religion, fill = diff
 
 ggsave("output/figures/pistar_fertility_diff_10yr.png", p_pistar_diff,
        width = 7, height = 5, dpi = 200)
+
+pistar_fert_df = do.call(rbind, lapply(mids_grid, function(mid) {
+  key         = as.character(mid)
+  pistar_fert = pistar_fert_list[[key]]
+  if (is.null(pistar_fert)) return(NULL)
+  cohort_lbl  = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100))
+  data.frame(
+    mid      = mid,
+    cohort   = cohort_lbl,
+    religion = names(pistar_fert),
+    value    = as.numeric(pistar_fert)
+  )
+}))
+
+pistar_fert_df$religion = factor(pistar_fert_df$religion, levels = rel_level_order)
+pistar_fert_df$cohort   = factor(pistar_fert_df$cohort,
+  levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100)))
+
+p_pistar_fert_vec = ggplot(pistar_fert_df, aes(x = cohort, y = religion, fill = value)) +
+  geom_tile(color = "white", linewidth = 0.5, width = 0.7) +
+  geom_text(aes(label = sprintf("%.3f", value)), size = 3.5) +
+  scale_fill_distiller(palette = "Blues", direction = 1,
+                       limits = c(0, 1), name = "π*_f") +
+  scale_y_discrete(labels = reltrad_labels_tc) +
+  labs(x = NULL, y = NULL,
+       title = "Fertility-adjusted stationary distribution (π*_f) by birth cohort") +
+  theme_bw(base_size = 11) +
+  theme(axis.text.x    = element_text(angle = 45, hjust = 1, size = 10),
+        axis.text.y    = element_text(size = 10),
+        axis.ticks     = element_blank(),
+        panel.grid     = element_blank(),
+        panel.border   = element_blank(),
+        legend.position = "bottom")
+
+ggsave("output/figures/pistar_fertility_vec_10yr.png", p_pistar_fert_vec,
+       width = 7, height = 5, dpi = 200)
