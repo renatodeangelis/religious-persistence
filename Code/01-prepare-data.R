@@ -22,7 +22,7 @@ data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
          race, polviews, partyid, sibs_7222, childs) |>
-  filter(!(year %in% c(1972, 1982, 1987, 2021, 2022, 2024))) |>
+  filter(!(year %in% c(1972, 1982, 1987, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
