@@ -12,9 +12,82 @@ library(dplyr)
 library(ggplot2)
 source("code/utils.R")
 
-clean     = readRDS("data/derived/gss_clean.rds")
-data      = clean$data
-states_bp = clean$states_bp
+data(gss_all)
+data = gss_all |>
+  select(year, cohort, sex, reltrad, reltrad16, region, born,
+         race, polviews, partyid, sibs_7222, childs) |>
+  filter(!(year %in% c(1972, 2021))) |>
+  mutate(across(c(reltrad, reltrad16),
+                ~ reltrad_labels[as.character(as.numeric(.))])) |>
+  filter(!is.na(reltrad), !is.na(reltrad16)) |>
+  # 6-state variant for the Black-Protestant robustness stage (12): collapse
+  # only jewish → other, keeping "black protestant" as its own state.
+  mutate(across(c(reltrad, reltrad16),
+                ~ if_else(. == "jewish", "other", .),
+                .names = "{.col}_bp")) |>
+  # cohort arrives from gss_all as a haven_labelled vector; strip to plain
+  # numeric so downstream median()/binning behave (median.haven_labelled errors)
+  mutate(cohort = as.numeric(cohort)) |>
+  mutate(age = year - cohort) |>
+  filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984) |>
+  mutate(
+    cohort_10  = (floor((cohort - 1925) / 10) * 10 + 1925) + 5,
+    cohort_5 = (floor((cohort - 1925) / 5) * 5 + 1925) + 2.5,
+    region_broad = case_when(
+      as.numeric(region) == 1 ~ "Northeast",
+      as.numeric(region) == 2 ~ "Midwest",
+      as.numeric(region) == 3 ~ "South",
+      as.numeric(region) == 4 ~ "West",
+      TRUE ~ NA_character_
+    ),
+    nativity = case_when(
+      as.numeric(born) == 1 ~ "Born in US",
+      as.numeric(born) == 2 ~ "Born abroad"
+    )
+  )
+
+# ── PARTY ID AND POLITICAL VIEWS RECODES ─────────────────────────────────────
+# partyid: 0 = strong dem … 6 = strong rep, 7 = other party
+# polviews: 1 = extremely liberal … 7 = extremely conservative
+
+data = data |>
+  mutate(
+    partyid_narrow = case_when(
+      as.numeric(partyid) %in% 0:1            ~ "dem",
+      as.numeric(partyid) %in% 5:6            ~ "rep",
+      as.numeric(partyid) %in% c(2, 3, 4, 7) ~ "other"
+    ),
+    partyid_broad = case_when(
+      as.numeric(partyid) %in% 0:2        ~ "dem",
+      as.numeric(partyid) %in% 4:6        ~ "rep",
+      as.numeric(partyid) %in% c(3, 7)    ~ "other"
+    ),
+    polviews_narrow = case_when(
+      as.numeric(polviews) %in% 1:3 ~ "liberal",
+      as.numeric(polviews) == 4      ~ "moderate",
+      as.numeric(polviews) %in% 5:7 ~ "conservative"
+    ),
+    polviews_broad = case_when(
+      as.numeric(polviews) %in% 1:2 ~ "liberal",
+      as.numeric(polviews) %in% 3:5 ~ "moderate",
+      as.numeric(polviews) %in% 6:7 ~ "conservative"
+    )
+  )
+
+# ── STATE SPACE ───────────────────────────────────────────────────────────────
+
+# 6-state space for the Black-Protestant robustness stage (12)
+states_bp = sort(unique(c(data$reltrad_bp, data$reltrad16_bp)))
+states_bp = states_bp[!is.na(states_bp)]
+
+# ── SAVE ──────────────────────────────────────────────────────────────────────
+# Strip haven value labels so the saved frame is plain numeric/character. The
+# gssr columns arrive as haven_labelled, and as.numeric() on those only works
+# while haven's S3 methods are attached (they are here, via library(gssr), but
+# not in the downstream scripts that read this file).
+
+data = haven::zap_labels(data)
+
 
 # Fixed 6-state display order (Black Protestant retained; jewish already → other)
 rel_level_order_6 = c("catholic", "evangelical", "black protestant", "mainline", "other", "none")
