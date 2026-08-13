@@ -27,7 +27,7 @@ data = gss_all |>
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
   mutate(across(c(reltrad, reltrad16),
-                ~ case_when(
+               ~ case_when(
                   . == "jewish"           ~ "other",
                   . == "black protestant" ~ "evangelical",
                   TRUE                    ~ .
