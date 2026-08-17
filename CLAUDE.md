@@ -176,6 +176,7 @@ Blume et al. (forthcoming), Wodtke et al. 2026, Singer & Spilerman 1976, Barthol
 | `code/20-diff-figures-political.R` | Difference matrix grids (P_dem − P_rep, P_liberal − P_conservative) + π₀/π* dot-plots → `output/figures/political/` |
 | `code/robustness-add-health.R` | **Robustness** (run manually — needs restricted `add-health/` files): Add Health W1→W4 religiosity-split transition matrices, console-only |
 | `code/matrix-validation.R` | Add Health W1/W3 recall bias analysis (PA22 vs. H3RE26) |
+| `code/explore-none-heterogeneity.R` | **Exploratory** (run manually): intra-"none" heterogeneity — cradle-none vs. nonvert composition, belief/practice gradients by origin tradition → `output/figures/none-heterogeneity/`. Rebuilds from `gss_all` |
 | `code/utils.R` | Shared functions: matrix math, memory measures, plotting helpers |
 | `code/presentation.qmd` | Quarto slide deck |
 
