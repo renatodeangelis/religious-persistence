@@ -174,7 +174,7 @@ print(diag_tbl[order(diag_tbl$origin, diag_tbl$stratum), ])
 
 dir.create("output/figures/attend12", recursive = TRUE, showWarnings = FALSE)
 
-# Per-stratum transition heatmaps (P + π₀ + π*)
+# Per-stratum transition heatmaps (P + π₀ + π∞)
 for (att in names(P_att)) {
   p = make_combined(
     P_att[[att]], pi0_att[[att]], pistar_att[[att]],

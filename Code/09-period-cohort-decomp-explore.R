@@ -116,7 +116,7 @@ ggsave("output/figures/explore/apc/grid_pistar_none.png",
     geom_text(aes(label = ifelse(is.na(pistar_none), "", sprintf("%.2f", pistar_none))), size = 3) +
     scale_fill_distiller(palette = "Oranges", direction = 1, na.value = "grey92") +
     labs(x = "Survey period (decade)", y = "Birth cohort (10-yr midpoint)",
-         title = "Steady-state share 'None' (π*) by cohort × period") + healy_theme,
+         title = "Steady-state share 'None' (π∞) by cohort × period") + healy_theme,
   width = 8, height = 5, dpi = 200)
 
 ggsave("output/figures/explore/apc/grid_pct_none_current.png",

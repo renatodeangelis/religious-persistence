@@ -1,7 +1,7 @@
 # ── 16 · DIFFERENCE FIGURES: SEX ──────────────────────────────────────────────
 # Figure 1: Difference matrix grid (P_male − P_female) across 6 cohort windows,
 #           laid out like P_grid_national (facet_wrap, nrow = 2).
-# Figure 2: π₀ and π* dot-plot comparison, male vs female, facet_grid(measure ~ cohort).
+# Figure 2: π₀ and π∞ dot-plot comparison, male vs female, facet_grid(measure ~ cohort).
 #
 # Input:  data/derived/matrices_sex.rds
 # Output: output/figures/sex/diff_grid_sex.png
@@ -115,7 +115,7 @@ ggsave("output/figures/sex/diff_grid_sex.png", p_diff_grid,
        width = 12, height = 9, dpi = 200)
 cat("Saved output/figures/sex/diff_grid_sex.png\n")
 
-# ── FIGURE 2: π₀ AND π* DOT-PLOT COMPARISON ──────────────────────────────────
+# ── FIGURE 2: π₀ AND π∞ DOT-PLOT COMPARISON ──────────────────────────────────
 
 pi_rows = list()
 
@@ -126,7 +126,7 @@ for (mid in mids) {
 
   clbl = cohort_lbl(mid)
 
-  for (measure in c("π₀  (origin)", "π* (stationary)")) {
+  for (measure in c("π₀  (origin)", "π∞ (stationary)")) {
     vec_m = if (measure == "π₀  (origin)") pi0_sex[[key_m]] else pistar_sex[[key_m]]
     vec_f = if (measure == "π₀  (origin)") pi0_sex[[key_f]] else pistar_sex[[key_f]]
 
@@ -145,7 +145,7 @@ for (mid in mids) {
 pi_df         = do.call(rbind, pi_rows)
 pi_df$origin  = factor(pi_df$origin,  levels = rel_level_order)
 pi_df$cohort  = factor(pi_df$cohort,  levels = sapply(mids, cohort_lbl))
-pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π* (stationary)"))
+pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π∞ (stationary)"))
 pi_df$group   = factor(pi_df$group,   levels = c("Male", "Female"))
 
 # Wide form for segments connecting Male and Female points
@@ -171,7 +171,7 @@ p_pi_comp = ggplot() +
   scale_y_discrete(labels = reltrad_labels_tc) +
   labs(
     x = "Share", y = NULL,
-    title = "π₀ and π* by sex and birth cohort (1925–1984)"
+    title = "π₀ and π∞ by sex and birth cohort (1925–1984)"
   ) +
   healy_theme +
   theme(

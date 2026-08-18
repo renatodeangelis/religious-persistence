@@ -100,7 +100,7 @@ p_im_nb = ggplot(im_df_nb, aes(x = t, y = im, color = origin, group = origin)) +
   facet_wrap(~ cohort, nrow = 1) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_x_continuous(breaks = 0:6) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)", color = NULL,
+  labs(x = "Step (t)", y = "log(TV distance from π∞)", color = NULL,
        title = "Individual Memory by Cohort — Non-Black Sample (10-year bins, t = 0–6)") +
   healy_theme
 
@@ -115,7 +115,7 @@ p_im_nb_byorigin = ggplot(im_df_nb, aes(x = t, y = im, color = factor(cohort), g
   facet_wrap(~ origin, nrow = 1, labeller = labeller(origin = reltrad_labels_tc)) +
   scale_color_brewer(palette = "Dark2", name = "Birth cohort") +
   scale_x_continuous(breaks = 0:6) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)",
+  labs(x = "Step (t)", y = "log(TV distance from π∞)",
        title = "Individual Memory by Origin — Non-Black Sample (cohorts 1925–1984)") +
   healy_theme
 
@@ -184,7 +184,7 @@ for (key in names(nb$P)) {
                        "  (N all = ", all$n[[key]], "; N nb = ", nb$n[[key]], ")"),
     lim = lim)
   g_pi0  = plot_diff_col(delta_pi0,    title_str = "Δπ₀", lim = lim)
-  g_pist = plot_diff_col(delta_pistar, title_str = "Δπ*", lim = lim)
+  g_pist = plot_diff_col(delta_pistar, title_str = "Δπ∞", lim = lim)
 
   p_diff = patchwork::wrap_plots(g_mat, g_pi0, g_pist, widths = c(6, 1, 1))
   ggsave(paste0("output/figures/nonblack/diff_", key, "_10yr.png"),

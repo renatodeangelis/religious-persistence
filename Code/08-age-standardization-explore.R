@@ -158,7 +158,7 @@ plot_metric(res_fixed, "lambda2",   "λ₂ (second eigenvalue)",
             "output/figures/explore/age_std_lambda2_fixed.png")
 
 # ── TRANSITION-MATRIX HEATMAPS (make_combined, as in 05) ─────────────────────
-# Per-cohort P + π₀ + π* panels for the WIDE band, unstandardized (U) and
+# Per-cohort P + π₀ + π∞ panels for the WIDE band, unstandardized (U) and
 # age-standardized (S); plus a faceted P-heatmap grid so the cross-cohort change
 # is legible at a glance. Uses the wide band (39–49) — the reliable one.
 

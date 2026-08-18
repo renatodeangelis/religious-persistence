@@ -5,11 +5,11 @@
 #   OM   = 1 − Σᵢ m_{i,0} · Pᵢᵢ           (overall mobility)
 #   SM   = (1/2) Σᵢ |m_{i,0} − m_{i,1}|   (structural mobility)
 #   EM   = OM − SM                          (exchange mobility)
-#   SSM  = 1 − Σᵢ π*ᵢ · Pᵢᵢ               (steady-state mobility)
+#   SSM  = 1 − Σᵢ π∞ᵢ · Pᵢᵢ               (steady-state mobility)
 #   1−Pᵢᵢ per origin class                 (diagonal exit probability)
 #
 # overall_mobility(), sm(), and em() in utils.R implement these formulas directly;
-# SSM reuses overall_mobility() with π* substituted for the initial distribution.
+# SSM reuses overall_mobility() with π∞ substituted for the initial distribution.
 #
 # Input:  data/derived/matrices.rds  (national 10-year matrices)
 #         data/derived/gss_clean.rds  (5-year matrices built here)

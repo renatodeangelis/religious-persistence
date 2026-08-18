@@ -1,7 +1,7 @@
 # ── 11 · ROBUSTNESS: GSS SURVEY-PERIOD STRATIFICATION ────────────────────────
 # Stratifies the 5-state transition matrix by GSS *survey period* (not birth
 # cohort): five decade windows plus year-by-year diagonal persistence and
-# year-by-year implied stationary distribution π*. Oversample years (1982,
+# year-by-year implied stationary distribution π∞. Oversample years (1982,
 # 1987, 2022, 2024) are excluded upstream in 01 along with 1972 and 2021.
 #
 # Input:  data/derived/gss_clean.rds
@@ -102,7 +102,7 @@ im_df_gd$gss_decade = factor(im_df_gd$gss_decade, levels = decade_windows)
 
 dir.create("output/figures/gss-decade", recursive = TRUE, showWarnings = FALSE)
 
-# Heatmaps with π₀ and π*
+# Heatmaps with π₀ and π∞
 for (dw in names(P_list_gd)) {
   safe_dw = gsub("-", "_", dw)
   p = make_combined(
@@ -123,7 +123,7 @@ p_im_gd = ggplot(im_df_gd, aes(x = t, y = im, color = origin, group = origin)) +
   facet_wrap(~ gss_decade, nrow = 1) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_x_continuous(breaks = 0:4) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)", color = NULL,
+  labs(x = "Step (t)", y = "log(TV distance from π∞)", color = NULL,
        title = "Individual Memory by GSS Survey Period (5-state, t = 0–4)") +
   healy_theme
 
@@ -187,8 +187,8 @@ p_diag_year = ggplot(diag_year, aes(x = year, y = persistence, color = origin, g
 ggsave("output/figures/gss-decade/diagonal_persistence_by_year.png",
        p_diag_year, width = 10, height = 5, dpi = 200)
 
-# ── YEAR-BY-YEAR STATIONARY DISTRIBUTION (π*) ────────────────────────────────
-# π* is a whole-matrix property, so a year is dropped entirely if ANY origin
+# ── YEAR-BY-YEAR STATIONARY DISTRIBUTION (π∞) ────────────────────────────────
+# π∞ is a whole-matrix property, so a year is dropped entirely if ANY origin
 # has fewer than min_origin_n respondents (a thin row destabilizes the eigen).
 
 pistar_year = do.call(rbind, lapply(sort(unique(data_gd$year)), function(yr) {
@@ -214,14 +214,14 @@ p_pistar_year = ggplot(pistar_year, aes(x = year, y = pistar, color = origin, gr
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1),
                      labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = seq(1975, 2020, 5)) +
-  labs(x = "GSS survey year", y = "Stationary share (π*)", color = NULL,
-       title = "Year-by-Year Implied Stationary Distribution (π*) by Religion (5-state)") +
+  labs(x = "GSS survey year", y = "Stationary share (π∞)", color = NULL,
+       title = "Year-by-Year Implied Stationary Distribution (π∞) by Religion (5-state)") +
   healy_theme
 
 ggsave("output/figures/gss-decade/pistar_by_year.png",
        p_pistar_year, width = 10, height = 5, dpi = 200)
 
-# π* over GSS windows
+# π∞ over GSS windows
 pistar_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
   data.frame(gss_decade = dw, origin = names(pistar_list_gd[[dw]]),
              pistar = as.numeric(pistar_list_gd[[dw]]), row.names = NULL)
@@ -234,8 +234,8 @@ p_pistar_gd = ggplot(pistar_df_gd, aes(x = gss_decade, y = pistar, color = origi
   geom_point(size = 2.5) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
-  labs(x = "GSS survey period", y = "Stationary share (π*)", color = NULL,
-       title = "Implied Stationary Distribution (π*) by GSS Survey Period") +
+  labs(x = "GSS survey period", y = "Stationary share (π∞)", color = NULL,
+       title = "Implied Stationary Distribution (π∞) by GSS Survey Period") +
   healy_theme +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
@@ -279,7 +279,7 @@ p_grid_gd = ggplot(grid_df_gd, aes(current, origin, fill = p)) +
 ggsave("output/figures/gss-decade/P_grid_gss_decade.png", p_grid_gd,
        width = 12, height = 8, dpi = 200)
 
-# ── π₀ AND π* DISTRIBUTION GRID (5 GSS survey-period windows) ────────────────
+# ── π₀ AND π∞ DISTRIBUTION GRID (5 GSS survey-period windows) ────────────────
 
 dist_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
   pi0    = pi0_list_gd[[dw]]
@@ -287,7 +287,7 @@ dist_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
   rbind(
     data.frame(period = dw, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
-    data.frame(period = dw, measure = "π* (stationary)",
+    data.frame(period = dw, measure = "π∞ (stationary)",
                religion = names(pistar), value = as.numeric(pistar))
   )
 }))
@@ -295,7 +295,7 @@ dist_df_gd = do.call(rbind, lapply(names(P_list_gd), function(dw) {
 dist_df_gd$religion = factor(dist_df_gd$religion, levels = rel_level_order)
 dist_df_gd$period   = factor(dist_df_gd$period,   levels = decade_windows)
 dist_df_gd$measure  = factor(dist_df_gd$measure,
-                              levels = c("π₀  (origin)", "π* (stationary)"))
+                              levels = c("π₀  (origin)", "π∞ (stationary)"))
 
 p_dist_gd = ggplot(dist_df_gd, aes(y = religion, x = value, fill = religion)) +
   geom_col(width = 0.65) +
@@ -305,7 +305,7 @@ p_dist_gd = ggplot(dist_df_gd, aes(y = religion, x = value, fill = religion)) +
                      labels = c("0", ".25", ".5")) +
   scale_y_discrete(labels = reltrad_labels_tc) +
   labs(x = "Share", y = NULL,
-       title = "Origin (π₀) and stationary (π*) distributions by GSS survey period") +
+       title = "Origin (π₀) and stationary (π∞) distributions by GSS survey period") +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor   = element_blank(),

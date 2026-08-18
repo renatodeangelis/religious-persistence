@@ -1,7 +1,7 @@
 # ── 17 · DIFFERENCE FIGURES: NON-BLACK ────────────────────────────────────────
 # Figure 1: Difference matrix grid (P_nonblack − P_full) across 6 cohort windows,
 #           laid out like P_grid_national (facet_wrap, nrow = 2).
-# Figure 2: π₀ and π* dot-plot comparison, non-Black vs full sample,
+# Figure 2: π₀ and π∞ dot-plot comparison, non-Black vs full sample,
 #           facet_grid(measure ~ cohort).
 #
 # Input:  data/derived/matrices_nonblack.rds
@@ -107,7 +107,7 @@ ggsave("output/figures/nonblack/diff_grid_nonblack.png", p_diff_grid,
        width = 12, height = 9, dpi = 200)
 cat("Saved output/figures/nonblack/diff_grid_nonblack.png\n")
 
-# ── FIGURE 2: π₀ AND π* DOT-PLOT COMPARISON ──────────────────────────────────
+# ── FIGURE 2: π₀ AND π∞ DOT-PLOT COMPARISON ──────────────────────────────────
 
 pi_rows = list()
 
@@ -116,7 +116,7 @@ for (edge in edges) {
 
   clbl = cohort_lbl(edge)
 
-  for (measure in c("π₀  (origin)", "π* (stationary)")) {
+  for (measure in c("π₀  (origin)", "π∞ (stationary)")) {
     vec_nb  = if (measure == "π₀  (origin)") nb$pi0[[edge]]   else nb$pistar[[edge]]
     vec_all = if (measure == "π₀  (origin)") full$pi0[[edge]] else full$pistar[[edge]]
 
@@ -135,7 +135,7 @@ for (edge in edges) {
 pi_df         = do.call(rbind, pi_rows)
 pi_df$origin  = factor(pi_df$origin,  levels = rel_level_order)
 pi_df$cohort  = factor(pi_df$cohort,  levels = sapply(edges, cohort_lbl))
-pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π* (stationary)"))
+pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π∞ (stationary)"))
 pi_df$group   = factor(pi_df$group,   levels = c("Non-Black", "Full"))
 
 pi_wide = pi_df |>
@@ -160,7 +160,7 @@ p_pi_comp = ggplot() +
   scale_y_discrete(labels = reltrad_labels_tc) +
   labs(
     x = "Share", y = NULL,
-    title = "π₀ and π* by sample (non-Black vs full) and birth cohort (1925–1984)"
+    title = "π₀ and π∞ by sample (non-Black vs full) and birth cohort (1925–1984)"
   ) +
   healy_theme +
   theme(

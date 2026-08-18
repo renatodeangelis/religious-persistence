@@ -2,7 +2,7 @@
 # Figure 1 (×2): Binary difference matrix grid — 6 cohort windows, nrow = 2
 #   partyid_broad:  P_dem − P_rep   (excludes "other" from this figure only)
 #   polviews_broad: P_liberal − P_conservative  (excludes "moderate")
-# Figure 2 (×2): π₀ and π* dot-plot — all three groups per variable
+# Figure 2 (×2): π₀ and π∞ dot-plot — all three groups per variable
 #   partyid_broad:  dem / rep / other
 #   polviews_broad: liberal / moderate / conservative
 #
@@ -113,7 +113,7 @@ make_diff_grid = function(vname, grp_a, grp_b, title_str, legend_label, outfile)
   cat("Saved", outfile, "\n")
 }
 
-# ── FIGURE 2 HELPER: π₀ and π* dot-plot, all groups ──────────────────────────
+# ── FIGURE 2 HELPER: π₀ and π∞ dot-plot, all groups ──────────────────────────
 # Segments span min-to-max across groups for each origin × cohort × measure cell,
 # showing the full range without implying a specific pairwise comparison.
 
@@ -127,7 +127,7 @@ make_pi_plot = function(vname, groups, group_colors, group_shapes,
       key = paste(vname, grp, mid, sep = "_")
       if (is.null(pi0_pol[[key]])) next
 
-      for (measure in c("π₀  (origin)", "π* (stationary)")) {
+      for (measure in c("π₀  (origin)", "π∞ (stationary)")) {
         vec = if (measure == "π₀  (origin)") pi0_pol[[key]] else pistar_pol[[key]]
         pi_rows[[length(pi_rows) + 1]] = data.frame(
           cohort  = clbl,
@@ -145,7 +145,7 @@ make_pi_plot = function(vname, groups, group_colors, group_shapes,
   pi_df         = do.call(rbind, pi_rows)
   pi_df$origin  = factor(pi_df$origin,  levels = rel_level_order)
   pi_df$cohort  = factor(pi_df$cohort,  levels = sapply(mids, cohort_lbl))
-  pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π* (stationary)"))
+  pi_df$measure = factor(pi_df$measure, levels = c("π₀  (origin)", "π∞ (stationary)"))
   pi_df$group   = factor(pi_df$group,   levels = groups)
 
   # Segments: min-to-max range across all groups per origin × cohort × measure
@@ -216,7 +216,7 @@ make_pi_plot(
   group_colors = c(dem = "#0072B2", rep = "#D55E00", other = "#999999"),
   group_shapes = c(dem = 16, rep = 17, other = 15),
   group_labels = c(dem = "Democrat", rep = "Republican", other = "Other/Ind."),
-  title_str    = "π₀ and π* by party ID (broad) and birth cohort (1925–1984)",
+  title_str    = "π₀ and π∞ by party ID (broad) and birth cohort (1925–1984)",
   outfile      = "output/figures/political/pi_comparison_partyid_broad.png"
 )
 
@@ -228,7 +228,7 @@ make_pi_plot(
   group_colors = c(liberal = "#0072B2", moderate = "#999999", conservative = "#D55E00"),
   group_shapes = c(liberal = 16, moderate = 15, conservative = 17),
   group_labels = c(liberal = "Liberal", moderate = "Moderate", conservative = "Conservative"),
-  title_str    = "π₀ and π* by political views (broad) and birth cohort (1925–1984)",
+  title_str    = "π₀ and π∞ by political views (broad) and birth cohort (1925–1984)",
   outfile      = "output/figures/political/pi_comparison_polviews_broad.png"
 )
 
@@ -262,7 +262,7 @@ make_pi_plot(
   group_colors = c(dem = "#0072B2", rep = "#D55E00", other = "#999999"),
   group_shapes = c(dem = 16, rep = 17, other = 15),
   group_labels = c(dem = "Democrat", rep = "Republican", other = "Other/Ind."),
-  title_str    = "π₀ and π* by party ID (narrow) and birth cohort (1925–1984)",
+  title_str    = "π₀ and π∞ by party ID (narrow) and birth cohort (1925–1984)",
   outfile      = "output/figures/political/pi_comparison_partyid_narrow.png"
 )
 
@@ -274,6 +274,6 @@ make_pi_plot(
   group_colors = c(liberal = "#0072B2", moderate = "#999999", conservative = "#D55E00"),
   group_shapes = c(liberal = 16, moderate = 15, conservative = 17),
   group_labels = c(liberal = "Liberal", moderate = "Moderate", conservative = "Conservative"),
-  title_str    = "π₀ and π* by political views (narrow) and birth cohort (1925–1984)",
+  title_str    = "π₀ and π∞ by political views (narrow) and birth cohort (1925–1984)",
   outfile      = "output/figures/political/pi_comparison_polviews_narrow.png"
 )

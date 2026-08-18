@@ -4,7 +4,7 @@
 # Produces three figures parallel to the main 5-state national analysis:
 #   (1) P_grid: 7×7 heatmap grid (3 rows × 2 cols) by cohort
 #   (2) λ₂ trend with bootstrapped 95% CIs (250 replicates, seed 42)
-#   (3) π₀/π* distribution grid
+#   (3) π₀/π∞ distribution grid
 #
 # Input:  data/derived/gss_clean.rds
 # Output: output/figures/7state/*.png
@@ -209,7 +209,7 @@ p_l2_7 = ggplot(boot_df_7, aes(x = cohort, y = l2, group = 1)) +
 ggsave("output/figures/7state/lambda2_trend_7state_10yr.png", p_l2_7,
        width = 8, height = 5, dpi = 200)
 
-# ── FIGURE 3: π₀ AND π* DISTRIBUTION GRID ────────────────────────────────────
+# ── FIGURE 3: π₀ AND π∞ DISTRIBUTION GRID ────────────────────────────────────
 
 dist_df_7 = do.call(rbind, lapply(seq_along(mids_10), function(i) {
   mid    = mids_10[i]
@@ -221,7 +221,7 @@ dist_df_7 = do.call(rbind, lapply(seq_along(mids_10), function(i) {
   rbind(
     data.frame(mid = mid, cohort = cohort_lbl, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
-    data.frame(mid = mid, cohort = cohort_lbl, measure = "π* (stationary)",
+    data.frame(mid = mid, cohort = cohort_lbl, measure = "π∞ (stationary)",
                religion = names(pistar), value = as.numeric(pistar))
   )
 }))
@@ -230,7 +230,7 @@ dist_df_7$religion = factor(dist_df_7$religion, levels = rel_level_order_7)
 dist_df_7$cohort   = factor(dist_df_7$cohort,
   levels = paste0(mids_10 - 5, "–", sprintf("%02d", (mids_10 + 4) %% 100)))
 dist_df_7$measure  = factor(dist_df_7$measure,
-  levels = c("π₀  (origin)", "π* (stationary)"))
+  levels = c("π₀  (origin)", "π∞ (stationary)"))
 
 p_dist_grid_7 = ggplot(dist_df_7, aes(y = religion, x = value, fill = religion)) +
   geom_col(width = 0.65) +
@@ -240,7 +240,7 @@ p_dist_grid_7 = ggplot(dist_df_7, aes(y = religion, x = value, fill = religion))
                      labels = c("0", ".25", ".5")) +
   scale_y_discrete(labels = reltrad_labels_7) +
   labs(x = "Share", y = NULL,
-       title = "Origin (π₀) and stationary (π*) distributions by birth cohort (7-state)") +
+       title = "Origin (π₀) and stationary (π∞) distributions by birth cohort (7-state)") +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor   = element_blank(),
@@ -264,6 +264,6 @@ cat("\nSaved all 7-state figures to output/figures/7state/\n")
 #   missingness is introduced relative to the 5-state analysis.
 # - λ₂ is computed on the point-estimate matrix; bootstrapped CIs reflect sampling
 #   variance only, not thin-cell instability in Jewish or Black Protestant rows.
-# - π* is the implied long-run distribution under each cohort-specific regime
-#   (conditional summary, not a population forecast); thin-cell rows make π*
+# - π∞ is the implied long-run distribution under each cohort-specific regime
+#   (conditional summary, not a population forecast); thin-cell rows make π∞
 #   less reliable for the jewish state, especially in early cohorts.

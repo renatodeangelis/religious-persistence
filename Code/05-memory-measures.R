@@ -83,7 +83,7 @@ p_im = ggplot(im_df_10 |> filter(cohort %in% mids_im), aes(x = t, y = im, color 
   facet_wrap(~ cohort_label, nrow = 2) +
   scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc) +
   scale_x_continuous(breaks = 0:4) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)",
+  labs(x = "Step (t)", y = "log(TV distance from π∞)",
        color = NULL, title = "Individual Memory by Birth Cohort (t = 0–4)") +
   healy_theme
 
@@ -178,10 +178,12 @@ grid_df$cohort  = factor(grid_df$cohort,
 
 p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
   geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
-  facet_wrap(~ cohort, nrow = 2) +
+  geom_text(aes(label = sprintf("%.2f", p)), size = 3.0) +
+  facet_wrap(~ cohort, nrow = 3) +
   scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1), name = "P[i→j]") +
-  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)") +
+  scale_x_discrete(labels = tools::toTitleCase) +
+  scale_y_discrete(labels = tools::toTitleCase) +
+  labs(x = "Current religion (RELIG)", y = "Religion of origin (RELIG16)") +
   theme_bw(base_size = 10) +
   theme(
     axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
@@ -194,9 +196,9 @@ p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
   )
 
 ggsave("output/figures/P_grid_national_10yr.png", p_grid_national,
-       width = 12, height = 9, dpi = 200)
+       width = 6.5, height = 9, dpi = 300)
 
-# ── π₀ AND π* DISTRIBUTION GRID (10-year cohorts, 1935–1994) ─────────────────
+# ── π₀ AND π∞ DISTRIBUTION GRID (10-year cohorts, 1935–1994) ─────────────────
 # Two companions to the matrix grid above. The grid figure (facet_grid) shows
 # the bar-chart layout cohort-by-cohort; the line figure shows the trend across
 # cohorts for each religion — more useful for reading the narrative.
@@ -210,7 +212,7 @@ dist_df = do.call(rbind, lapply(mids_grid, function(mid) {
   rbind(
     data.frame(mid = mid, cohort = cohort_lbl, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
-    data.frame(mid = mid, cohort = cohort_lbl, measure = "π* (stationary)",
+    data.frame(mid = mid, cohort = cohort_lbl, measure = "π∞ (stationary)",
                religion = names(pistar), value = as.numeric(pistar))
   )
 }))
@@ -219,34 +221,36 @@ dist_df$religion = factor(dist_df$religion, levels = rel_level_order)
 dist_df$cohort   = factor(dist_df$cohort,
                            levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100)))
 dist_df$measure  = factor(dist_df$measure,
-                           levels = c("π₀  (origin)", "π* (stationary)"))
+                           levels = c("π₀  (origin)", "π∞ (stationary)"))
 
-# Grid version: facet_grid(measure × cohort), one bar chart per cell.
-# coord_flip() keeps religion labels horizontal and readable at small size.
-p_dist_grid = ggplot(dist_df, aes(y = religion, x = value, fill = religion)) +
-  geom_col(width = 0.65) +
-  facet_grid(measure ~ cohort) +
-  scale_fill_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
-  scale_x_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
-                     labels = c("0", ".25", ".5")) +
-  scale_y_discrete(labels = reltrad_labels_tc) +
-  labs(x = "Share", y = NULL) +
+# Line version: one line per religion across cohort windows, faceted by measure.
+# More compact than the bar-chart grid and easier to read at textwidth.
+p_dist_grid = ggplot(dist_df, aes(x = mid, y = value, color = religion, group = religion)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  facet_wrap(~ measure, ncol = 1) +
+  scale_color_manual(values = reltrad_colors, labels = reltrad_labels_tc, name = NULL) +
+  scale_x_continuous(breaks = mids_grid,
+                     labels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100))) +
+  scale_y_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
+                     labels = c("0", "0.25", "0.50")) +
+  labs(x = "Birth cohort", y = "Share") +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor  = element_blank(),
-    panel.grid.major.y = element_blank(),
-    legend.position   = "none",
+    legend.position   = "bottom",
+    legend.text       = element_text(size = 9),
     strip.background  = element_rect(fill = "grey92", color = NA),
-    strip.text        = element_text(size = 8),
+    strip.text        = element_text(size = 10),
+    axis.text.x       = element_text(angle = 30, hjust = 1, size = 8),
     axis.text.y       = element_text(size = 8),
-    axis.text.x       = element_text(size = 7),
     plot.caption      = element_text(size = 8, color = "grey50")
   )
 
 ggsave("output/figures/pi_dist_grid_10yr.png", p_dist_grid,
-       width = 14, height = 5, dpi = 200)
+       width = 6.5, height = 5.5, dpi = 300)
 
-# ── FERTILITY-ADJUSTED π* ─────────────────────────────────────────────────────
+# ── FERTILITY-ADJUSTED π∞ ─────────────────────────────────────────────────────
 
 f_list           = matrices$fertility
 pistar_fert_list = Filter(Negate(is.null), setNames(
@@ -282,10 +286,10 @@ p_pistar_diff = ggplot(pistar_diff_df, aes(x = cohort, y = religion, fill = diff
   geom_text(aes(label = sprintf("%+.3f", diff)), size = 3.5) +
   scale_fill_distiller(palette = "RdBu", direction = -1,
                        limits = c(-diff_limit, diff_limit),
-                       name = "π*_f − π*") +
+                       name = "π∞_f − π∞") +
   scale_y_discrete(labels = reltrad_labels_tc) +
   labs(x = NULL, y = NULL,
-       title = "Fertility adjustment: π*_f − π* by birth cohort") +
+       title = "Fertility adjustment: π∞_f − π∞ by birth cohort") +
   theme_bw(base_size = 11) +
   theme(axis.text.x    = element_text(angle = 45, hjust = 1, size = 10),
         axis.text.y    = element_text(size = 10),
@@ -318,10 +322,10 @@ p_pistar_fert_vec = ggplot(pistar_fert_df, aes(x = cohort, y = religion, fill = 
   geom_tile(color = "white", linewidth = 0.5, width = 0.7) +
   geom_text(aes(label = sprintf("%.3f", value)), size = 3.5) +
   scale_fill_distiller(palette = "Blues", direction = 1,
-                       limits = c(0, 1), name = "π*_f") +
+                       limits = c(0, 1), name = "π∞_f") +
   scale_y_discrete(labels = reltrad_labels_tc) +
   labs(x = NULL, y = NULL,
-       title = "Fertility-adjusted stationary distribution (π*_f) by birth cohort") +
+       title = "Fertility-adjusted stationary distribution (π∞_f) by birth cohort") +
   theme_bw(base_size = 11) +
   theme(axis.text.x    = element_text(angle = 45, hjust = 1, size = 10),
         axis.text.y    = element_text(size = 10),

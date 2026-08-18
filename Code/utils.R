@@ -48,7 +48,7 @@ pi_0 = function(data, origin) {
   v
 }
 
-# Stationary distribution (π*): left eigenvector of P corresponding to eigenvalue 1.
+# Stationary distribution (π∞): left eigenvector of P corresponding to eigenvalue 1.
 pi_star = function(P) {
   eig = eigen(t(as.matrix(P)))
   v = Re(eig$vectors[, which.min(abs(eig$values - 1))])
@@ -122,7 +122,7 @@ shannon_entropy = function(mu) {
 
 # ── MEMORY MEASURES ──────────────────────────────────────────────────────────
 
-# Individual memory (IM): log TV distance from π* for each origin state at step t.
+# Individual memory (IM): log TV distance from π∞ for each origin state at step t.
 im = function(data, origin, current, t = 1) {
   P_mat = p_matrix(data, origin, current)
   pi_s  = pi_star(P_mat)
@@ -225,7 +225,7 @@ make_combined = function(P, pi0, pistar, levels = NULL, title_str = "P", text_si
              theme(axis.text.y = element_blank(), axis.title.y = element_blank())
   g0     = plot_pi_column(pi0,    title_str = "π₀", levels = levels, text_size = text_size) +
              theme(axis.text.y = element_text(size = 11))
-  g_star = plot_pi_column(pistar, title_str = "π*", levels = levels, text_size = text_size)
+  g_star = plot_pi_column(pistar, title_str = "π∞", levels = levels, text_size = text_size)
   patchwork::wrap_plots(g0, g, g_star, widths = c(1, 6, 1))
 }
 

@@ -200,7 +200,7 @@ p_l2_7 = ggplot(boot_df_7, aes(x = cohort, y = l2, group = 1)) +
 ggsave("output/figures/7state-drop2224/lambda2_trend_7state_10yr.png", p_l2_7,
        width = 8, height = 5, dpi = 200)
 
-# ── FIGURE 3: π₀ AND π* DISTRIBUTION GRID ────────────────────────────────────
+# ── FIGURE 3: π₀ AND π∞ DISTRIBUTION GRID ────────────────────────────────────
 
 dist_df_7 = do.call(rbind, lapply(seq_along(mids_10), function(i) {
   mid    = mids_10[i]
@@ -212,7 +212,7 @@ dist_df_7 = do.call(rbind, lapply(seq_along(mids_10), function(i) {
   rbind(
     data.frame(mid = mid, cohort = cohort_lbl, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
-    data.frame(mid = mid, cohort = cohort_lbl, measure = "π* (stationary)",
+    data.frame(mid = mid, cohort = cohort_lbl, measure = "π∞ (stationary)",
                religion = names(pistar), value = as.numeric(pistar))
   )
 }))
@@ -221,7 +221,7 @@ dist_df_7$religion = factor(dist_df_7$religion, levels = rel_level_order_7)
 dist_df_7$cohort   = factor(dist_df_7$cohort,
   levels = paste0(mids_10 - 5, "–", sprintf("%02d", (mids_10 + 4) %% 100)))
 dist_df_7$measure  = factor(dist_df_7$measure,
-  levels = c("π₀  (origin)", "π* (stationary)"))
+  levels = c("π₀  (origin)", "π∞ (stationary)"))
 
 p_dist_grid_7 = ggplot(dist_df_7, aes(y = religion, x = value, fill = religion)) +
   geom_col(width = 0.65) +
@@ -231,7 +231,7 @@ p_dist_grid_7 = ggplot(dist_df_7, aes(y = religion, x = value, fill = religion))
                      labels = c("0", ".25", ".5")) +
   scale_y_discrete(labels = reltrad_labels_7) +
   labs(x = "Share", y = NULL,
-       title = "Origin (π₀) and stationary (π*) distributions by birth cohort (7-state; 2022 & 2024 excluded)") +
+       title = "Origin (π₀) and stationary (π∞) distributions by birth cohort (7-state; 2022 & 2024 excluded)") +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor   = element_blank(),

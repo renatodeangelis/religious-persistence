@@ -211,7 +211,7 @@ p_im_bp10 = ggplot(im_df_bp10, aes(x = t, y = im, color = origin, group = origin
              labeller = labeller(cohort = function(x) paste0(x, "–", sprintf("%02d", (as.integer(x) + 9) %% 100)))) +
   scale_color_manual(values = reltrad_colors_6, labels = reltrad_labels_6) +
   scale_x_continuous(breaks = 0:4) +
-  labs(x = "Step (t)", y = "log(TV distance from π*)", color = NULL,
+  labs(x = "Step (t)", y = "log(TV distance from π∞)", color = NULL,
        title = "Individual Memory by Cohort — 6-State Space (10-year bins, 1925–1984)") +
   healy_theme
 
@@ -277,7 +277,7 @@ p_grid_bp = ggplot(grid_df_bp, aes(current, origin, fill = p)) +
 ggsave("output/figures/bp/P_grid_bp_10yr.png", p_grid_bp,
        width = 14, height = 10, dpi = 200)
 
-# ── π₀ AND π* DISTRIBUTION GRID (6-state, 10-year cohorts, 1925–1984) ─────────
+# ── π₀ AND π∞ DISTRIBUTION GRID (6-state, 10-year cohorts, 1925–1984) ─────────
 
 dist_df_bp = do.call(rbind, lapply(edges_bp, function(key) {
   pi0    = bp10$pi0[[key]]
@@ -287,7 +287,7 @@ dist_df_bp = do.call(rbind, lapply(edges_bp, function(key) {
   rbind(
     data.frame(cohort = cohort_lbl, measure = "π₀  (origin)",
                religion = names(pi0),    value = as.numeric(pi0)),
-    data.frame(cohort = cohort_lbl, measure = "π* (stationary)",
+    data.frame(cohort = cohort_lbl, measure = "π∞ (stationary)",
                religion = names(pistar), value = as.numeric(pistar))
   )
 }))
@@ -296,7 +296,7 @@ dist_df_bp$religion = factor(dist_df_bp$religion, levels = rel_level_order_6)
 dist_df_bp$cohort   = factor(dist_df_bp$cohort,
   levels = paste0(edges_bp, "–", sprintf("%02d", (as.integer(edges_bp) + 9) %% 100)))
 dist_df_bp$measure  = factor(dist_df_bp$measure,
-  levels = c("π₀  (origin)", "π* (stationary)"))
+  levels = c("π₀  (origin)", "π∞ (stationary)"))
 
 p_dist_grid_bp = ggplot(dist_df_bp, aes(y = religion, x = value, fill = religion)) +
   geom_col(width = 0.65) +
@@ -306,7 +306,7 @@ p_dist_grid_bp = ggplot(dist_df_bp, aes(y = religion, x = value, fill = religion
                      labels = c("0", ".25", ".5")) +
   scale_y_discrete(labels = reltrad_labels_6) +
   labs(x = "Share", y = NULL,
-       title = "Origin (π₀) and stationary (π*) distributions by birth cohort — 6-State Space") +
+       title = "Origin (π₀) and stationary (π∞) distributions by birth cohort — 6-State Space") +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor   = element_blank(),
