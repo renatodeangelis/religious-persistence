@@ -9,9 +9,9 @@ library(dplyr)
 library(ggplot2)
 source("code/utils.R")
 
-clean      = readRDS("data/derived/gss_clean.rds")
-data       = clean$data
-states_alt = clean$states_alt
+clean     = readRDS("data/derived/gss_clean.rds")
+data      = clean$data
+states_bp = clean$states_bp
 
 lambda2 = function(P) sort(Mod(eigen(P)$values), decreasing = TRUE)[2]
 
@@ -23,17 +23,17 @@ set.seed(42)
 
 boot_rows = lapply(mids, function(mid) {
   sub = data[!is.na(data$cohort_10) & data$cohort_10 == mid &
-             !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+             !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
 
   P_obs  = suppressWarnings(
-    p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+    p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
   )
   l2_obs = lambda2(P_obs)
 
   l2_boot = replicate(n_boot, {
     idx = sample(nrow(sub), replace = TRUE)
     P_b = suppressWarnings(
-      p_matrix(sub[idx, ], "reltrad16_alt", "reltrad_alt", levels = states_alt)
+      p_matrix(sub[idx, ], "reltrad16_bp", "reltrad_bp", levels = states_bp)
     )
     lambda2(P_b)
   })

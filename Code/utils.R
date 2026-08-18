@@ -6,8 +6,8 @@ library(dplyr)
 # Config used across the split pipeline (01–12). Data-derived constants such as
 # `states_alt` live in gss_clean.rds instead, because they depend on the data.
 
-# Column order for the 5-state scheme in every figure and homogeneity test.
-rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
+# Column order for the 6-state scheme in every figure and homogeneity test.
+rel_level_order = c("catholic", "evangelical", "black protestant", "mainline", "other", "none")
 
 # Shared Healy theme (theme_bw + Okabe-Ito palette conventions)
 healy_theme = theme_bw(base_size = 12) +
@@ -62,7 +62,7 @@ pi_star = function(P) {
 # in religion i, regardless of where those children end up.
 #
 # Arguments:
-#   P        — named 5×5 row-stochastic transition matrix
+#   P        — named 6×6 row-stochastic transition matrix
 #   f        — named numeric vector, length 5, all > 0; need not sum to 1
 #   pi0      — starting distribution; defaults to uniform
 #   tol      — convergence threshold (max absolute change per element)

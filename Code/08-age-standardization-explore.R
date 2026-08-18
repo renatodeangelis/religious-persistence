@@ -31,7 +31,7 @@ lambda2 = function(P) sort(Mod(eigen(P)$values), decreasing = TRUE)[2]
 # Weighted row-stochastic transition matrix. w defaults to 1 (unweighted).
 wp_matrix = function(df, w = NULL, levels = S) {
   if (is.null(w)) w = rep(1, nrow(df))
-  N = xtabs(w ~ factor(df$reltrad16_alt, levels) + factor(df$reltrad_alt, levels))
+  N = xtabs(w ~ factor(df$reltrad16_bp, levels) + factor(df$reltrad_bp, levels))
   N = matrix(as.numeric(N), length(levels), length(levels), dimnames = list(levels, levels))
   list(P = N / rowSums(N), pi0 = rowSums(N) / sum(N), N = N)
 }
@@ -50,8 +50,8 @@ d = gss_all |>
   mutate(across(c(reltrad, reltrad16), ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
   mutate(across(c(reltrad, reltrad16),
-    ~ case_when(. == "jewish" ~ "other", . == "black protestant" ~ "evangelical", TRUE ~ .),
-    .names = "{.col}_alt")) |>
+    ~ if_else(. == "jewish", "other", .),
+    .names = "{.col}_bp")) |>
   mutate(cohort = as.numeric(cohort), age = year - cohort) |>
   filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984)
 d = as.data.frame(d)

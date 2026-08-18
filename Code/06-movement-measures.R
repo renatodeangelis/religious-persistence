@@ -18,26 +18,28 @@
 source("code/utils.R")
 
 matrices   = readRDS("data/derived/matrices.rds")
-clean      = readRDS("data/derived/gss_clean.rds")
-data       = clean$data
-states_alt = clean$states_alt
+clean     = readRDS("data/derived/gss_clean.rds")
+data      = clean$data
+states_bp = clean$states_bp
 
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
 
 # Okabe-Ito palette — same keys and values as in 05-memory-measures.R
 reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
+  catholic           = "#0072B2",
+  evangelical        = "#D55E00",
+  `black protestant` = "#56B4E9",
+  mainline           = "#009E73",
+  other              = "#CC79A7",
+  none               = "#999999"
 )
 reltrad_labels_tc = c(
-  catholic    = "Catholic",
-  evangelical = "Evangelical",
-  mainline    = "Mainline",
-  other       = "Other",
-  none        = "None"
+  catholic           = "Catholic",
+  evangelical        = "Evangelical",
+  `black protestant` = "Black Protestant",
+  mainline           = "Mainline",
+  other              = "Other",
+  none               = "None"
 )
 
 dir.create("output/figures/movement", recursive = TRUE, showWarnings = FALSE)
@@ -97,13 +99,13 @@ pistar_list_5 = list()
 
 for (coh in cohorts_5) {
   sub = data[!is.na(data$cohort_5) & data$cohort_5 == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+               !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
   if (nrow(sub) < 30) next
   key = as.character(coh)
   P_list_5[[key]]      = suppressWarnings(
-    p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+    p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
   )
-  pi0_list_5[[key]]    = pi_0(sub, "reltrad16_alt")
+  pi0_list_5[[key]]    = pi_0(sub, "reltrad16_bp")
   pistar_list_5[[key]] = pi_star(P_list_5[[key]])
 }
 

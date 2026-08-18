@@ -125,17 +125,17 @@ p_roll = ggplot(roll_results, aes(x = center, y = p_value,
 
 clean_5yr  = readRDS("data/derived/gss_clean.rds")
 data_5yr   = clean_5yr$data
-states_5yr = clean_5yr$states_alt
+states_5yr = clean_5yr$states_bp
 
 data_5yr$cohort_5 = (floor((data_5yr$cohort - 1925) / 5) * 5 + 1925) + 2
 mids_5 = sort(unique(data_5yr$cohort_5[!is.na(data_5yr$cohort_5)]))
 
 N_list_5 = list()
 for (mid in mids_5) {
-  sub = data_5yr[!is.na(data_5yr$cohort_5)    & data_5yr$cohort_5      == mid &
-                   !is.na(data_5yr$reltrad16_alt) & !is.na(data_5yr$reltrad_alt), ]
+  sub = data_5yr[!is.na(data_5yr$cohort_5)   & data_5yr$cohort_5     == mid &
+                   !is.na(data_5yr$reltrad16_bp) & !is.na(data_5yr$reltrad_bp), ]
   if (nrow(sub) < 30) next
-  N_list_5[[as.character(mid)]] = count_matrix(sub, "reltrad16_alt", "reltrad_alt",
+  N_list_5[[as.character(mid)]] = count_matrix(sub, "reltrad16_bp", "reltrad_bp",
                                                levels = states_5yr)
 }
 
@@ -261,7 +261,8 @@ homog_tex = c(
   "transition probabilities out of each origin state are constant across birth cohorts",
   "(Anderson and Goodman 1957). The \\textit{All} column pools every 10-year cohort; each",
   "remaining column compares two successive cohort decades, localizing when the matrix",
-  paste0("shifts. Each origin-state test has df $= (s-1)(T-1)$ --- 4 for the pairwise columns and ",
+  paste0("shifts. Each origin-state test has df $= (s-1)(T-1)$ --- ", length(rel_level_order) - 1L,
+         " for the pairwise columns and ",
          df_all, " for \\textit{All} --- reduced where a pooled destination cell is empty; the"),
   "Joint row sums $\\chi^2$ and df across origins. Because each cohort matrix is an independent",
   "GSS cross-section, these are tests of homogeneity across cohorts. The pairwise columns",

@@ -3,9 +3,10 @@
 # with every derived column (reltrad recodes, cohort bins, party/polviews
 # binaries), and the state space.
 #
-# Output: data/derived/gss_clean.rds — a list(data, states_alt) consumed by the
-# estimation script (02) and every analysis script that recomputes matrices at
-# 1-year resolution (03, 05, 06, 07).
+# Output: data/derived/gss_clean.rds — a list(data, states_bp, states_alt)
+# consumed by the estimation script (02) and every analysis script that
+# recomputes matrices at 1-year resolution (03, 05, 06, 07). states_bp is the
+# primary 6-state scheme; states_alt is retained for robustness scripts only.
 
 library(dplyr)
 library(tidyr)
@@ -22,7 +23,7 @@ data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
          race, polviews, partyid, sibs_7222, childs) |>
-  filter(!(year %in% c(1972, 1982, 1987, 2021))) |>
+  filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>

@@ -29,7 +29,7 @@ lambda2 = function(P) sort(Mod(eigen(P)$values), decreasing = TRUE)[2]
 
 # transition matrix + π₀ from a subframe
 pm = function(df, levels = S) {
-  N = table(factor(df$reltrad16_alt, levels), factor(df$reltrad_alt, levels))
+  N = table(factor(df$reltrad16_bp, levels), factor(df$reltrad_bp, levels))
   N = matrix(as.numeric(N), length(levels), length(levels), dimnames = list(levels, levels))
   list(P = N / rowSums(N), pi0 = rowSums(N) / sum(N), N = N)
 }
@@ -46,8 +46,8 @@ d = gss_all |>
   mutate(across(c(reltrad, reltrad16), ~ reltrad_labels[as.character(as.numeric(.))])) |>
   filter(!is.na(reltrad), !is.na(reltrad16)) |>
   mutate(across(c(reltrad, reltrad16),
-    ~ case_when(. == "jewish" ~ "other", . == "black protestant" ~ "evangelical", TRUE ~ .),
-    .names = "{.col}_alt")) |>
+    ~ if_else(. == "jewish", "other", .),
+    .names = "{.col}_bp")) |>
   mutate(cohort = as.numeric(cohort), age = year - cohort) |>
   filter(age >= 30, age <= 75, cohort >= 1925, cohort <= 1984)
 d = as.data.frame(d)
@@ -225,10 +225,10 @@ fit_focal = function(sub, ylab) {
   sub$cohf = factor(sub$coh); sub$perf = factor(sub$per)
   glm(y ~ ns(age, 4) + cohf + perf, data = sub, family = binomial())
 }
-leave_sub  = d[d$reltrad16_alt != "none", ]
-return_sub = d[d$reltrad16_alt == "none", ]
-fit_leave  = fit_focal(leave_sub,  function(x) as.integer(x$reltrad_alt == "none"))
-fit_return = fit_focal(return_sub, function(x) as.integer(x$reltrad_alt != "none"))
+leave_sub  = d[d$reltrad16_bp != "none", ]
+return_sub = d[d$reltrad16_bp == "none", ]
+fit_leave  = fit_focal(leave_sub,  function(x) as.integer(x$reltrad_bp == "none"))
+fit_return = fit_focal(return_sub, function(x) as.integer(x$reltrad_bp != "none"))
 
 cat("\n==== PART C: estimable cohort curvature (Δ²) — 'leaving religion' logit ====\n")
 sd_leave_c = second_diff(fit_leave, "cohf"); print(round(sd_leave_c, 3), row.names = FALSE)
@@ -257,7 +257,7 @@ ggsave("output/figures/explore/apc/curvature_contrasts.png",
 if (requireNamespace("lme4", quietly = TRUE)) {
   cat("\n==== PART D: HAPC cross-classified random effects (leaving logit) ====\n")
   m = lme4::glmer(y ~ ns(age, 3) + (1 | cohf) + (1 | perf),
-                  data = transform(leave_sub, y = as.integer(reltrad_alt == "none"),
+                  data = transform(leave_sub, y = as.integer(reltrad_bp == "none"),
                                    cohf = factor(coh), perf = factor(per)),
                   family = binomial())
   vc = as.data.frame(lme4::VarCorr(m))

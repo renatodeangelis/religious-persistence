@@ -13,9 +13,9 @@
 
 source("code/utils.R")
 
-clean      = readRDS("data/derived/gss_clean.rds")
-data       = clean$data
-states_alt = clean$states_alt
+clean     = readRDS("data/derived/gss_clean.rds")
+data      = clean$data
+states_bp = clean$states_bp
 
 # ── NATIONAL COHORT MATRICES ─────────────────────────────────────────────────
 
@@ -29,14 +29,14 @@ N_list_10      = list()   # raw count matrices feeding the homogeneity test (04)
 
 for (coh in cohorts_10) {
   sub = data[!is.na(data$cohort_10) & data$cohort_10 == coh &
-               !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+               !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
   if (nrow(sub) < 30) next
   key = as.character(coh)
 
-  P_list_10[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-  pi0_list_10[[key]]    = pi_0(sub, "reltrad16_alt")
+  P_list_10[[key]]      = p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
+  pi0_list_10[[key]]    = pi_0(sub, "reltrad16_bp")
   pistar_list_10[[key]] = pi_star(P_list_10[[key]])
-  N_list_10[[key]]      = count_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
+  N_list_10[[key]]      = count_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
 }
 
 # ── NATIVITY-SPLIT MATRICES (10-year cohorts: 1930–1980) ─────────────────────
@@ -52,14 +52,14 @@ n_list_nat      = list()
 for (nat in nativity_groups) {
   for (coh in cohorts_nat) {
     sub = data[
-      !is.na(data$cohort_10)     & data$cohort_10 == coh &
-      !is.na(data$nativity)      & data$nativity   == nat &
-      !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+      !is.na(data$cohort_10)    & data$cohort_10 == coh &
+      !is.na(data$nativity)     & data$nativity   == nat &
+      !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
     if (nrow(sub) < 30) next
     key = paste(gsub(" ", "_", nat), coh, sep = "_")
 
-    P_list_nat[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-    pi0_list_nat[[key]]    = pi_0(sub, "reltrad16_alt")
+    P_list_nat[[key]]      = p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
+    pi0_list_nat[[key]]    = pi_0(sub, "reltrad16_bp")
     pistar_list_nat[[key]] = pi_star(P_list_nat[[key]])
     n_list_nat[[key]]      = nrow(sub)
   }
@@ -78,14 +78,14 @@ n_list_sex      = list()
 for (sx in c(1, 2)) {
   for (coh in cohorts_sex) {
     sub = data[
-      !is.na(data$cohort_10)     & data$cohort_10         == coh &
-      !is.na(data$sex)           & as.numeric(data$sex)   == sx  &
-      !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+      !is.na(data$cohort_10)    & data$cohort_10         == coh &
+      !is.na(data$sex)          & as.numeric(data$sex)   == sx  &
+      !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
     if (nrow(sub) < 30) next
     key = paste(sex_labels[as.character(sx)], coh, sep = "_")
 
-    P_list_sex[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-    pi0_list_sex[[key]]    = pi_0(sub, "reltrad16_alt")
+    P_list_sex[[key]]      = p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
+    pi0_list_sex[[key]]    = pi_0(sub, "reltrad16_bp")
     pistar_list_sex[[key]] = pi_star(P_list_sex[[key]])
     n_list_sex[[key]]      = nrow(sub)
   }
@@ -111,13 +111,13 @@ for (vname in names(pol_vars)) {
   for (grp in pol_vars[[vname]]) {
     for (coh in cohorts_pol) {
       sub = data[
-        !is.na(data$cohort_10)     & data$cohort_10 == coh &
-        !is.na(data[[vname]])      & data[[vname]]  == grp &
-        !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt), ]
+        !is.na(data$cohort_10)    & data$cohort_10 == coh &
+        !is.na(data[[vname]])     & data[[vname]]  == grp &
+        !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
       if (nrow(sub) < 30) next
       key = paste(vname, grp, coh, sep = "_")
-      P_list_pol[[key]]      = p_matrix(sub, "reltrad16_alt", "reltrad_alt", levels = states_alt)
-      pi0_list_pol[[key]]    = pi_0(sub, "reltrad16_alt")
+      P_list_pol[[key]]      = p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
+      pi0_list_pol[[key]]    = pi_0(sub, "reltrad16_bp")
       pistar_list_pol[[key]] = pi_star(P_list_pol[[key]])
       n_list_pol[[key]]      = nrow(sub)
     }
@@ -133,9 +133,9 @@ for (vname in names(pol_vars)) {
 
 fertility_raw = data |>
   filter(sex == 2, age >= 40) |>
-  filter(!is.na(childs), !is.na(reltrad_alt)) |>
+  filter(!is.na(childs), !is.na(reltrad_bp)) |>
   mutate(childs = as.numeric(childs)) |>
-  group_by(cohort_10, reltrad_alt) |>
+  group_by(cohort_10, reltrad_bp) |>
   summarise(mean_childs = mean(childs, na.rm = TRUE),
             n           = n(),
             .groups     = "drop")
@@ -150,7 +150,7 @@ if (nrow(thin) > 0) {
 f_list = fertility_raw |>
   split(~cohort_10) |>
   lapply(function(df) {
-    v = setNames(df$mean_childs, df$reltrad_alt)
+    v = setNames(df$mean_childs, df$reltrad_bp)
     v[rel_level_order]   # reorders to match rel_level_order; NA if a cell is missing
   })
 

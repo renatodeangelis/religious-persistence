@@ -10,9 +10,9 @@
 source("code/utils.R")
 
 matrices   = readRDS("data/derived/matrices.rds")
-clean      = readRDS("data/derived/gss_clean.rds")
-data       = clean$data
-states_alt = clean$states_alt
+clean     = readRDS("data/derived/gss_clean.rds")
+data      = clean$data
+states_bp = clean$states_bp
 
 P_list_10      = matrices$nat10$P
 pi0_list_10    = matrices$nat10$pi0
@@ -51,18 +51,20 @@ for (key in names(P_list_10)) {
 
 # Okabe-Ito palette (Healy) — lowercase keys match rel_level_order
 reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
+  catholic           = "#0072B2",
+  evangelical        = "#D55E00",
+  `black protestant` = "#56B4E9",
+  mainline           = "#009E73",
+  other              = "#CC79A7",
+  none               = "#999999"
 )
 reltrad_labels_tc = c(
-  catholic    = "Catholic",
-  evangelical = "Evangelical",
-  mainline    = "Mainline",
-  other       = "Other",
-  none        = "None"
+  catholic           = "Catholic",
+  evangelical        = "Evangelical",
+  `black protestant` = "Black Protestant",
+  mainline           = "Mainline",
+  other              = "Other",
+  none               = "None"
 )
 
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
@@ -148,7 +150,7 @@ p_entropy = ggplot(entropy_long, aes(x = cohort, y = entropy,
 
 ggsave("output/figures/shannon_entropy_10yr.png", p_entropy, width = 8, height = 5, dpi = 200)
 
-# ── TRANSITION MATRIX GRID (10-year cohorts, 1935–1984) ──────────────────────
+# ── TRANSITION MATRIX GRID (10-year cohorts, 1925–1984) ──────────────────────
 # Five panels in one figure: one column per birth cohort. Rows = origin (RELIG16),
 # columns = current (RELIG). Same layout as P_grid_U_vs_S from 08 but a single
 # row — gives the reader a cross-cohort view of the full matrix at a glance.
@@ -179,8 +181,7 @@ p_grid_national = ggplot(grid_df, aes(current, origin, fill = p)) +
   geom_text(aes(label = sprintf("%.2f", p)), size = 2.8) +
   facet_wrap(~ cohort, nrow = 2) +
   scale_fill_distiller(palette = "Blues", direction = 1, limits = c(0, 1), name = "P[i→j]") +
-  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)",
-       title = "Intergenerational transition matrices by birth cohort") +
+  labs(x = "Current religion (RELIG)", y = "Origin (RELIG16)") +
   theme_bw(base_size = 10) +
   theme(
     axis.text.x      = element_text(angle = 45, hjust = 1, size = 8),
@@ -229,9 +230,7 @@ p_dist_grid = ggplot(dist_df, aes(y = religion, x = value, fill = religion)) +
   scale_x_continuous(limits = c(0, 0.65), breaks = c(0, 0.25, 0.5),
                      labels = c("0", ".25", ".5")) +
   scale_y_discrete(labels = reltrad_labels_tc) +
-  labs(x = "Share", y = NULL,
-       title = "Origin (π₀) and stationary (π*) distributions by birth cohort",
-) +
+  labs(x = "Share", y = NULL) +
   theme_bw(base_size = 10) +
   theme(
     panel.grid.minor  = element_blank(),

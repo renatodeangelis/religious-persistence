@@ -8,16 +8,16 @@
 library(dplyr)
 source("code/utils.R")
 
-clean      = readRDS("data/derived/gss_clean.rds")
-data       = clean$data
-states_alt = clean$states_alt
+clean     = readRDS("data/derived/gss_clean.rds")
+data      = clean$data
+states_bp = clean$states_bp
 
 # ── COHORT SAMPLE SIZES (10-year windows) ────────────────────────────────────
 # N per cohort window feeding the main RELIG16 -> RELIG transition matrices in
 # 02 (same non-missing filter as the P_list_* loops). The n < 30 threshold
 # matches the exclusion rule used in those loops.
 
-valid_rows = !is.na(data$reltrad16_alt) & !is.na(data$reltrad_alt)
+valid_rows = !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp)
 
 cohort_n_table = function(cohort_var, label) {
   coh = data[[cohort_var]]
