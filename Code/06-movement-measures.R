@@ -24,23 +24,6 @@ states_bp = clean$states_bp
 
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
 
-# Okabe-Ito palette — same keys and values as in 05-memory-measures.R
-reltrad_colors = c(
-  catholic           = "#0072B2",
-  evangelical        = "#D55E00",
-  `black protestant` = "#56B4E9",
-  mainline           = "#009E73",
-  other              = "#CC79A7",
-  none               = "#999999"
-)
-reltrad_labels_tc = c(
-  catholic           = "Catholic",
-  evangelical        = "Evangelical",
-  `black protestant` = "Black Protestant",
-  mainline           = "Mainline",
-  other              = "Other",
-  none               = "None"
-)
 
 dir.create("output/figures/movement", recursive = TRUE, showWarnings = FALSE)
 

@@ -27,21 +27,6 @@ reltrad_labels = c(
   "4" = "catholic",    "5" = "jewish",    "6" = "other", "7" = "none"
 )
 
-reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
-)
-
-reltrad_labels_tc = c(
-  catholic    = "Catholic",
-  evangelical = "Evangelical",
-  mainline    = "Mainline",
-  other       = "Other",
-  none        = "None"
-)
 
 pathway_colors = c("cradle none" = "#999999", "nonvert" = "#E69F00")
 

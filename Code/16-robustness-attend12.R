@@ -33,20 +33,6 @@ reltrad_labels  = c(
   "1" = "evangelical", "2" = "mainline",  "3" = "black protestant",
   "4" = "catholic",    "5" = "jewish",    "6" = "other", "7" = "none")
 
-rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
-
-reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
-)
-
-reltrad_labels_tc = c(
-  catholic = "Catholic", evangelical = "Evangelical", mainline = "Mainline",
-  other = "Other", none = "None"
-)
 
 attend12_waves = c(1991, 1998, 2008, 2018)
 

@@ -16,18 +16,6 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
-reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
-)
-reltrad_labels_tc = c(
-  catholic = "Catholic", evangelical = "Evangelical", mainline = "Mainline",
-  other = "Other", none = "None"
-)
 
 decade_windows = c("1973-1981", "1983-1992", "1993-2002", "2003-2012", "2013-2020")
 

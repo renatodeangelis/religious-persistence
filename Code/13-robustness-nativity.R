@@ -13,18 +13,6 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
-reltrad_colors  = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
-)
-reltrad_labels_tc = c(
-  catholic = "Catholic", evangelical = "Evangelical", mainline = "Mainline",
-  other = "Other", none = "None"
-)
 
 # 10-year bin midpoints (edges 1925–1975); early windows may be skipped for Born abroad
 mids_nat        = c(1930, 1940, 1950, 1960, 1970, 1980)
@@ -112,3 +100,91 @@ saveRDS(
 )
 cat("Wrote output/figures/nativity/\n")
 cat("Wrote data/derived/matrices_nativity.rds\n")
+
+# ── π₀ AND π∞ GRID: 20-YEAR COHORTS × NATIVITY (6-STATE BP SCHEME) ──────────
+# Three 20-year cohort windows (1925–44, 1945–64, 1965–84).
+# Uses the 6-state BP scheme. Foreign-born Black Protestant cells may be thin
+# (BP is a predominantly US-born category). If any foreign-born window drops
+# due to n < 30, we stop — no fallback to the 5-state scheme.
+
+states_bp = clean$states_bp
+mids_20   = c(1935, 1955, 1975)
+lbl_20    = c("1925–44", "1945–64", "1965–84")
+
+data$cohort_20 = floor((data$cohort - 1925) / 20) * 20 + 1925 + 10
+data$cohort_20[data$cohort < 1925 | data$cohort > 1984] = NA
+
+P_nat20 = pi0_nat20 = pistar_nat20 = n_nat20 = list()
+
+for (nat in nativity_groups) {
+  for (mid in mids_20) {
+    sub = data[!is.na(data$cohort_20) & data$cohort_20 == mid &
+               !is.na(data$nativity)  & data$nativity  == nat &
+               !is.na(data$reltrad16_bp) & !is.na(data$reltrad_bp), ]
+    if (nrow(sub) < 30) next
+    key                 = paste0(gsub(" ", "_", nat), "_", mid)
+    P_nat20[[key]]      = p_matrix(sub, "reltrad16_bp", "reltrad_bp", levels = states_bp)
+    pi0_nat20[[key]]    = pi_0(sub, "reltrad16_bp")
+    pistar_nat20[[key]] = pi_star(P_nat20[[key]])
+    n_nat20[[key]]      = nrow(sub)
+  }
+}
+
+# Thin-cell guard for foreign-born — do not fall back to 5-state
+fb_expected = paste0("Born_abroad_", mids_20)
+fb_missing  = setdiff(fb_expected, names(P_nat20))
+if (length(fb_missing) > 0) {
+  # NOTE: Foreign-born 20-year cohort(s) dropped due to n < 30 in the BP scheme.
+  # Missing windows stored in fb_missing. Per design, no fallback to 5-state.
+  stop("Thin cells in foreign-born × BP scheme. Missing windows: ",
+       paste(fb_missing, collapse = ", "))
+}
+
+# Long-format data for paired bar figure
+pi_nat20_df = do.call(rbind, lapply(names(P_nat20), function(key) {
+  mid_val    = as.integer(sub(".*_(\\d{4})$", "\\1", key))
+  nat_lbl    = gsub("_", " ", sub("_(\\d{4})$", "", key))
+  cohort_lbl = lbl_20[match(mid_val, mids_20)]
+  pi0v       = pi0_nat20[[key]]
+  piv        = pistar_nat20[[key]]
+  rbind(
+    data.frame(nativity = nat_lbl, cohort = cohort_lbl,
+               religion = names(pi0v), value = as.numeric(pi0v), measure = "π₀"),
+    data.frame(nativity = nat_lbl, cohort = cohort_lbl,
+               religion = names(piv),  value = as.numeric(piv),  measure = "π∞")
+  )
+}))
+
+pi_nat20_df$religion = factor(pi_nat20_df$religion, levels = rel_level_order)
+pi_nat20_df$cohort   = factor(pi_nat20_df$cohort,   levels = lbl_20)
+pi_nat20_df$measure  = factor(pi_nat20_df$measure,  levels = c("π₀", "π∞"))
+pi_nat20_df$nativity = factor(pi_nat20_df$nativity, levels = nativity_groups)
+
+p_pi_nat20 = ggplot(pi_nat20_df, aes(x = religion, y = value)) +
+  ggpattern::geom_col_pattern(
+    aes(fill = religion, pattern = measure),
+    position             = position_dodge(width = 0.8), width = 0.8,
+    color                = "grey25", linewidth = 0.25,
+    pattern_fill         = "white", pattern_colour = "white",
+    pattern_angle        = 45,      pattern_density = 0.08,
+    pattern_spacing      = 0.03,    pattern_key_scale_factor = 0.6
+  ) +
+  scale_fill_manual(values = reltrad_colors, labels = reltrad_labels_tc, guide = "none") +
+  ggpattern::scale_pattern_manual(
+    values = c("π₀" = "stripe", "π∞" = "none"),
+    labels = c("π₀" = expression(Origin~(pi[0])),
+               "π∞" = expression(Stationary~(pi[infinity])))
+  ) +
+  guides(pattern = guide_legend(override.aes = list(fill = "grey55", color = "grey25"))) +
+  scale_x_discrete(labels = reltrad_labels_tc) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     limits = c(0, NA),
+                     expand = expansion(mult = c(0, 0.05))) +
+  facet_grid(nativity ~ cohort) +
+  labs(x = NULL, y = "Share") +
+  theme_bc(base_size = 12, x_angle = 45) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+ggsave("output/figures/nativity/pi_dist_20yr_nativity.png", p_pi_nat20,
+       width = 10, height = 6, dpi = 200)
+cat("Wrote output/figures/nativity/pi_dist_20yr_nativity.png\n")

@@ -17,18 +17,6 @@ clean      = readRDS("data/derived/gss_clean.rds")
 data       = clean$data
 states_alt = clean$states_alt
 
-rel_level_order = c("catholic", "evangelical", "mainline", "other", "none")
-reltrad_colors = c(
-  catholic    = "#0072B2",
-  evangelical = "#D55E00",
-  mainline    = "#009E73",
-  other       = "#CC79A7",
-  none        = "#999999"
-)
-reltrad_labels_tc = c(
-  catholic = "Catholic", evangelical = "Evangelical", mainline = "Mainline",
-  other = "Other", none = "None"
-)
 
 # 10-year cohort midpoints (edges 1925–1975). cohort_10 in the pipeline is the
 # bin midpoint (edge + 5); the edge is used for titles and filenames.

@@ -9,6 +9,24 @@ library(dplyr)
 # Column order for the 6-state scheme in every figure and homogeneity test.
 rel_level_order = c("catholic", "evangelical", "black protestant", "mainline", "other", "none")
 
+# Okabe-Ito palette and display labels — shared across all scripts.
+reltrad_colors = c(
+  catholic           = "#0072B2",
+  evangelical        = "#D55E00",
+  `black protestant` = "#E69F00",
+  mainline           = "#009E73",
+  other              = "#CC79A7",
+  none               = "#999999"
+)
+reltrad_labels_tc = c(
+  catholic           = "Catholic",
+  evangelical        = "Evangelical",
+  `black protestant` = "Black Protestant",
+  mainline           = "Mainline",
+  other              = "Other",
+  none               = "None"
+)
+
 # Shared Healy theme (theme_bw + Okabe-Ito palette conventions)
 healy_theme = theme_bw(base_size = 12) +
   theme(
@@ -21,6 +39,32 @@ healy_theme = theme_bw(base_size = 12) +
     strip.background  = element_rect(fill = "grey92", color = NA),
     strip.text        = element_text(size = 11)
   )
+
+# Publication theme (Times New Roman, theme_minimal, black axis lines, no grid)
+theme_bc = function(base_size = 14, x_angle = 0) {
+  theme_minimal(base_family = "Times New Roman", base_size = base_size) +
+    theme(
+      plot.title        = element_blank(),
+      panel.grid        = element_blank(),
+      panel.background  = element_blank(),
+      axis.line         = element_line(color = "black", linewidth = 0.5),
+      axis.ticks        = element_line(color = "black"),
+      axis.ticks.length = unit(0.15, "cm"),
+      axis.text.x       = element_text(face = "bold", size = base_size - 1,
+                                        color = "black", angle = x_angle,
+                                        hjust = if (x_angle > 0) 1 else 0.5),
+      axis.text.y       = element_text(face = "bold", size = base_size - 1,
+                                        color = "black"),
+      axis.title.y      = element_text(size = base_size + 4,
+                                        margin = margin(r = 10)),
+      axis.title.x      = element_text(size = base_size + 2,
+                                        margin = margin(t = 10)),
+      legend.text       = element_text(size = base_size - 1),
+      legend.title      = element_blank(),
+      strip.text        = element_text(size = base_size, face = "bold"),
+      strip.background  = element_blank()
+    )
+}
 
 # ── MATRIX MATH ──────────────────────────────────────────────────────────────
 

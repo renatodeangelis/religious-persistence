@@ -49,23 +49,6 @@ for (key in names(P_list_10)) {
          width = 10, height = 7, dpi = 200)
 }
 
-# Okabe-Ito palette (Healy) — lowercase keys match rel_level_order
-reltrad_colors = c(
-  catholic           = "#0072B2",
-  evangelical        = "#D55E00",
-  `black protestant` = "#56B4E9",
-  mainline           = "#009E73",
-  other              = "#CC79A7",
-  none               = "#999999"
-)
-reltrad_labels_tc = c(
-  catholic           = "Catholic",
-  evangelical        = "Evangelical",
-  `black protestant` = "Black Protestant",
-  mainline           = "Mainline",
-  other              = "Other",
-  none               = "None"
-)
 
 im_df_10$origin = factor(im_df_10$origin, levels = rel_level_order)
 
@@ -336,3 +319,57 @@ p_pistar_fert_vec = ggplot(pistar_fert_df, aes(x = cohort, y = religion, fill = 
 
 ggsave("output/figures/pistar_fertility_vec_10yr.png", p_pistar_fert_vec,
        width = 7, height = 5, dpi = 200)
+
+# ── PAIRED BAR CHART: π∞ vs π∞_f BY COHORT ──────────────────────────────────
+
+pistar_paired_df = do.call(rbind, lapply(mids_grid, function(mid) {
+  key         = as.character(mid)
+  pistar      = pistar_list_10[[key]]
+  pistar_fert = pistar_fert_list[[key]]
+  if (is.null(pistar) || is.null(pistar_fert)) return(NULL)
+  cohort_lbl  = paste0(mid - 5, "–", sprintf("%02d", (mid + 4) %% 100))
+  rbind(
+    data.frame(mid = mid, cohort = cohort_lbl, religion = names(pistar),
+               value = as.numeric(pistar),      measure = "π∞"),
+    data.frame(mid = mid, cohort = cohort_lbl, religion = names(pistar_fert),
+               value = as.numeric(pistar_fert), measure = "π∞_f")
+  )
+}))
+
+pistar_paired_df$religion = factor(pistar_paired_df$religion, levels = rel_level_order)
+pistar_paired_df$cohort   = factor(pistar_paired_df$cohort,
+  levels = paste0(mids_grid - 5, "–", sprintf("%02d", (mids_grid + 4) %% 100)))
+pistar_paired_df$measure  = factor(pistar_paired_df$measure,
+  levels = c("π∞", "π∞_f"))
+
+p_pistar_paired = ggplot(pistar_paired_df,
+    aes(x = religion, y = value)) +
+  ggpattern::geom_col_pattern(
+    aes(fill = religion, pattern = measure),
+    position             = position_dodge(width = 0.8), width = 0.8,
+    color                = "grey25", linewidth = 0.25,
+    pattern_fill         = "white", pattern_colour = "white",
+    pattern_angle        = 45,      pattern_density = 0.08,
+    pattern_spacing      = 0.03,    pattern_key_scale_factor = 0.6
+  ) +
+  scale_fill_manual(values = reltrad_colors,
+                    labels = reltrad_labels_tc, guide = "none") +
+  ggpattern::scale_pattern_manual(
+    values = c("π∞"  = "none",   "π∞_f" = "stripe"),
+    labels = c("π∞"  = expression(Unadjusted~(pi[infinity])),
+               "π∞_f" = expression(Fertility~adjusted~(pi[infinity]^f)))
+  ) +
+  guides(pattern = guide_legend(
+    override.aes = list(fill = "grey55", color = "grey25")
+  )) +
+  scale_x_discrete(labels = reltrad_labels_tc) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     limits = c(0, NA),
+                     expand = expansion(mult = c(0, 0.05))) +
+  facet_wrap(~ cohort, nrow = 2) +
+  labs(x = NULL, y = "Share") +
+  theme_bc(base_size = 12, x_angle = 45) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+ggsave("output/figures/pistar_paired_bar_10yr.png", p_pistar_paired,
+       width = 10, height = 5, dpi = 200)
