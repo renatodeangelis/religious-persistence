@@ -27,6 +27,7 @@ source("code/14-robustness-sex.R")          # sex-stratified decadal matrices
 source("code/15-robustness-political.R")    # political stratification matrices
 source("code/16-robustness-attend12.R")     # childhood attendance-stratified matrices
 source("code/17-robustness-demographics.R") # demographic stratification (siblings & children)
+source("code/23-robustness-parental-educ.R") # parental-education-stratified 20-year matrices
 
 # ── DIFFERENCE FIGURES ────────────────────────────────────────────────────────
 source("code/18-diff-figures-sex.R")        # P_male − P_female + π comparison

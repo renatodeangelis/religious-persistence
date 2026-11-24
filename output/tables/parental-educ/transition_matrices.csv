@@ -1,0 +1,217 @@
+"group","cohort","origin","current","p","n_origin"
+"No college","1925–44","black protestant","black protestant",0.817647058823529,1020
+"No college","1925–44","catholic","black protestant",0.00373134328358209,2680
+"No college","1925–44","evangelical","black protestant",0.00695786625434867,2587
+"No college","1925–44","mainline","black protestant",0.00798403193612774,2505
+"No college","1925–44","none","black protestant",0.0177514792899408,338
+"No college","1925–44","other","black protestant",0.00616016427104723,487
+"No college","1925–44","black protestant","catholic",0.0205882352941176,1020
+"No college","1925–44","catholic","catholic",0.825,2680
+"No college","1925–44","evangelical","catholic",0.033243138770777,2587
+"No college","1925–44","mainline","catholic",0.0570858283433134,2505
+"No college","1925–44","none","catholic",0.112426035502959,338
+"No college","1925–44","other","catholic",0.0349075975359343,487
+"No college","1925–44","black protestant","evangelical",0.0705882352941176,1020
+"No college","1925–44","catholic","evangelical",0.0421641791044776,2680
+"No college","1925–44","evangelical","evangelical",0.764978739853112,2587
+"No college","1925–44","mainline","evangelical",0.144910179640719,2505
+"No college","1925–44","none","evangelical",0.29585798816568,338
+"No college","1925–44","other","evangelical",0.053388090349076,487
+"No college","1925–44","black protestant","mainline",0.0284313725490196,1020
+"No college","1925–44","catholic","mainline",0.0503731343283582,2680
+"No college","1925–44","evangelical","mainline",0.141090065713181,2587
+"No college","1925–44","mainline","mainline",0.700998003992016,2505
+"No college","1925–44","none","mainline",0.192307692307692,338
+"No college","1925–44","other","mainline",0.0698151950718686,487
+"No college","1925–44","black protestant","none",0.0303921568627451,1020
+"No college","1925–44","catholic","none",0.0630597014925373,2680
+"No college","1925–44","evangelical","none",0.0324700425202938,2587
+"No college","1925–44","mainline","none",0.0614770459081836,2505
+"No college","1925–44","none","none",0.289940828402367,338
+"No college","1925–44","other","none",0.080082135523614,487
+"No college","1925–44","black protestant","other",0.0323529411764706,1020
+"No college","1925–44","catholic","other",0.0156716417910448,2680
+"No college","1925–44","evangelical","other",0.0212601468882876,2587
+"No college","1925–44","mainline","other",0.0275449101796407,2505
+"No college","1925–44","none","other",0.0917159763313609,338
+"No college","1925–44","other","other",0.75564681724846,487
+"No college","1945–64","black protestant","black protestant",0.781873111782477,1655
+"No college","1945–64","catholic","black protestant",0.00716039279869067,4888
+"No college","1945–64","evangelical","black protestant",0.00840336134453781,3451
+"No college","1945–64","mainline","black protestant",0.0108735048930772,2759
+"No college","1945–64","none","black protestant",0.0156985871271586,637
+"No college","1945–64","other","black protestant",0.00821917808219178,730
+"No college","1945–64","black protestant","catholic",0.0120845921450151,1655
+"No college","1945–64","catholic","catholic",0.722381342062193,4888
+"No college","1945–64","evangelical","catholic",0.0266589394378441,3451
+"No college","1945–64","mainline","catholic",0.0485683218557448,2759
+"No college","1945–64","none","catholic",0.0627943485086342,637
+"No college","1945–64","other","catholic",0.0287671232876712,730
+"No college","1945–64","black protestant","evangelical",0.102114803625378,1655
+"No college","1945–64","catholic","evangelical",0.0810147299509002,4888
+"No college","1945–64","evangelical","evangelical",0.759200231816865,3451
+"No college","1945–64","mainline","evangelical",0.154041319318594,2759
+"No college","1945–64","none","evangelical",0.230769230769231,637
+"No college","1945–64","other","evangelical",0.0616438356164384,730
+"No college","1945–64","black protestant","mainline",0.0211480362537764,1655
+"No college","1945–64","catholic","mainline",0.0390752864157119,4888
+"No college","1945–64","evangelical","mainline",0.0834540712836859,3451
+"No college","1945–64","mainline","mainline",0.637549836897427,2759
+"No college","1945–64","none","mainline",0.0753532182103611,637
+"No college","1945–64","other","mainline",0.0315068493150685,730
+"No college","1945–64","black protestant","none",0.0453172205438066,1655
+"No college","1945–64","catholic","none",0.112929623567921,4888
+"No college","1945–64","evangelical","none",0.0889597218197624,3451
+"No college","1945–64","mainline","none",0.114534251540413,2759
+"No college","1945–64","none","none",0.525902668759812,637
+"No college","1945–64","other","none",0.16986301369863,730
+"No college","1945–64","black protestant","other",0.0374622356495468,1655
+"No college","1945–64","catholic","other",0.0374386252045827,4888
+"No college","1945–64","evangelical","other",0.0333236742973051,3451
+"No college","1945–64","mainline","other",0.0344327654947445,2759
+"No college","1945–64","none","other",0.0894819466248038,637
+"No college","1945–64","other","other",0.7,730
+"No college","1965–84","black protestant","black protestant",0.711775043936731,569
+"No college","1965–84","catholic","black protestant",0.00847457627118644,2006
+"No college","1965–84","evangelical","black protestant",0.00952380952380952,1155
+"No college","1965–84","mainline","black protestant",0.00728597449908925,549
+"No college","1965–84","none","black protestant",0.0203389830508475,590
+"No college","1965–84","other","black protestant",0.0112044817927171,357
+"No college","1965–84","black protestant","catholic",0.0140597539543058,569
+"No college","1965–84","catholic","catholic",0.672482552342971,2006
+"No college","1965–84","evangelical","catholic",0.0242424242424242,1155
+"No college","1965–84","mainline","catholic",0.0437158469945355,549
+"No college","1965–84","none","catholic",0.0474576271186441,590
+"No college","1965–84","other","catholic",0.0196078431372549,357
+"No college","1965–84","black protestant","evangelical",0.117750439367311,569
+"No college","1965–84","catholic","evangelical",0.0887337986041874,2006
+"No college","1965–84","evangelical","evangelical",0.730735930735931,1155
+"No college","1965–84","mainline","evangelical",0.138433515482696,549
+"No college","1965–84","none","evangelical",0.2,590
+"No college","1965–84","other","evangelical",0.0896358543417367,357
+"No college","1965–84","black protestant","mainline",0.00878734622144113,569
+"No college","1965–84","catholic","mainline",0.0219341974077767,2006
+"No college","1965–84","evangelical","mainline",0.0502164502164502,1155
+"No college","1965–84","mainline","mainline",0.570127504553734,549
+"No college","1965–84","none","mainline",0.0322033898305085,590
+"No college","1965–84","other","mainline",0.0112044817927171,357
+"No college","1965–84","black protestant","none",0.123022847100176,569
+"No college","1965–84","catholic","none",0.174975074775673,2006
+"No college","1965–84","evangelical","none",0.150649350649351,1155
+"No college","1965–84","mainline","none",0.202185792349727,549
+"No college","1965–84","none","none",0.654237288135593,590
+"No college","1965–84","other","none",0.282913165266106,357
+"No college","1965–84","black protestant","other",0.0246045694200351,569
+"No college","1965–84","catholic","other",0.0333998005982054,2006
+"No college","1965–84","evangelical","other",0.0346320346320346,1155
+"No college","1965–84","mainline","other",0.0382513661202186,549
+"No college","1965–84","none","other",0.0457627118644068,590
+"No college","1965–84","other","other",0.585434173669468,357
+"College","1925–44","black protestant","black protestant",0.5,30
+"College","1925–44","catholic","black protestant",0.00760456273764259,263
+"College","1925–44","evangelical","black protestant",0,176
+"College","1925–44","mainline","black protestant",0,505
+"College","1925–44","none","black protestant",0,32
+"College","1925–44","other","black protestant",0,116
+"College","1925–44","black protestant","catholic",0.0666666666666667,30
+"College","1925–44","catholic","catholic",0.802281368821293,263
+"College","1925–44","evangelical","catholic",0.0113636363636364,176
+"College","1925–44","mainline","catholic",0.0415841584158416,505
+"College","1925–44","none","catholic",0.03125,32
+"College","1925–44","other","catholic",0.0172413793103448,116
+"College","1925–44","black protestant","evangelical",0.1,30
+"College","1925–44","catholic","evangelical",0.0228136882129278,263
+"College","1925–44","evangelical","evangelical",0.590909090909091,176
+"College","1925–44","mainline","evangelical",0.0772277227722772,505
+"College","1925–44","none","evangelical",0.09375,32
+"College","1925–44","other","evangelical",0.0431034482758621,116
+"College","1925–44","black protestant","mainline",0.166666666666667,30
+"College","1925–44","catholic","mainline",0.0494296577946768,263
+"College","1925–44","evangelical","mainline",0.238636363636364,176
+"College","1925–44","mainline","mainline",0.738613861386139,505
+"College","1925–44","none","mainline",0.25,32
+"College","1925–44","other","mainline",0.0862068965517241,116
+"College","1925–44","black protestant","none",0.1,30
+"College","1925–44","catholic","none",0.0798479087452472,263
+"College","1925–44","evangelical","none",0.0852272727272727,176
+"College","1925–44","mainline","none",0.0851485148514852,505
+"College","1925–44","none","none",0.4375,32
+"College","1925–44","other","none",0.0862068965517241,116
+"College","1925–44","black protestant","other",0.0666666666666667,30
+"College","1925–44","catholic","other",0.0380228136882129,263
+"College","1925–44","evangelical","other",0.0738636363636364,176
+"College","1925–44","mainline","other",0.0574257425742574,505
+"College","1925–44","none","other",0.1875,32
+"College","1925–44","other","other",0.767241379310345,116
+"College","1945–64","black protestant","black protestant",0.680851063829787,141
+"College","1945–64","catholic","black protestant",0.0054945054945055,1092
+"College","1945–64","evangelical","black protestant",0.00392927308447937,509
+"College","1945–64","mainline","black protestant",0.00175746924428822,1138
+"College","1945–64","none","black protestant",0.00452488687782805,221
+"College","1945–64","other","black protestant",0.00510204081632653,392
+"College","1945–64","black protestant","catholic",0.0425531914893617,141
+"College","1945–64","catholic","catholic",0.652930402930403,1092
+"College","1945–64","evangelical","catholic",0.0432220039292731,509
+"College","1945–64","mainline","catholic",0.0448154657293497,1138
+"College","1945–64","none","catholic",0.0361990950226244,221
+"College","1945–64","other","catholic",0.0153061224489796,392
+"College","1945–64","black protestant","evangelical",0.0921985815602837,141
+"College","1945–64","catholic","evangelical",0.0668498168498168,1092
+"College","1945–64","evangelical","evangelical",0.646365422396857,509
+"College","1945–64","mainline","evangelical",0.113356766256591,1138
+"College","1945–64","none","evangelical",0.0950226244343891,221
+"College","1945–64","other","evangelical",0.038265306122449,392
+"College","1945–64","black protestant","mainline",0.0425531914893617,141
+"College","1945–64","catholic","mainline",0.0613553113553114,1092
+"College","1945–64","evangelical","mainline",0.135559921414538,509
+"College","1945–64","mainline","mainline",0.632688927943761,1138
+"College","1945–64","none","mainline",0.0995475113122172,221
+"College","1945–64","other","mainline",0.0280612244897959,392
+"College","1945–64","black protestant","none",0.0709219858156028,141
+"College","1945–64","catholic","none",0.159340659340659,1092
+"College","1945–64","evangelical","none",0.113948919449902,509
+"College","1945–64","mainline","none",0.163444639718805,1138
+"College","1945–64","none","none",0.67420814479638,221
+"College","1945–64","other","none",0.145408163265306,392
+"College","1945–64","black protestant","other",0.0709219858156028,141
+"College","1945–64","catholic","other",0.054029304029304,1092
+"College","1945–64","evangelical","other",0.0569744597249509,509
+"College","1945–64","mainline","other",0.0439367311072056,1138
+"College","1945–64","none","other",0.0904977375565611,221
+"College","1945–64","other","other",0.767857142857143,392
+"College","1965–84","black protestant","black protestant",0.72027972027972,143
+"College","1965–84","catholic","black protestant",0.00655307994757536,763
+"College","1965–84","evangelical","black protestant",0.00602409638554217,332
+"College","1965–84","mainline","black protestant",0,429
+"College","1965–84","none","black protestant",0.00413223140495868,242
+"College","1965–84","other","black protestant",0.00367647058823529,272
+"College","1965–84","black protestant","catholic",0.00699300699300699,143
+"College","1965–84","catholic","catholic",0.612057667103539,763
+"College","1965–84","evangelical","catholic",0.0421686746987952,332
+"College","1965–84","mainline","catholic",0.0303030303030303,429
+"College","1965–84","none","catholic",0.0413223140495868,242
+"College","1965–84","other","catholic",0.00735294117647059,272
+"College","1965–84","black protestant","evangelical",0.0979020979020979,143
+"College","1965–84","catholic","evangelical",0.0786369593709043,763
+"College","1965–84","evangelical","evangelical",0.674698795180723,332
+"College","1965–84","mainline","evangelical",0.13986013986014,429
+"College","1965–84","none","evangelical",0.0909090909090909,242
+"College","1965–84","other","evangelical",0.0257352941176471,272
+"College","1965–84","black protestant","mainline",0.041958041958042,143
+"College","1965–84","catholic","mainline",0.0353866317169069,763
+"College","1965–84","evangelical","mainline",0.0692771084337349,332
+"College","1965–84","mainline","mainline",0.554778554778555,429
+"College","1965–84","none","mainline",0.0578512396694215,242
+"College","1965–84","other","mainline",0.0147058823529412,272
+"College","1965–84","black protestant","none",0.0979020979020979,143
+"College","1965–84","catholic","none",0.234600262123198,763
+"College","1965–84","evangelical","none",0.168674698795181,332
+"College","1965–84","mainline","none",0.233100233100233,429
+"College","1965–84","none","none",0.727272727272727,242
+"College","1965–84","other","none",0.25,272
+"College","1965–84","black protestant","other",0.034965034965035,143
+"College","1965–84","catholic","other",0.0327653997378768,763
+"College","1965–84","evangelical","other",0.0391566265060241,332
+"College","1965–84","mainline","other",0.041958041958042,429
+"College","1965–84","none","other",0.0785123966942149,242
+"College","1965–84","other","other",0.698529411764706,272

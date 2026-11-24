@@ -22,7 +22,7 @@ reltrad_labels = c(
 data(gss_all)
 data = gss_all |>
   select(year, cohort, sex, reltrad, reltrad16, region, born,
-         race, polviews, partyid, sibs_7222, childs) |>
+         race, polviews, partyid, sibs_7222, childs, paeduc, maeduc) |>
   filter(!(year %in% c(1972, 2021))) |>
   mutate(across(c(reltrad, reltrad16),
                 ~ reltrad_labels[as.character(as.numeric(.))])) |>
